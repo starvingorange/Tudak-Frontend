@@ -1,0 +1,41 @@
+:root {
+  /* Layout */
+  --page-max-width: 964px;
+  --nav-height: 64px;
+
+  /* Radii */
+  --radius-hero: 20px;
+  --radius-section: 16px;
+  --radius-card: 14px;
+  --radius-row: 10px;
+  --radius-button: 10px;
+  --radius-button-sm: 8px;
+  --radius-poll: 5px;
+  --radius-pill: 999px;
+
+  /* Spacing rhythm */
+  --space-section-gap: 28px;
+  --space-card-gap: 18px;
+  --space-row-gap: 10px;
+  --pad-section: 24px 28px 28px;
+  --pad-card: 22px 22px 20px;
+  --pad-row: 12px 16px;
+
+  /* Borders — no shadows anywhere; 1px borders define surfaces */
+  --border-w: 1px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--text-1);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--brand-yellow);
+}
