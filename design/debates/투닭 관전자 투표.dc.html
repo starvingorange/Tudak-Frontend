@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>투닭 - 관전자 투표</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+<style>
+body{margin:0;background:#f6f4f0;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1a1a1a;text-decoration:none}
+a:hover{color:#ffc226}
+</style>
+</helmet>
+<section data-screen-label="관전자 투표" style="max-width:720px;margin:24px auto;background:#fefefe;border:1px solid #ebe9e4;border-radius:14px;padding:26px 28px;color:#1a1a1a;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:9px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>
+    <span style="font-size:18px;font-weight:800;flex:1">어느 입장에 공감하시나요?</span>
+    <span style="font-size:13px;color:#909090">투표 마감 D-3</span>
+  </div>
+  <div style="margin-top:8px;font-size:13.5px;color:#6f6f6f">토론 종료 후 3일간 투표할 수 있어요. 마감 전까지 언제든 바꿀 수 있습니다.</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
+    <button onClick="{{ votePro }}" style="{{ proBtnStyle }}">
+      <img src="assets/stickers/st-pro-basic.png" alt="찬성" style="height:64px;display:block">
+      <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">
+        <span style="font-size:16px;font-weight:800;color:#2f6fed">찬성 · 민초러버</span>
+        <span style="font-size:13px;color:#6f6f6f">디저트 맞음!</span>
+      </span>
+    </button>
+    <button onClick="{{ voteCon }}" style="{{ conBtnStyle }}">
+      <img src="assets/stickers/st-con-basic.png" alt="반대" style="height:64px;display:block">
+      <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">
+        <span style="font-size:16px;font-weight:800;color:#ef4444">반대 · 치킨왕</span>
+        <span style="font-size:13px;color:#6f6f6f">디저트로 한정 못함!</span>
+      </span>
+    </button>
+  </div>
+
+  <sc-if value="{{ voted }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:20px;display:flex;align-items:center;justify-content:center;gap:14px">
+      <span style="font-size:14px;font-weight:800;color:{{ votedColor }}">{{ votedMsg }}</span>
+      <span style="font-size:12.5px;color:#909090">결과는 투표 종료 후 공개돼요 · 다른 입장을 누르면 재투표할 수 있어요</span>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 760, &quot;height&quot;: 420}, &quot;proVotes&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 154, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;투표 수&quot;}, &quot;conVotes&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 121, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;투표 수&quot;}}">
+class Component extends DCLogic {
+  state = { myVote: null };
+
+  renderVals() {
+    const baseCount = { pro: this.props.proVotes ?? 154, con: this.props.conVotes ?? 121 };
+    const myVote = this.state.myVote;
+    const pro = baseCount.pro + (myVote === "pro" ? 1 : 0);
+    const con = baseCount.con + (myVote === "con" ? 1 : 0);
+    const total = pro + con;
+    const proPercent = Math.round((pro / total) * 100);
+
+    const btn = (side) => {
+      const active = myVote === side;
+      const color = side === "pro" ? "#2f6fed" : "#ef4444";
+      const tint = side === "pro" ? "#eef1fd" : "#fdecec";
+      return {
+        display: "flex", alignItems: "center", gap: 16, textAlign: "left",
+        padding: "16px 18px", borderRadius: 12, cursor: "pointer",
+        fontFamily: "inherit", background: active ? tint : "#fefefe",
+        border: active ? "2px solid " + color : "1px solid #ebe9e4",
+        opacity: myVote && !active ? 0.55 : 1,
+        transition: "all .15s",
+      };
+    };
+
+    return {
+      voted: myVote !== null,
+      votePro: () => this.setState({ myVote: "pro" }),
+      voteCon: () => this.setState({ myVote: "con" }),
+      proBtnStyle: btn("pro"),
+      conBtnStyle: btn("con"),
+      votedColor: myVote === "pro" ? "#2f6fed" : "#ef4444",
+      votedMsg: myVote === "pro" ? "찬성(민초러버)에 투표했어요!" : "반대(치킨왕)에 투표했어요!",
+    };
+  }
+}
+</script>
+</body>
+</html>

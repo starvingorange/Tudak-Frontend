@@ -1,0 +1,25 @@
+/* The Pretendard @font-face import itself lives in app/globals.css: CSS requires
+   @import rules to precede all other rules in the final bundled stylesheet, and
+   this file gets inlined after Tailwind's own rules. */
+:root {
+  /* Named --font-pretendard (not --font-sans) so app/globals.css can register it
+     under Tailwind's `--font-sans` theme key without colliding with this file. */
+  --font-pretendard:
+    Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
+
+  /* Scale (from 투닭 main page) */
+  --text-hero: 800 24px / 1.3 var(--font-pretendard); /* hero tagline */
+  --text-card-title:
+    800 20px / 1.4 var(--font-pretendard); /* topic card titles */
+  --text-percent: 800 19px / 1.2 var(--font-pretendard); /* poll percentages */
+  --text-section: 800 18px / 1.3 var(--font-pretendard); /* section headers */
+  --text-row-title:
+    700 15px / 1.4 var(--font-pretendard); /* waiting room rows */
+  --text-body: 400 15px / 1.6 var(--font-pretendard);
+  --text-nav: 600 15px / 1 var(--font-pretendard);
+  --text-caption: 400 13px / 1.5 var(--font-pretendard);
+  --text-badge: 700 12px / 1 var(--font-pretendard);
+
+  --tracking-display: -0.3px;
+}

@@ -1,0 +1,50 @@
+:root {
+  /* Brand accent */
+  --brand-yellow: #ffc226;
+  --brand-on-yellow: #111111;
+
+  /* VS / poll colors */
+  --vote-blue: #2f6fed;
+  --vote-red: #ef4444;
+
+  /* Category colors */
+  --cat-sisa: #7b5cd6; /* 시사 */
+  --cat-yeonae: #f43f5e; /* 연애 */
+  --cat-sahoe: #14b8a6; /* 사회 */
+  --cat-sports: #22a54a; /* 스포츠 */
+  --cat-game: #f5920b; /* 게임 */
+  --cat-munhwa: #8b5cf6; /* 문화 */
+  --cat-tech: #3b82f6; /* 과학기술 */
+  --cat-fg: #ffffff;
+
+  /* Status */
+  --live-dot: #ef4444;
+  --noti-dot: #ef4444;
+
+  /* Light theme (default) */
+  --bg-page: #fefefe;
+  --bg-surface: #fefefe;
+  --bg-card: #fefefe;
+  --bg-hero: #fefaf6;
+  --border-1: #ebe9e4;
+  --text-1: #1a1a1a;
+  --text-2: #6f6f6f;
+  --text-3: #909090;
+  --text-label: #555555;
+  --poll-track: #ececec;
+  --btn-outline-fg: #333333;
+}
+
+.dark {
+  --bg-page: #1c1e21;
+  --bg-surface: #1c1e21;
+  --bg-card: #1c1e21;
+  --bg-hero: #1c1e21;
+  --border-1: #33363a;
+  --text-1: #fefefe;
+  --text-2: #a3a3a3;
+  --text-3: #8b8b8b;
+  --text-label: #c9c9c9;
+  --poll-track: #3a3a3a;
+  --btn-outline-fg: #ffc227;
+}

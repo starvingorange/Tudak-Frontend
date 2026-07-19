@@ -1,0 +1,48 @@
+<!-- @dsCard group="Components" viewport="700x420" subtitle="Button · CategoryBadge · Card · SectionHeader · VsBar · PollBar" name="Core" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<div id="root"></div>
+<script>
+(async () => {
+  // Prefer the compiled design-system bundle when present; otherwise load sources directly.
+  let NS = null;
+  for (const k of Object.getOwnPropertyNames(window)) {
+    try {
+      const v = window[k];
+      if (v && typeof v === "object" && v.Button && v.VsBar) { NS = v; break; }
+    } catch (e) { /* cross-origin frame — skip */ }
+  }
+  if (!NS) {
+    const files = ["Button.jsx", "CategoryBadge.jsx", "Card.jsx", "SectionHeader.jsx", "VsBar.jsx", "PollBar.jsx"];
+    const srcs = await Promise.all(files.map(f => fetch(f).then(r => r.text())));
+    const code = srcs.join("\n").replace(/^import .*$/gm, "").replace(/^export /gm, "");
+    NS = {};
+    new Function("React", "NS", Babel.transform(
+      code + "\nObject.assign(NS,{Button,CategoryBadge,Card,SectionHeader,VsBar,PollBar});",
+      { presets: [["react", { runtime: "classic" }]] }).code)(React, NS);
+  }
+  const { Button, CategoryBadge, Card, SectionHeader, VsBar, PollBar } = NS;
+  const h = React.createElement;
+  const title = (t) => h("div", { style: { fontSize: 20, fontWeight: 800, lineHeight: 1.4, marginTop: 14, letterSpacing: "-0.3px", color: "var(--text-1)", fontFamily: "var(--font-sans)" }, dangerouslySetInnerHTML: { __html: t } });
+  const demo = h("div", { style: { padding: 20, display: "flex", flexDirection: "column", gap: 18, fontFamily: "var(--font-sans)" } },
+    h("div", { style: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" } },
+      h(Button, { variant: "primary" }, "토론 참여하기"),
+      h(Button, { variant: "outline" }, "입장하기"),
+      h(CategoryBadge, { category: "시사" }),
+      h(CategoryBadge, { category: "연애" }),
+      h(CategoryBadge, { category: "게임" })),
+    h(SectionHeader, { icon: h("span", { style: { fontSize: 18 } }, "🔥"), title: "지금 인기 있는 토론" }),
+    h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 } },
+      h(Card, null,
+        h(CategoryBadge, { category: "스포츠" }),
+        title("축구 GOAT는<br>메시 vs 호날두?"),
+        h(VsBar, { style: { marginTop: 16 }, leftPercent: 62, leftLabel: "메시", rightLabel: "호날두" })),
+      h(Card, null,
+        h(CategoryBadge, { category: "게임" }),
+        title("롤에서 가장<br>재미있는 포지션은?"),
+        h(PollBar, { style: { marginTop: 16 }, options: [{ label: "미드", percent: 42 }, { label: "정글", percent: 28 }, { label: "탑", percent: 18 }, { label: "기타", percent: 12 }] }))));
+  ReactDOM.createRoot(document.getElementById("root")).render(demo);
+})();
+</script>
