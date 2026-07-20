@@ -131,7 +131,7 @@ export function JoinModal({ room, onClose }: JoinModalProps) {
             취소
           </button>
           <Link
-            href={canConfirm ? `/debates/${room.id}` : "#"}
+            href={canConfirm ? `/debates/${room.id}/waiting` : "#"}
             aria-disabled={!canConfirm}
             className={cn(
               "flex-[1.4] inline-flex items-center justify-center text-sm font-extrabold py-[13px] rounded-[var(--radius-button)] no-underline",
