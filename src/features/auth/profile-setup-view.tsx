@@ -14,7 +14,6 @@ export function ProfileSetupView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [nickname, setNickname] = useState("");
-  const [done, setDone] = useState(false);
 
   const trimmedLength = nickname.trim().length;
   const valid =
@@ -35,8 +34,7 @@ export function ProfileSetupView() {
 
   const submit = () => {
     if (!valid) return;
-    setDone(true);
-    setTimeout(() => router.push("/"), 1200);
+    router.push("/");
   };
 
   return (
@@ -98,10 +96,7 @@ export function ProfileSetupView() {
           <div className="relative">
             <input
               value={nickname}
-              onChange={(e) => {
-                setNickname(e.target.value);
-                setDone(false);
-              }}
+              onChange={(e) => setNickname(e.target.value)}
               maxLength={MAX_NICKNAME_LENGTH}
               placeholder="닉네임을 입력해주세요"
               className={cn(
@@ -143,11 +138,6 @@ export function ProfileSetupView() {
         >
           투닭 시작하기
         </button>
-        {done && (
-          <div className="w-full rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.5 px-4.5 box-border">
-            환영해요, {nickname}님! 🐔
-          </div>
-        )}
       </div>
     </>
   );

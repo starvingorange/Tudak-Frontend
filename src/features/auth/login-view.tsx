@@ -2,14 +2,11 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export function LoginView() {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "success">("idle");
 
   const login = () => {
-    setStatus("success");
     router.push("/onboarding");
   };
 
