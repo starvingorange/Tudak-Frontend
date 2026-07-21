@@ -1,25 +1,26 @@
 "use client";
 
-import { Bell, House, ThumbsUp, Vote } from "lucide-react";
+import { House, MessageCircle, Vote } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "홈", icon: House },
-  { href: "/votes", label: "투표", icon: ThumbsUp },
-  { href: "/debates", label: "토론", icon: Vote },
+  { href: "/votes", label: "투표", icon: Vote },
+  { href: "/debates", label: "토론", icon: MessageCircle },
 ] as const;
 
 export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-[var(--bg-surface)] border-b border-[var(--border-1)] sticky top-0 z-10">
-      <div className="max-w-[1180px] mx-auto h-16 flex items-center gap-9 px-4">
-        <Link href="/" className="block h-[42px] w-[132px] relative shrink-0">
+    <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
+      <div className="max-w-295 mx-auto h-16 flex items-center gap-9 px-4">
+        <Link href="/" className="block h-10.5 w-33 relative shrink-0">
           <Image
             src="/assets/logo-nav-light.png"
             alt="투닭"
@@ -41,10 +42,10 @@ export function Navbar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-[7px] px-3.5 text-[15px] box-border border-b-[3px]",
+                  "flex items-center gap-1.75 px-3.5 text-[15px] box-border border-b-[3px]",
                   active
-                    ? "font-bold text-[var(--text-1)] border-[var(--brand-yellow)]"
-                    : "font-semibold text-[var(--text-label)] border-transparent",
+                    ? "font-bold text-(--text-1) border-(--brand-yellow)"
+                    : "font-semibold text-(--text-label) border-transparent",
                 )}
               >
                 <Icon size={17} strokeWidth={active ? 2.4 : 2.2} />
@@ -53,12 +54,9 @@ export function Navbar() {
             );
           })}
         </div>
-        <div className="flex items-center gap-[18px]">
+        <div className="flex items-center gap-4.5">
           <ThemeToggle />
-          <div className="relative w-6 h-6 text-[var(--text-1)]">
-            <Bell size={22} strokeWidth={2} />
-            <span className="absolute -top-px -right-px w-2 h-2 rounded-full bg-[var(--live-dot)] border-2 border-[var(--bg-surface)]" />
-          </div>
+          <NotificationBell />
           <Image
             src="/assets/avatar.png"
             alt="프로필"

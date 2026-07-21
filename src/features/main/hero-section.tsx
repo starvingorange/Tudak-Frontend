@@ -1,4 +1,4 @@
-import { Vote } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
@@ -45,7 +45,7 @@ export function HeroSection() {
         </div>
         <Button
           href="/debates"
-          icon={<Vote size={16} fill="currentColor" />}
+          icon={<MessageCircle size={16} />}
           className="mt-[22px]"
         >
           토론 참여하기

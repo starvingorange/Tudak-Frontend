@@ -70,9 +70,9 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
   const isFull = room.pro !== null && room.con !== null;
 
   return (
-    <div className="border border-[var(--border-1)] rounded-[var(--radius-card)] px-[22px] py-5 flex flex-col hover:border-[var(--brand-yellow)]">
-      <CategoryBadge category={room.category} />
-      <div className="text-lg font-extrabold leading-snug tracking-[-0.3px] mt-3.5 min-h-[50px]">
+    <div className="border border-(--border-1) rounded-(--radius-card) px-5.5 py-5 flex flex-col hover:border-(--brand-yellow)">
+      <CategoryBadge category={room.category} className="self-start" />
+      <div className="text-lg font-extrabold leading-snug tracking-[-0.3px] mt-3.5 min-h-12.5">
         {room.title}
       </div>
       <div className="grid grid-cols-[1fr_34px_1fr] items-center mt-4">
@@ -83,11 +83,11 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
         <Seat side="con" seat={room.con} />
       </div>
       <div className="flex-1" />
-      <div className="flex justify-end mt-[18px] pt-4 border-t border-[var(--border-1)]">
+      <div className="flex justify-end mt-4.5 pt-4 border-t border-(--border-1)">
         {isFull ? (
           <Link
             href={`/debates/${room.id}`}
-            className="inline-flex items-center gap-[7px] text-[13px] font-extrabold px-5 py-[9px] rounded-lg text-[var(--text-1)] border border-[var(--border-1)] hover:border-[var(--brand-yellow)]"
+            className="inline-flex items-center gap-1.75 text-[13px] font-extrabold px-5 py-2.25 rounded-lg text-(--text-1) border border-(--border-1) hover:border-(--brand-yellow)"
           >
             관전하기
           </Link>
@@ -95,7 +95,7 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
           <button
             type="button"
             onClick={() => onJoin(room)}
-            className="inline-flex items-center gap-[7px] text-[13px] font-extrabold px-5 py-[9px] rounded-lg bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] cursor-pointer"
+            className="inline-flex items-center gap-1.75 text-[13px] font-extrabold px-5 py-2.25 rounded-lg bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer"
           >
             참여하기
           </button>

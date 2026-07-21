@@ -7,7 +7,7 @@ const SERVICE_LINKS = ["이용약관", "개인정보처리방침", "신고하기
 
 export function Footer() {
   return (
-    <footer className="mt-9 px-2">
+    <footer className="mt-20 px-2">
       <div className="max-w-[964px] mx-auto grid grid-cols-[150px_1fr_200px_200px_140px] gap-6 items-start">
         <div className="relative w-[130px] h-[130px]">
           <Image

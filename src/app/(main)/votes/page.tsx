@@ -3,13 +3,13 @@ import { VoteList } from "@/features/votes/vote-list";
 
 export default function VotesPage() {
   return (
-    <div className="max-w-[1180px] mx-auto px-4 pt-2 pb-10">
-      <div className="border-b border-[var(--border-1)] flex items-end justify-between">
+    <div className="max-w-295 mx-auto px-4 pt-2 pb-10">
+      <div className="flex items-start justify-between">
         <div className="py-9">
           <h1 className="m-0 text-[32px] font-extrabold tracking-[-0.5px]">
             투표 목록
           </h1>
-          <div className="mt-2 text-[15px] text-[var(--text-2)]">
+          <div className="mt-2 text-[15px] text-(--text-2)">
             다양한 주제로 진행 중인 투표를 확인하고 참여해보세요!
           </div>
         </div>
@@ -18,7 +18,7 @@ export default function VotesPage() {
           alt="투닭 캐릭터"
           width={150}
           height={150}
-          className="h-[150px] w-auto mr-10"
+          className="w-37.5 h-37.5 object-contain mr-10"
         />
       </div>
       <VoteList />
