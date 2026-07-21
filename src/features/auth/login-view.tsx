@@ -10,7 +10,7 @@ export function LoginView() {
 
   const login = () => {
     setStatus("success");
-    setTimeout(() => router.push("/onboarding"), 1200);
+    router.push("/onboarding");
   };
 
   return (
@@ -95,11 +95,6 @@ export function LoginView() {
           </svg>
           구글로 시작하기
         </button>
-        {status === "success" && (
-          <div className="rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.5 px-4.5">
-            로그인 성공! 홈으로 이동합니다 🐔
-          </div>
-        )}
         <div className="text-center text-[13px] text-[var(--text-3)] mt-1.5 leading-relaxed">
           가입 시{" "}
           <a href="/terms" className="font-bold text-[var(--text-2)]">
