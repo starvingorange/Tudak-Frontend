@@ -1,4 +1,6 @@
+import { MessageCircle } from "lucide-react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import { DebateList } from "@/features/debates/debate-list";
 
 export default function DebatesPage() {
@@ -12,6 +14,13 @@ export default function DebatesPage() {
           <div className="mt-2 text-[15px] text-[var(--text-2)]">
             다양한 주제로 열려있는 토론방에 참여해보세요!
           </div>
+          <Button
+            href="/debates/new"
+            icon={<MessageCircle size={16} />}
+            className="mt-5"
+          >
+            토론방 만들기
+          </Button>
         </div>
         <Image
           src="/assets/stickers/st-pro-speak.png"

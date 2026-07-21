@@ -28,9 +28,8 @@ export interface DebateRoomDetail {
   conVotes: number;
 }
 
-// The one fully-authored example, reproduced verbatim from
-// design/debates/투닭 토론 인게임.dc.html — every other id below is a
-// lighter, generated detail derived from the debates-list seat data.
+// The one fully-authored example; every other id below is a lighter,
+// generated detail derived from the debates-list seat data.
 const MINT_CHOCO: DebateRoomDetail = {
   id: "mint-choco",
   question: "Q. 민트초코는 디저트인가?",
