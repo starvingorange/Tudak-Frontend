@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "홈", icon: House },
@@ -54,7 +53,6 @@ export function Navbar() {
           })}
         </div>
         <div className="flex items-center gap-[18px]">
-          <ThemeToggle />
           <div className="relative w-6 h-6 text-[var(--text-1)]">
             <Bell size={22} strokeWidth={2} />
             <span className="absolute -top-px -right-px w-2 h-2 rounded-full bg-[var(--live-dot)] border-2 border-[var(--bg-surface)]" />
