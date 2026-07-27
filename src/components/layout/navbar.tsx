@@ -23,12 +23,14 @@ export function Navbar() {
             src="/assets/logo-nav-light.png"
             alt="투닭"
             fill
+            sizes="132px"
             className="object-contain object-left dark:hidden"
           />
           <Image
             src="/assets/logo-nav-dark.png"
             alt="투닭"
             fill
+            sizes="132px"
             className="object-contain object-left hidden dark:block"
           />
         </Link>

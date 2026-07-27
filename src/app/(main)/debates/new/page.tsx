@@ -13,7 +13,9 @@ export default function NewDebatePage() {
           alt="글 쓰는 투닭"
           width={210}
           height={155}
-          className="w-[210px] h-auto shrink-0"
+          priority
+          style={{ height: "auto" }}
+          className="w-[210px] shrink-0"
         />
       </div>
       <CreateDebateForm />

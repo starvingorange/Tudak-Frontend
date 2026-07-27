@@ -37,15 +37,15 @@ function Seat({
   return (
     <div className="flex flex-col items-center gap-2">
       <span
-        className="w-[72px] h-[72px] rounded-full border-2 inline-flex items-center justify-center overflow-hidden"
+        className="relative w-[72px] h-[72px] rounded-full border-2 inline-flex items-center justify-center overflow-hidden"
         style={{ background: tint, borderColor: color }}
       >
         <Image
           src={`/assets/stickers/${seat.sticker}.png`}
           alt={label}
-          width={56}
-          height={56}
-          className="h-14 w-auto"
+          fill
+          sizes="72px"
+          className="object-contain p-2"
         />
       </span>
       <span

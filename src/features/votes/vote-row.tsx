@@ -11,13 +11,15 @@ export function VoteRow({ vote }: { vote: VoteRowData }) {
       className="flex items-center gap-5 border border-[var(--border-1)] rounded-[var(--radius-card)] px-[26px] py-5 hover:border-[var(--brand-yellow)]"
     >
       <CategoryBadge category={vote.category} className="shrink-0" />
-      <Image
-        src={`/assets/stickers/${vote.sticker}.png`}
-        alt="캐릭터"
-        width={46}
-        height={46}
-        className="h-[46px] w-auto"
-      />
+      <span className="relative inline-block w-[46px] h-[46px] shrink-0">
+        <Image
+          src={`/assets/stickers/${vote.sticker}.png`}
+          alt="캐릭터"
+          fill
+          sizes="46px"
+          className="object-contain"
+        />
+      </span>
       <span className="flex-1 text-[19px] font-extrabold tracking-[-0.3px] min-w-0">
         {vote.title}
       </span>

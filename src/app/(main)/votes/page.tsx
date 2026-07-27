@@ -16,9 +16,11 @@ export default function VotesPage() {
         <Image
           src="/assets/stickers/st-com-idea.png"
           alt="투닭 캐릭터"
-          width={150}
-          height={150}
-          className="h-[150px] w-auto mr-10"
+          width={175}
+          height={158}
+          priority
+          style={{ width: "auto" }}
+          className="h-[150px] mr-10"
         />
       </div>
       <VoteList />

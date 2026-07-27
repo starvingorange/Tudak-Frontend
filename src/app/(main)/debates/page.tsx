@@ -25,9 +25,11 @@ export default function DebatesPage() {
         <Image
           src="/assets/stickers/st-pro-speak.png"
           alt="투닭 캐릭터"
-          width={150}
-          height={150}
-          className="h-[150px] w-auto mr-10"
+          width={195}
+          height={165}
+          priority
+          style={{ width: "auto" }}
+          className="h-[150px] mr-10"
         />
       </div>
       <DebateList />

@@ -1,6 +1,15 @@
 import Image from "next/image";
 import type { DebaterState } from "./data";
 
+// Intrinsic dimensions of each pose image, so the responsive clamp()-sized
+// render doesn't distort — see public/assets/{side}-{pose}.png.
+const POSE_SIZE = {
+  "pro-confident": { width: 168, height: 158 },
+  "pro-speaking": { width: 195, height: 165 },
+  "con-confident": { width: 163, height: 158 },
+  "con-speaking": { width: 200, height: 190 },
+} as const;
+
 interface DebaterCardProps {
   side: "pro" | "con";
   debater: DebaterState | null;
@@ -30,13 +39,17 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
     );
   }
 
+  const pose =
+    `${side}-${debater.speaking ? "speaking" : "confident"}` as const;
   const image = (
     <Image
-      src={`/assets/${side}-${debater.speaking ? "speaking" : "confident"}.png`}
+      src={`/assets/${pose}.png`}
       alt={`${debater.name} 캐릭터`}
-      width={190}
-      height={190}
-      className="w-[clamp(120px,14vw,190px)] h-auto mt-[26px]"
+      width={POSE_SIZE[pose].width}
+      height={POSE_SIZE[pose].height}
+      priority
+      style={{ height: "auto" }}
+      className="w-[clamp(120px,14vw,190px)] mt-[26px]"
     />
   );
 

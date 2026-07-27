@@ -45,12 +45,14 @@ export function ProfileSetupView() {
             src="/assets/logo-hero-light.png"
             alt="투닭"
             fill
+            sizes="140px"
             className="object-contain dark:hidden"
           />
           <Image
             src="/assets/logo-hero-dark.png"
             alt="투닭"
             fill
+            sizes="140px"
             className="object-contain hidden dark:block"
           />
         </div>
