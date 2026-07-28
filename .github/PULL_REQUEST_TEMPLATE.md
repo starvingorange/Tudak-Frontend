@@ -1,19 +1,19 @@
-## Summary
+## 요약
 
-<!-- What does this PR do, and why? -->
+<!-- 이 PR이 무엇을 하는지, 왜 필요한지 -->
 
-## Changes
+## 변경 사항
 
-<!-- Key files/areas touched. Bullet points are fine. -->
+<!-- 주요 변경 파일/영역. 불릿 포인트로 정리해도 좋습니다. -->
 
-## Test plan
+## 테스트 방법
 
-<!-- How did you verify this? Commands run, routes/screens checked, edge cases considered. -->
+<!-- 어떻게 검증했는지 — 실행한 명령어, 확인한 라우트/화면, 고려한 엣지 케이스 -->
 
 - [ ] `pnpm lint`
 - [ ] `pnpm build`
-- [ ] Manually verified in the browser (light + dark mode where relevant)
+- [ ] 브라우저에서 직접 확인 (관련 있다면 라이트/다크 모드 모두)
 
-## Screenshots
+## 스크린샷
 
-<!-- If this touches UI, before/after screenshots help a lot. -->
+<!-- UI 변경이라면 변경 전/후 스크린샷이 있으면 좋습니다. -->
