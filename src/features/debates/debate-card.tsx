@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import type { DebateRoom, DebateSeat } from "./data";
 
@@ -92,13 +93,9 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
             관전하기
           </Link>
         ) : (
-          <button
-            type="button"
-            onClick={() => onJoin(room)}
-            className="inline-flex items-center gap-1.75 text-[13px] font-extrabold px-5 py-2.25 rounded-lg bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer"
-          >
+          <Button size="sm" onClick={() => onJoin(room)}>
             참여하기
-          </button>
+          </Button>
         )}
       </div>
     </div>

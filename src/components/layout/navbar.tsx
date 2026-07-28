@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
-import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "홈", icon: House },
@@ -55,7 +54,8 @@ export function Navbar() {
           })}
         </div>
         <div className="flex items-center gap-4.5">
-          <ThemeToggle />
+          {/* 추후 다크 모드 필요시 활성화 */}
+          {/* <ThemeToggle /> */}
           <NotificationBell />
           <Image
             src="/assets/avatar.png"
