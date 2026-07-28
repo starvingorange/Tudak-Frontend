@@ -36,25 +36,26 @@ export const CATEGORY_FILTERS: CategorySlug[] = [
   "과학기술",
 ];
 
-/** Tab set shared by the debates and votes list filter bars. */
-export const LIST_FILTER_TABS = [
-  "전체",
+/**
+ * Candidate order for the debates/votes list filter bars, widest-priority
+ * first. CategoryTabBar shows as many of these as fit in one row and folds
+ * whatever doesn't fit into a "기타" overflow menu — see that component.
+ */
+export const LIST_FILTER_CATEGORIES: CategorySlug[] = [
   "시사",
   "연애",
   "사회",
-  "학교",
-  "기타",
-] as const;
-export type ListFilterTab = (typeof LIST_FILTER_TABS)[number];
+  "스포츠",
+  "게임",
+  "문화",
+  "과학기술",
+];
 
-/** Categories not covered by a named tab fall under "기타". */
-const NAMED_LIST_TABS = new Set<CategorySlug>(["시사", "연애", "사회", "학교"]);
+export type ListFilter = "전체" | CategorySlug;
 
-export function matchesListFilterTab(
+export function matchesListFilter(
   category: CategorySlug,
-  tab: ListFilterTab,
+  filter: ListFilter,
 ): boolean {
-  if (tab === "전체") return true;
-  if (tab === "기타") return !NAMED_LIST_TABS.has(category);
-  return category === tab;
+  return filter === "전체" || category === filter;
 }

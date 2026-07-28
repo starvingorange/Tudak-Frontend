@@ -1,5 +1,12 @@
 import type { PollOption } from "@/components/ui/poll-bar";
+import { DEBATE_ROOMS, type DebateRoom } from "@/features/debates/data";
 import type { CategorySlug } from "@/features/shared/categories";
+
+function getDebateRoom(id: string): DebateRoom {
+  const room = DEBATE_ROOMS.find((r) => r.id === id);
+  if (!room) throw new Error(`Unknown debate room id: ${id}`);
+  return room;
+}
 
 export interface PopularDebate {
   id: string;
@@ -96,34 +103,15 @@ export const POPULAR_VOTES: PopularVote[] = [
   },
 ];
 
-export interface WaitingRoom {
-  id: string;
-  category: CategorySlug;
-  title: string;
+export interface WaitingRoom extends DebateRoom {
   filled: number;
   capacity: number;
 }
 
+// Reuses real DEBATE_ROOMS entries (with an open seat) so clicking "입장하기"
+// here can open the same seat-picking JoinModal the debates list uses.
 export const WAITING_ROOMS: WaitingRoom[] = [
-  {
-    id: "ai-replace-human",
-    category: "과학기술",
-    title: "AI가 인간을 대체할 수 있을까?",
-    filled: 6,
-    capacity: 10,
-  },
-  {
-    id: "military-duty",
-    category: "사회",
-    title: "병역 의무, 남성에게만 부과하는 것은 정당한가?",
-    filled: 4,
-    capacity: 8,
-  },
-  {
-    id: "looks-vs-conversation",
-    category: "연애",
-    title: "첫 만남에서 더 중요한 건 외모 vs 대화?",
-    filled: 3,
-    capacity: 6,
-  },
+  { ...getDebateRoom("age-gap-dating"), filled: 6, capacity: 10 },
+  { ...getDebateRoom("ai-judge"), filled: 4, capacity: 8 },
+  { ...getDebateRoom("tuition-fees"), filled: 3, capacity: 6 },
 ];

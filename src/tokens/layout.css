@@ -25,17 +25,23 @@
   --border-w: 1px;
 }
 
-body {
-  margin: 0;
-  background: var(--bg-page);
-  color: var(--text-1);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
-a {
-  color: var(--text-1);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--brand-yellow);
+/* @layer base so Tailwind utilities (always @layer utilities, higher
+   priority regardless of specificity) can override these defaults — e.g.
+   a component's own `hover:text-*` on a Link. Unlayered rules would always
+   win over utilities no matter how specific the utility's selector is. */
+@layer base {
+  body {
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: var(--text-1);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--brand-yellow);
+  }
 }
