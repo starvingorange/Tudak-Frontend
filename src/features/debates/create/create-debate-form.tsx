@@ -23,8 +23,14 @@ export function CreateDebateForm() {
   const [side, setSide] = useState<Side>("left");
   const [created, setCreated] = useState(false);
 
+  const valid =
+    topic.trim() !== "" &&
+    description.trim() !== "" &&
+    leftLabel.trim() !== "" &&
+    rightLabel.trim() !== "";
+
   const submit = () => {
-    if (!topic.trim()) return;
+    if (!valid) return;
     setCreated(true);
     setTimeout(() => setCreated(false), 2500);
   };
@@ -203,7 +209,13 @@ export function CreateDebateForm() {
       <button
         type="button"
         onClick={submit}
-        className="h-15 rounded-2xl bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] text-[17px] font-black font-sans cursor-pointer flex items-center justify-center gap-2.5 py-4 hover:brightness-[0.97]"
+        disabled={!valid}
+        className={cn(
+          "h-15 rounded-2xl text-[17px] font-black font-sans flex items-center justify-center gap-2.5 py-4",
+          valid
+            ? "bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] cursor-pointer hover:brightness-[0.97]"
+            : "bg-[var(--border-1)] text-[var(--text-3)] cursor-not-allowed",
+        )}
       >
         <MessageCircle size={20} strokeWidth={2.2} />
         토론방 생성하기
