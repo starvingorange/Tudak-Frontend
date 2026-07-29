@@ -1,19 +1,25 @@
-## Summary
+## 관련 이슈
 
-<!-- What does this PR do, and why? -->
+<!-- 이 PR이 머지되면 자동으로 닫히도록 이슈 번호를 적어주세요. 없으면 지워도 됩니다. -->
 
-## Changes
+Closes #
 
-<!-- Key files/areas touched. Bullet points are fine. -->
+## 요약
 
-## Test plan
+<!-- 이 PR이 무엇을 하는지, 왜 필요한지 -->
 
-<!-- How did you verify this? Commands run, routes/screens checked, edge cases considered. -->
+## 변경 사항
 
-- [ ] `pnpm lint`
+<!-- 주요 변경 파일/영역. 불릿 포인트로 정리해도 좋습니다. -->
+
+## 테스트 방법
+
+<!-- 어떻게 검증했는지 — 실행한 명령어, 확인한 라우트/화면, 고려한 엣지 케이스 -->
+
+- [ ] `pnpm lint:fix`
 - [ ] `pnpm build`
-- [ ] Manually verified in the browser (light + dark mode where relevant)
 
-## Screenshots
 
-<!-- If this touches UI, before/after screenshots help a lot. -->
+## 스크린샷
+
+<!-- UI 변경이라면 변경 전/후 스크린샷이 있으면 좋습니다. -->

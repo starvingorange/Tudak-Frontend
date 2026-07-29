@@ -11,7 +11,7 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
       alt={message.name}
       width={52}
       height={52}
-      className="w-[52px] h-[52px] rounded-full border border-[var(--border-1)] shrink-0 bg-[var(--bg-hero)]"
+      className="w-13 h-13 rounded-full border border-(--border-1) shrink-0 bg-(--bg-hero)"
     />
   );
   const meta = (
@@ -21,7 +21,7 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
       )}
       {isPro && (
         <span
-          className="text-white text-[11px] font-bold px-[9px] py-[3px] rounded-[var(--radius-pill)]"
+          className="text-white text-[11px] font-bold px-2.25 py-0.75 rounded-(--radius-pill)"
           style={{ background: color }}
         >
           찬성
@@ -30,7 +30,7 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
       <span className="text-[12.5px] text-[#909090]">{message.time}</span>
       {!isPro && (
         <span
-          className="text-white text-[11px] font-bold px-[9px] py-[3px] rounded-[var(--radius-pill)]"
+          className="text-white text-[11px] font-bold px-2.25 py-0.75 rounded-(--radius-pill)"
           style={{ background: color }}
         >
           반대
@@ -43,7 +43,7 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
   );
   const bubble = (
     <div
-      className="px-4 py-[13px] text-[15px] leading-relaxed whitespace-pre-line"
+      className="px-4 py-3.25 text-[15px] leading-relaxed whitespace-pre-line"
       style={{
         // Fixed dark text: this tint is always a light pastel in both themes,
         // so it can't use the theme's (theme-flipping) --text-1 color.
@@ -85,7 +85,7 @@ function PlaybackButton({ color }: { color: string }) {
     <button
       type="button"
       title="음성 다시 듣기"
-      className="w-[34px] h-[34px] rounded-full border border-[var(--border-1)] bg-[var(--bg-card)] inline-flex items-center justify-center cursor-pointer shrink-0"
+      className="w-8.5 h-8.5 rounded-full border border-(--border-1) bg-(--bg-card) inline-flex items-center justify-center cursor-pointer shrink-0"
       style={{ color }}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -98,7 +98,7 @@ function PlaybackButton({ color }: { color: string }) {
 
 export function ChatLog({ messages }: { messages: TranscriptMessage[] }) {
   return (
-    <section className="bg-[var(--bg-card)] border border-[var(--border-1)] rounded-2xl mt-6 p-[26px_28px] flex flex-col gap-[26px]">
+    <section className="bg-(--bg-card) border border-(--border-1) rounded-2xl mt-6 p-[26px_28px] flex flex-col gap-6.5">
       {messages.map((message) => (
         <ChatBubble
           key={`${message.side}-${message.time}-${message.text.slice(0, 8)}`}

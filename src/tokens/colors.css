@@ -33,6 +33,8 @@
   --text-label: #555555;
   --poll-track: #ececec;
   --btn-outline-fg: #333333;
+  --bg-unread: #fffdf5;
+  --divider: #f3f1ec;
 }
 
 .dark {
@@ -47,4 +49,6 @@
   --text-label: #c9c9c9;
   --poll-track: #3a3a3a;
   --btn-outline-fg: #ffc227;
+  --bg-unread: #26282c;
+  --divider: #2a2d31;
 }
