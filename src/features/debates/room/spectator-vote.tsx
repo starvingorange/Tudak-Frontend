@@ -69,9 +69,10 @@ export function SpectatorVote({
           <Image
             src="/assets/stickers/st-pro-basic.png"
             alt="찬성"
-            width={64}
-            height={64}
-            className="h-16 w-auto"
+            width={190}
+            height={165}
+            style={{ width: "auto" }}
+            className="h-16"
           />
           <span className="flex flex-col items-start gap-1">
             <span className="text-base font-extrabold text-[var(--vote-blue)]">
@@ -96,9 +97,10 @@ export function SpectatorVote({
           <Image
             src="/assets/stickers/st-con-basic.png"
             alt="반대"
-            width={64}
-            height={64}
-            className="h-16 w-auto"
+            width={200}
+            height={158}
+            style={{ width: "auto" }}
+            className="h-16"
           />
           <span className="flex flex-col items-start gap-1">
             <span className="text-base font-extrabold text-[var(--vote-red)]">

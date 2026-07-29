@@ -24,12 +24,14 @@ export function Navbar() {
             src="/assets/logo-nav-light.png"
             alt="투닭"
             fill
+            sizes="132px"
             className="object-contain object-left dark:hidden"
           />
           <Image
             src="/assets/logo-nav-dark.png"
             alt="투닭"
             fill
+            sizes="132px"
             className="object-contain object-left hidden dark:block"
           />
         </Link>
@@ -57,13 +59,15 @@ export function Navbar() {
           {/* 추후 다크 모드 필요시 활성화 */}
           {/* <ThemeToggle /> */}
           <NotificationBell />
-          <Image
-            src="/assets/avatar.png"
-            alt="프로필"
-            width={40}
-            height={40}
-            className="rounded-full block"
-          />
+          <Link href="/mypage" className="block shrink-0">
+            <Image
+              src="/assets/avatar.png"
+              alt="프로필"
+              width={40}
+              height={40}
+              className="rounded-full block"
+            />
+          </Link>
         </div>
       </div>
     </nav>

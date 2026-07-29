@@ -13,8 +13,6 @@ export interface DebateResult {
   rightComment: string;
   aiSummary: string;
   missedPoint: string;
-  replayTotalSeconds: number;
-  replayElapsedSeconds: number;
 }
 
 // The one fully-authored example, written for this app's actual mint-choco
@@ -38,8 +36,6 @@ const MINT_CHOCO: DebateResult = {
     '결국 "디저트를 어떻게 정의할지"에 대한 기준 차이에서 비롯된 논쟁으로 보여요.',
   missedPoint:
     "디저트로 분류되지 않지만 자주 소비되는 다른 식품과의 비교는 두 분 다 다루지 않았어요.",
-  replayTotalSeconds: 720,
-  replayElapsedSeconds: 268,
 };
 
 export function getDebateResult(id: string): DebateResult | null {

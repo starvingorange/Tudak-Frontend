@@ -14,12 +14,14 @@ export function Footer() {
             src="/assets/footer-chick-light.png"
             alt="투닭 캐릭터"
             fill
+            sizes="130px"
             className="object-contain dark:hidden"
           />
           <Image
             src="/assets/footer-chick-dark.png"
             alt="투닭 캐릭터"
             fill
+            sizes="130px"
             className="object-contain hidden dark:block"
           />
         </div>
@@ -29,12 +31,14 @@ export function Footer() {
               src="/assets/logo-footer-light2.png"
               alt="투닭"
               fill
+              sizes="72px"
               className="object-contain object-left dark:hidden"
             />
             <Image
               src="/assets/logo-footer-dark2.png"
               alt="투닭"
               fill
+              sizes="72px"
               className="object-contain object-left hidden dark:block"
             />
           </div>

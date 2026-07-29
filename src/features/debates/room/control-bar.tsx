@@ -46,9 +46,10 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
           <Image
             src="/assets/stickers/st-pro-happy.png"
             alt="이모티콘"
-            width={30}
-            height={30}
-            className="h-[30px] w-auto"
+            width={175}
+            height={172}
+            style={{ width: "auto" }}
+            className="h-[30px]"
           />
         </button>
 
@@ -84,15 +85,19 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
         </div>
 
         {reactions.map((r) => (
-          <Image
+          <span
             key={r.id}
-            src={`/assets/stickers/${r.sticker}.png`}
-            alt="반응"
-            width={88}
-            height={88}
-            className="absolute bottom-[76px] h-[88px] w-auto pointer-events-none [animation:tdk-react-pop_1.6s_ease-out_forwards]"
+            className="absolute bottom-[76px] w-[88px] h-[88px] pointer-events-none [animation:tdk-react-pop_1.6s_ease-out_forwards]"
             style={{ left: r.left }}
-          />
+          >
+            <Image
+              src={`/assets/stickers/${r.sticker}.png`}
+              alt="반응"
+              fill
+              sizes="88px"
+              className="object-contain"
+            />
+          </span>
         ))}
       </div>
     </div>

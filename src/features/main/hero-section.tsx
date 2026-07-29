@@ -8,16 +8,19 @@ export function HeroSection() {
       <Image
         src="/assets/hero-light.png"
         alt="투닭 캐릭터"
-        width={420}
+        width={526}
         height={330}
-        className="absolute right-0 bottom-0 h-full w-auto block dark:hidden"
+        priority
+        style={{ width: "auto" }}
+        className="absolute right-0 bottom-0 h-full block dark:hidden"
       />
       <Image
         src="/assets/hero-dark.png"
         alt="투닭 캐릭터"
-        width={420}
+        width={526}
         height={330}
-        className="absolute right-0 bottom-0 h-full w-auto hidden dark:block"
+        style={{ width: "auto" }}
+        className="absolute right-0 bottom-0 h-full hidden dark:block"
       />
       <div className="relative z-1 pt-9.5 pl-17 max-w-105">
         <div className="relative w-54 h-13">
@@ -25,12 +28,14 @@ export function HeroSection() {
             src="/assets/logo-hero-light.png"
             alt="투닭"
             fill
+            sizes="216px"
             className="object-contain object-left dark:hidden"
           />
           <Image
             src="/assets/logo-hero-dark.png"
             alt="투닭"
             fill
+            sizes="216px"
             className="object-contain object-left hidden dark:block"
           />
         </div>

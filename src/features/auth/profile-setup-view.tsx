@@ -14,17 +14,18 @@ export function ProfileSetupView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [nickname, setNickname] = useState("");
-  const [done, setDone] = useState(false);
 
   const trimmedLength = nickname.trim().length;
   const valid =
     trimmedLength >= MIN_NICKNAME_LENGTH &&
     trimmedLength <= MAX_NICKNAME_LENGTH;
+  // Real availability can only be confirmed by the backend on save, so this
+  // hint only ever flags an invalid format — it never claims a name is free.
   const hint =
     nickname.length === 0
       ? "2~12자, 한글·영문·숫자를 쓸 수 있어요."
       : valid
-        ? "사용할 수 있는 닉네임이에요!"
+        ? ""
         : "2자 이상 입력해주세요.";
 
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -35,8 +36,7 @@ export function ProfileSetupView() {
 
   const submit = () => {
     if (!valid) return;
-    setDone(true);
-    setTimeout(() => router.push("/"), 1200);
+    router.push("/");
   };
 
   return (
@@ -47,12 +47,14 @@ export function ProfileSetupView() {
             src="/assets/logo-hero-light.png"
             alt="투닭"
             fill
+            sizes="140px"
             className="object-contain dark:hidden"
           />
           <Image
             src="/assets/logo-hero-dark.png"
             alt="투닭"
             fill
+            sizes="140px"
             className="object-contain hidden dark:block"
           />
         </div>
@@ -98,19 +100,14 @@ export function ProfileSetupView() {
           <div className="relative">
             <input
               value={nickname}
-              onChange={(e) => {
-                setNickname(e.target.value);
-                setDone(false);
-              }}
+              onChange={(e) => setNickname(e.target.value)}
               maxLength={MAX_NICKNAME_LENGTH}
               placeholder="닉네임을 입력해주세요"
               className={cn(
                 "w-full h-[54px] rounded-2xl border-[1.5px] pr-[76px] pl-[18px] text-[15px] font-bold box-border bg-[var(--bg-card)] outline-none",
-                nickname.length === 0
-                  ? "border-[var(--border-1)]"
-                  : valid
-                    ? "border-[#3BC96B]"
-                    : "border-[#FF6B6B]",
+                !valid && nickname.length > 0
+                  ? "border-[#FF6B6B]"
+                  : "border-[var(--border-1)]",
               )}
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--text-3)]">
@@ -120,11 +117,9 @@ export function ProfileSetupView() {
           <div
             className={cn(
               "text-[13px] min-h-[18px]",
-              nickname.length === 0
+              nickname.length === 0 || valid
                 ? "text-[var(--text-3)]"
-                : valid
-                  ? "text-[#1F9D55]"
-                  : "text-[var(--brand-yellow)]",
+                : "text-[#FF6B6B]",
             )}
           >
             {hint}
@@ -143,11 +138,6 @@ export function ProfileSetupView() {
         >
           투닭 시작하기
         </button>
-        {done && (
-          <div className="w-full rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.5 px-4.5 box-border">
-            환영해요, {nickname}님! 🐔
-          </div>
-        )}
       </div>
     </>
   );
