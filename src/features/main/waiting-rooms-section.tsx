@@ -13,21 +13,30 @@ export function WaitingRoomsSection() {
   const [openRoom, setOpenRoom] = useState<DebateRoom | null>(null);
 
   return (
-    <section className="bg-(--bg-surface) border border-(--border-1) rounded-(--radius-section) mt-7 p-[24px_28px_26px]">
+    <section className="mt-5 rounded-(--radius-section) border border-(--border-1) bg-(--bg-surface) p-4 sm:mt-7 sm:p-[24px_28px_26px]">
       <SectionHeader
         icon={<Clock size={18} className="text-(--text-1)" />}
         title="대기 중인 방"
         moreHref="/debates"
       />
-      <div className="flex flex-col gap-2.5 mt-4.5">
+      <div className="mt-4 flex flex-col gap-3 sm:mt-4.5 sm:gap-2.5">
         {WAITING_ROOMS.map((room) => (
           <div
             key={room.id}
-            className="flex items-center gap-4 bg-(--bg-card) border border-(--border-1) rounded-(--radius-row) p-[12px_16px]"
+            className="flex flex-col items-stretch gap-3 rounded-(--radius-row) border border-(--border-1) bg-(--bg-card) p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-[12px_16px]"
           >
-            <CategoryBadge category={room.category} className="shrink-0" />
-            <span className="flex-1 text-[15px] font-bold">{room.title}</span>
-            <Button size="sm" onClick={() => setOpenRoom(room)}>
+            <CategoryBadge
+              category={room.category}
+              className="shrink-0 self-start"
+            />
+            <span className="flex-1 text-[15px] leading-relaxed font-bold">
+              {room.title}
+            </span>
+            <Button
+              size="sm"
+              className="justify-center sm:justify-start"
+              onClick={() => setOpenRoom(room)}
+            >
               입장하기
             </Button>
           </div>
