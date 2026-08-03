@@ -24,7 +24,7 @@ export function VoteList() {
 
   return (
     <>
-      <div className="mt-4 flex flex-col gap-4 rounded-(--radius-section) border border-(--border-1) p-4 sm:mt-6 sm:items-end sm:gap-6 sm:p-[18px_22px] lg:flex-row">
+      <div className="mt-4 flex flex-col gap-3 rounded-(--radius-section) border border-(--border-1) p-3.5 sm:mt-6 sm:items-end sm:gap-6 sm:p-[18px_22px] lg:flex-row">
         <div className="flex-1">
           <div className="mt-0 sm:mt-2.5">
             <CategoryTabBar active={tab} onChange={setTab} />
@@ -37,7 +37,7 @@ export function VoteList() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 sm:mt-5.5 sm:gap-3.5">
+      <div className="mt-3.5 flex flex-col gap-2.5 sm:mt-5.5 sm:gap-3.5">
         {rows.map((vote) => (
           <VoteRow key={vote.id} vote={vote} />
         ))}

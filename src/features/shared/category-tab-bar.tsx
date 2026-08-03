@@ -35,7 +35,8 @@ const TAB_ICONS: Record<ListFilter, React.ElementType> = {
 };
 
 const CANDIDATES: ListFilter[] = ["전체", ...LIST_FILTER_CATEGORIES];
-const GAP_PX = 12; // matches gap-3 below
+const MOBILE_GAP_PX = 8;
+const DESKTOP_GAP_PX = 12; // matches sm:gap-3 below
 
 interface CategoryTabBarProps {
   active: ListFilter;
@@ -62,11 +63,12 @@ export function CategoryTabBar({ active, onChange }: CategoryTabBarProps) {
 
     const recalc = () => {
       const containerWidth = row.clientWidth;
+      const gapPx = window.innerWidth < 640 ? MOBILE_GAP_PX : DESKTOP_GAP_PX;
       const widths = measureRefs.current.map(
         (el) => el?.getBoundingClientRect().width ?? 0,
       );
       const totalWidth = widths.reduce(
-        (sum, w, i) => sum + w + (i > 0 ? GAP_PX : 0),
+        (sum, w, i) => sum + w + (i > 0 ? gapPx : 0),
         0,
       );
 
@@ -77,11 +79,11 @@ export function CategoryTabBar({ active, onChange }: CategoryTabBarProps) {
 
       const moreWidth =
         moreMeasureRef.current?.getBoundingClientRect().width ?? 0;
-      const budget = containerWidth - moreWidth - GAP_PX;
+      const budget = containerWidth - moreWidth - gapPx;
       let used = 0;
       let count = 0;
       for (let i = 0; i < widths.length; i++) {
-        const next = used + widths[i] + (i > 0 ? GAP_PX : 0);
+        const next = used + widths[i] + (i > 0 ? gapPx : 0);
         if (next > budget && i > 0) break;
         used = next;
         count = i + 1;
@@ -104,37 +106,39 @@ export function CategoryTabBar({ active, onChange }: CategoryTabBarProps) {
       {/* Ghost row: same buttons, invisible, used only to measure natural widths. */}
       <div
         aria-hidden
-        className="absolute top-0 left-0 flex gap-3 invisible pointer-events-none -z-10"
+        className="pointer-events-none absolute inset-x-0 top-0 h-0 overflow-hidden -z-10"
       >
-        {CANDIDATES.map((tab, i) => {
-          const Icon = TAB_ICONS[tab];
-          return (
-            <button
-              key={tab}
-              type="button"
-              tabIndex={-1}
-              ref={(el) => {
-                measureRefs.current[i] = el;
-              }}
-              className={dropdownTriggerClass(false)}
-            >
-              <Icon size={16} />
-              {tab}
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          tabIndex={-1}
-          ref={moreMeasureRef}
-          className={dropdownTriggerClass(false)}
-        >
-          <MoreHorizontal size={16} />
-          기타
-        </button>
+        <div className="flex w-max gap-2 opacity-0 sm:gap-3">
+          {CANDIDATES.map((tab, i) => {
+            const Icon = TAB_ICONS[tab];
+            return (
+              <button
+                key={tab}
+                type="button"
+                tabIndex={-1}
+                ref={(el) => {
+                  measureRefs.current[i] = el;
+                }}
+                className={dropdownTriggerClass(false)}
+              >
+                <Icon size={16} />
+                {tab}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            tabIndex={-1}
+            ref={moreMeasureRef}
+            className={dropdownTriggerClass(false)}
+          >
+            <MoreHorizontal size={16} />
+            기타
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         {visible.map((tab) => {
           const Icon = TAB_ICONS[tab];
           return (

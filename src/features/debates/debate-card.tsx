@@ -19,18 +19,20 @@ function Seat({
     return (
       <div className="flex flex-col items-center gap-2">
         <span
-          className="w-[72px] h-[72px] rounded-full bg-[var(--bg-card)] border-2 border-dashed inline-flex items-center justify-center text-[26px] font-extrabold box-border"
+          className="inline-flex h-15 w-15 items-center justify-center rounded-full border-2 border-dashed bg-[var(--bg-card)] text-2xl font-extrabold box-border sm:h-[72px] sm:w-[72px] sm:text-[26px]"
           style={{ borderColor: "#d8d5cf", color: "#c2beb6" }}
         >
           ?
         </span>
         <span
-          className="border text-[11px] font-bold px-[11px] py-[3px] rounded-[var(--radius-pill)]"
+          className="rounded-[var(--radius-pill)] border px-[10px] py-[3px] text-[11px] font-bold sm:px-[11px]"
           style={{ borderColor: "#d8d5cf", color: "#909090" }}
         >
           {label}
         </span>
-        <span className="text-[13.5px] font-bold text-[#909090]">공석</span>
+        <span className="text-[13px] font-bold text-[#909090] sm:text-[13.5px]">
+          공석
+        </span>
       </div>
     );
   }
@@ -38,24 +40,27 @@ function Seat({
   return (
     <div className="flex flex-col items-center gap-2">
       <span
-        className="relative w-[72px] h-[72px] rounded-full border-2 inline-flex items-center justify-center overflow-hidden"
+        className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-[72px] sm:w-[72px]"
         style={{ background: tint, borderColor: color }}
       >
         <Image
           src={`/assets/stickers/${seat.sticker}.png`}
           alt={label}
           fill
-          sizes="72px"
+          sizes="(max-width: 639px) 60px, 72px"
           className="object-contain p-2"
         />
       </span>
       <span
-        className="text-white text-[11px] font-bold px-[11px] py-[3px] rounded-[var(--radius-pill)]"
+        className="rounded-[var(--radius-pill)] px-[10px] py-[3px] text-[11px] font-bold text-white sm:px-[11px]"
         style={{ background: color }}
       >
         {label}
       </span>
-      <span className="text-[13.5px] font-extrabold" style={{ color }}>
+      <span
+        className="max-w-full truncate text-[13px] font-extrabold sm:text-[13.5px]"
+        style={{ color }}
+      >
         {seat.name}
       </span>
     </div>
@@ -71,29 +76,36 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
   const isFull = room.pro !== null && room.con !== null;
 
   return (
-    <div className="border border-(--border-1) rounded-(--radius-card) px-5.5 py-5 flex flex-col hover:border-(--brand-yellow)">
-      <CategoryBadge category={room.category} className="self-start" />
-      <div className="text-lg font-extrabold leading-snug tracking-[-0.3px] mt-3.5 min-h-12.5">
+    <div className="flex flex-col rounded-(--radius-card) border border-(--border-1) px-3.5 py-3.5 hover:border-(--brand-yellow) sm:px-5.5 sm:py-5">
+      <CategoryBadge
+        category={room.category}
+        className="self-start px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.25 sm:text-xs"
+      />
+      <div className="mt-2.5 text-[16px] font-extrabold leading-snug tracking-[-0.3px] sm:mt-3.5 sm:min-h-12.5 sm:text-lg">
         {room.title}
       </div>
-      <div className="grid grid-cols-[1fr_34px_1fr] items-center mt-4">
+      <div className="mt-3.5 grid grid-cols-[1fr_20px_1fr] items-center sm:mt-4 sm:grid-cols-[1fr_34px_1fr]">
         <Seat side="pro" seat={room.pro} />
-        <span className="text-center text-sm font-extrabold text-[#909090]">
+        <span className="text-center text-[12px] font-extrabold text-[#909090] sm:text-sm">
           VS
         </span>
         <Seat side="con" seat={room.con} />
       </div>
       <div className="flex-1" />
-      <div className="flex justify-end mt-4.5 pt-4 border-t border-(--border-1)">
+      <div className="mt-3.5 flex justify-stretch border-t border-(--border-1) pt-3.5 sm:mt-4.5 sm:justify-end sm:pt-4">
         {isFull ? (
           <Link
             href={`/debates/${room.id}`}
-            className="inline-flex items-center gap-1.75 text-[13px] font-extrabold px-5 py-2.25 rounded-lg text-(--text-1) border border-(--border-1) hover:border-(--brand-yellow)"
+            className="inline-flex w-full items-center justify-center gap-1.75 rounded-lg border border-(--border-1) px-5 py-2.25 text-[13px] font-extrabold text-(--text-1) hover:border-(--brand-yellow) sm:w-auto"
           >
             관전하기
           </Link>
         ) : (
-          <Button size="sm" onClick={() => onJoin(room)}>
+          <Button
+            size="sm"
+            className="w-full justify-center sm:w-auto"
+            onClick={() => onJoin(room)}
+          >
             참여하기
           </Button>
         )}
