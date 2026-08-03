@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "api:generate": "orval --config orval.config.ts --formatter biome",
+    "api:watch": "orval --config orval.config.ts --watch --formatter biome",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -34,6 +36,7 @@
     "@types/react-dom": "^19",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
+    "orval": "^8.23.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
