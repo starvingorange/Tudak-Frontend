@@ -15,7 +15,7 @@ export function CategoryBadge({
   return (
     <span
       className={cn(
-        "inline-block text-(--cat-fg) font-sans text-xs font-bold px-3 py-1.25 rounded-(--radius-pill) whitespace-nowrap",
+        "inline-block w-fit self-start whitespace-nowrap rounded-(--radius-pill) px-3 py-1.25 font-sans text-xs font-bold text-(--cat-fg)",
         className,
       )}
       style={{ background: CATEGORIES[category].colorVar, ...style }}

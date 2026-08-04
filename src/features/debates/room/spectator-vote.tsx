@@ -45,10 +45,10 @@ export function SpectatorVote({
   };
 
   return (
-    <section className="max-w-[720px] mx-auto mt-6 bg-[var(--bg-card)] border border-[var(--border-1)] rounded-2xl p-[26px_28px] box-border">
-      <div className="flex items-center gap-2.5">
+    <section className="mx-auto mt-6 box-border max-w-[720px] rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] p-4 sm:p-[26px_28px]">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2.5">
         <SquareCheckBig size={18} />
-        <span className="text-lg font-extrabold flex-1">
+        <span className="flex-1 text-lg font-extrabold">
           어느 입장에 공감하시나요?
         </span>
         <span className="text-[13px] text-[#909090]">
@@ -60,7 +60,7 @@ export function SpectatorVote({
         있습니다.
       </div>
 
-      <div className="grid grid-cols-2 gap-3.5 mt-[18px]">
+      <div className="mt-[18px] grid gap-3.5 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setMyVote("pro")}
@@ -72,10 +72,10 @@ export function SpectatorVote({
             width={190}
             height={165}
             style={{ width: "auto" }}
-            className="h-16"
+            className="h-14 sm:h-16"
           />
           <span className="flex flex-col items-start gap-1">
-            <span className="text-base font-extrabold text-[var(--vote-blue)]">
+            <span className="text-[15px] font-extrabold text-[var(--vote-blue)] sm:text-base">
               찬성 · {proName}
             </span>
             <span
@@ -100,10 +100,10 @@ export function SpectatorVote({
             width={200}
             height={158}
             style={{ width: "auto" }}
-            className="h-16"
+            className="h-14 sm:h-16"
           />
           <span className="flex flex-col items-start gap-1">
-            <span className="text-base font-extrabold text-[var(--vote-red)]">
+            <span className="text-[15px] font-extrabold text-[var(--vote-red)] sm:text-base">
               반대 · {conName}
             </span>
             <span
@@ -120,7 +120,7 @@ export function SpectatorVote({
       </div>
 
       {myVote && (
-        <div className="mt-5 flex items-center justify-center gap-3.5">
+        <div className="mt-5 flex flex-col items-start gap-2 text-left sm:items-center sm:justify-center sm:gap-3.5 sm:text-center">
           <span
             className="text-sm font-extrabold"
             style={{

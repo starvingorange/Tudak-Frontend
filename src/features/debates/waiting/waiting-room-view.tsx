@@ -35,38 +35,40 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
   };
 
   return (
-    <div className="max-w-[960px] mx-auto px-4 py-8 min-h-[calc(100dvh-var(--nav-height))] flex flex-col justify-between gap-6">
+    <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-[960px] flex-col justify-between gap-6 px-4 py-6 sm:py-8">
       <div className="flex flex-col justify-between gap-5">
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm font-extrabold text-[var(--brand-yellow)] tracking-wide">
             토론 대기방
           </span>
-          <h1 className="text-center text-4xl font-black tracking-[-0.5px] m-0">
+          <h1 className="m-0 text-center text-3xl font-black tracking-[-0.5px] sm:text-4xl">
             {room.topic}
           </h1>
         </div>
 
-        <div className="bg-[var(--bg-hero)] rounded-2xl p-6 flex flex-col gap-3.5">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-[var(--text-2)] w-20 shrink-0">
+        <div className="flex flex-col gap-3.5 rounded-2xl bg-[var(--bg-hero)] p-4 sm:p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <span className="w-20 shrink-0 text-sm font-bold text-[var(--text-2)]">
               카테고리
             </span>
-            <span className="w-px h-[18px] bg-[var(--border-1)]" />
+            <span className="hidden h-[18px] w-px bg-[var(--border-1)] sm:block" />
             <CategoryBadge category={room.category} />
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-[var(--text-2)] w-20 shrink-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <span className="w-20 shrink-0 text-sm font-bold text-[var(--text-2)]">
               안건 설명
             </span>
-            <span className="w-px h-[18px] bg-[var(--border-1)]" />
-            <span className="text-[15px] font-bold">{room.description}</span>
+            <span className="hidden h-[18px] w-px bg-[var(--border-1)] sm:block" />
+            <span className="text-[15px] font-bold leading-relaxed">
+              {room.description}
+            </span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-[var(--text-2)] w-20 shrink-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <span className="w-20 shrink-0 text-sm font-bold text-[var(--text-2)]">
               발언 시간
             </span>
-            <span className="w-px h-[18px] bg-[var(--border-1)]" />
-            <span className="text-[15px] font-bold">
+            <span className="hidden h-[18px] w-px bg-[var(--border-1)] sm:block" />
+            <span className="text-[15px] font-bold leading-relaxed">
               1인당 7분{" "}
               <span className="font-semibold text-[13px] text-[var(--text-2)]">
                 (입론+반론 6분 · 최종발언 1분)
@@ -75,14 +77,14 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-6">
+        <div className="grid items-stretch gap-4 sm:gap-6 md:grid-cols-[1fr_auto_1fr]">
           <WaitingSeat
             label="찬성"
             stance={room.proStance}
             seat={room.pro}
             color="var(--vote-blue)"
           />
-          <div className="text-[34px] font-black text-[var(--text-3)] self-center px-2">
+          <div className="self-center justify-self-center px-2 text-[28px] font-black text-[var(--text-3)] md:text-[34px]">
             VS
           </div>
           <WaitingSeat
@@ -97,14 +99,14 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2.5">
           <div className="text-base font-extrabold">초대 링크</div>
-          <div className="flex gap-3.5">
-            <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border-1)] rounded-2xl px-5 py-4 text-base text-[var(--text-2)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-3.5">
+            <div className="min-w-0 flex-1 break-all rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] px-4 py-4 text-sm text-[var(--text-2)] sm:px-5 sm:text-base">
               {inviteLink}
             </div>
             <button
               type="button"
               onClick={copyInvite}
-              className="flex items-center gap-2 h-14 px-6 rounded-2xl border-[1.5px] border-[var(--brand-yellow)] bg-[var(--bg-card)] text-[15px] font-extrabold cursor-pointer whitespace-nowrap shrink-0 hover:bg-[var(--bg-hero)]"
+              className="flex h-14 shrink-0 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-[var(--brand-yellow)] bg-[var(--bg-card)] px-6 text-[15px] font-extrabold whitespace-nowrap hover:bg-[var(--bg-hero)] sm:self-auto"
             >
               {copyLabel}
             </button>
@@ -146,7 +148,7 @@ function WaitingSeat({
 }) {
   return (
     <div
-      className="flex flex-col items-center justify-center gap-3 bg-[var(--bg-card)] border-2 rounded-2xl px-5 py-6"
+      className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 bg-[var(--bg-card)] px-4 py-5 sm:px-5 sm:py-6"
       style={{ borderColor: seat ? color : "var(--border-1)" }}
     >
       <div
@@ -155,7 +157,7 @@ function WaitingSeat({
       >
         {label}
       </div>
-      <div className="relative rounded-2xl px-[22px] py-3.5 text-[15px] font-bold bg-[var(--bg-hero)] text-center">
+      <div className="relative rounded-2xl bg-[var(--bg-hero)] px-4 py-3 text-center text-sm font-bold leading-relaxed sm:px-[22px] sm:py-3.5 sm:text-[15px]">
         {stance}
       </div>
       {seat ? (
@@ -165,16 +167,18 @@ function WaitingSeat({
             alt={seat.name}
             width={120}
             height={120}
-            className="w-[120px] h-[120px] object-contain bg-[var(--bg-hero)] border border-[var(--border-1)] rounded-full"
+            className="h-24 w-24 rounded-full border border-[var(--border-1)] bg-[var(--bg-hero)] object-contain sm:h-[120px] sm:w-[120px]"
           />
-          <div className="text-xl font-black">{seat.name}</div>
+          <div className="text-center text-lg font-black sm:text-xl">
+            {seat.name}
+          </div>
           <div className="flex items-center gap-2 text-[15px] font-bold text-[#B08A00]">
             <span className="w-[9px] h-[9px] rounded-full bg-[var(--brand-yellow)]" />
             대기 중
           </div>
         </>
       ) : (
-        <div className="w-[120px] h-[120px] rounded-full border border-dashed border-[var(--border-1)] flex items-center justify-center text-[13px] text-[var(--text-3)] text-center px-4">
+        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-[var(--border-1)] px-4 text-center text-[13px] text-[var(--text-3)] sm:h-[120px] sm:w-[120px]">
           참가자를
           <br />
           기다리는 중

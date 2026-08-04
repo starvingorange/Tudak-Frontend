@@ -3,6 +3,7 @@
 import { Mic } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useDismissableOpen } from "@/lib/use-dismissable-open";
 import { cn } from "@/lib/utils";
 import { EmojiPicker } from "./emoji-picker";
 
@@ -16,6 +17,10 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
   const [talking, setTalking] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
+  const pickerRef = useDismissableOpen<HTMLDivElement>(
+    pickerOpen,
+    setPickerOpen,
+  );
 
   const react = (sticker: string) => {
     const id = Date.now() + Math.random();
@@ -31,29 +36,31 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
 
   return (
     <div className="sticky bottom-0 z-20 bg-[var(--bg-surface)] border-t border-[var(--border-1)]">
-      <div className="max-w-[1180px] mx-auto p-[14px_16px] flex items-center justify-center gap-7 relative">
-        <button
-          type="button"
-          title="이모티콘"
-          onClick={() => setPickerOpen((v) => !v)}
-          className={cn(
-            "w-12 h-12 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-[var(--bg-hero)]",
-            pickerOpen
-              ? "border-[1.5px] border-[var(--brand-yellow)] bg-[#fff8e8]"
-              : "border border-[var(--border-1)] bg-[var(--bg-card)]",
-          )}
-        >
-          <Image
-            src="/assets/stickers/st-pro-happy.png"
-            alt="이모티콘"
-            width={175}
-            height={172}
-            style={{ width: "auto" }}
-            className="h-[30px]"
-          />
-        </button>
+      <div className="relative mx-auto flex max-w-[1180px] flex-col items-center gap-3 p-[14px_16px] sm:flex-row sm:justify-center sm:gap-7">
+        <div ref={pickerRef} className="relative self-start sm:self-auto">
+          <button
+            type="button"
+            title="이모티콘"
+            onClick={() => setPickerOpen((v) => !v)}
+            className={cn(
+              "inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full hover:bg-[var(--bg-hero)]",
+              pickerOpen
+                ? "border-[1.5px] border-[var(--brand-yellow)] bg-[#fff8e8]"
+                : "border border-[var(--border-1)] bg-[var(--bg-card)]",
+            )}
+          >
+            <Image
+              src="/assets/stickers/st-pro-happy.png"
+              alt="이모티콘"
+              width={175}
+              height={172}
+              style={{ width: "auto" }}
+              className="h-[30px]"
+            />
+          </button>
 
-        {pickerOpen && <EmojiPicker onSend={react} />}
+          {pickerOpen && <EmojiPicker onSend={react} />}
+        </div>
 
         <button
           type="button"
@@ -61,8 +68,10 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
           onMouseDown={() => myTurn && setTalking(true)}
           onMouseUp={() => setTalking(false)}
           onMouseLeave={() => setTalking(false)}
+          onTouchStart={() => myTurn && setTalking(true)}
+          onTouchEnd={() => setTalking(false)}
           className={cn(
-            "inline-flex items-center gap-2.5 text-base font-extrabold px-[34px] py-3.5 rounded-full border-none transition-transform",
+            "inline-flex w-full items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:px-[34px]",
             !myTurn
               ? "bg-[#efedea] text-[#a3a09a] cursor-not-allowed"
               : isTalking
@@ -78,7 +87,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
               : "누르고 말하기"}
         </button>
 
-        <div className="w-[220px] text-[13px] text-[#909090]">
+        <div className="w-full max-w-[320px] text-center text-[13px] text-[#909090] sm:w-[220px] sm:text-left">
           {!myTurn
             ? "내 차례가 되면 버튼이 활성화돼요. 이모티콘으로 의사를 표현해 보세요!"
             : "버튼을 누르고 있는 동안 발언이 전달돼요."}

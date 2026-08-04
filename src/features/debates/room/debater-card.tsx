@@ -23,7 +23,7 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
   if (!debater) {
     return (
       <section
-        className="relative bg-[var(--bg-card)] border rounded-2xl p-6 flex items-center justify-center min-h-[190px]"
+        className="relative flex min-h-[170px] items-center justify-center rounded-2xl border bg-[var(--bg-card)] p-5 sm:min-h-[190px] sm:p-6"
         style={{ borderColor: color }}
       >
         <span
@@ -49,14 +49,14 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       height={POSE_SIZE[pose].height}
       priority
       style={{ height: "auto" }}
-      className="w-[clamp(120px,14vw,190px)] mt-[26px]"
+      className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-[26px] sm:w-[clamp(120px,14vw,190px)]"
     />
   );
 
   const content = (
-    <div className="flex-1 min-w-0">
+    <div className="min-w-0 flex-1">
       <div
-        className={`flex items-center gap-2.5 ${isPro ? "" : "justify-end"}`}
+        className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
       >
         {!isPro && (
           <span
@@ -66,7 +66,7 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
             {debater.speaking ? "발언 중" : "대기 중"}
           </span>
         )}
-        <span className="text-[19px] font-extrabold whitespace-nowrap">
+        <span className="text-[17px] font-extrabold sm:text-[19px]">
           {debater.name}
         </span>
         {isPro && (
@@ -78,12 +78,12 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
           </span>
         )}
       </div>
-      <div className="mt-3 bg-[var(--bg-hero)] rounded-xl p-[14px_16px] text-[15px] leading-relaxed whitespace-pre-line">
+      <div className="mt-3 rounded-xl bg-[var(--bg-hero)] p-[14px_16px] text-[14px] leading-relaxed whitespace-pre-line sm:text-[15px]">
         {debater.statement}
       </div>
       <div className="mt-3.5 text-[13px] text-[var(--text-2)]">남은 시간</div>
       <div
-        className="text-[34px] font-extrabold tracking-wide leading-tight"
+        className="text-[30px] leading-tight font-extrabold tracking-wide sm:text-[34px]"
         style={{ color }}
       >
         {debater.remainingLabel}
@@ -99,7 +99,7 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
 
   return (
     <section
-      className="relative bg-[var(--bg-card)] border rounded-2xl p-6 flex gap-[22px] items-center"
+      className="relative flex flex-col items-center gap-4 rounded-2xl border bg-[var(--bg-card)] p-5 text-left sm:gap-[22px] sm:p-6 md:flex-row"
       style={{ borderColor: color }}
     >
       <span
@@ -115,8 +115,8 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
         </>
       ) : (
         <>
-          {content}
           {image}
+          {content}
         </>
       )}
     </section>
