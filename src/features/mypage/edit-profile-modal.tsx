@@ -53,17 +53,17 @@ export function EditProfileModal({
     // biome-ignore lint/a11y/noStaticElementInteractions: role="presentation" backdrop with click-outside-to-close is a standard modal pattern; every real control inside the dialog is a proper button.
     <div
       role="presentation"
-      className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-3 py-4 sm:px-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className="bg-(--bg-card) rounded-3xl w-105 max-w-[92vw] p-9 box-border flex flex-col items-center gap-6"
+        className="box-border flex max-h-[calc(100vh-2rem)] w-full max-w-[92vw] flex-col items-center gap-5 overflow-y-auto rounded-3xl bg-(--bg-card) p-5 sm:w-105 sm:gap-6 sm:p-9"
       >
         <div className="w-full flex items-center justify-between">
-          <div className="text-xl font-extrabold tracking-[-0.3px]">
+          <div className="text-lg font-extrabold tracking-[-0.3px] sm:text-xl">
             프로필 수정
           </div>
           <button
@@ -76,8 +76,8 @@ export function EditProfileModal({
           </button>
         </div>
 
-        <div className="relative w-35 h-35">
-          <div className="w-35 h-35 rounded-full overflow-hidden border-3 border-(--brand-yellow) box-border bg-(--bg-hero)">
+        <div className="relative h-28 w-28 sm:h-35 sm:w-35">
+          <div className="h-28 w-28 overflow-hidden rounded-full border-3 border-(--brand-yellow) box-border bg-(--bg-hero) sm:h-35 sm:w-35">
             <Image
               src={photo ?? "/assets/avatar.png"}
               alt="프로필 사진"
@@ -91,7 +91,7 @@ export function EditProfileModal({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="프로필 사진 변경"
-            className="absolute bottom-0.5 right-0.5 w-9.5 h-9.5 rounded-full bg-(--brand-yellow) border-3 border-(--bg-card) box-border flex items-center justify-center cursor-pointer"
+            className="absolute right-0.5 bottom-0.5 flex h-9 w-9 items-center justify-center rounded-full border-3 border-(--bg-card) box-border bg-(--brand-yellow) cursor-pointer sm:h-9.5 sm:w-9.5"
           >
             <Camera size={17} strokeWidth={2} />
           </button>
@@ -104,7 +104,7 @@ export function EditProfileModal({
           />
         </div>
 
-        <div className="flex flex-col gap-2.5 w-full">
+        <div className="flex w-full flex-col gap-2.5">
           <div className="text-sm font-extrabold">닉네임</div>
           <div className="relative">
             <input
@@ -113,13 +113,13 @@ export function EditProfileModal({
               maxLength={MAX_NICKNAME_LENGTH}
               placeholder="닉네임을 입력해주세요"
               className={cn(
-                "w-full h-13.5 rounded-2xl border-[1.5px] pr-19 pl-4.5 text-[15px] font-bold box-border bg-(--bg-card) outline-none",
+                "box-border h-13.5 w-full rounded-2xl border-[1.5px] bg-(--bg-card) pr-16 pl-4 text-[15px] font-bold outline-none sm:pr-19 sm:pl-4.5",
                 !valid && nickname.length > 0
                   ? "border-[#FF6B6B]"
                   : "border-(--border-1)",
               )}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-(--text-3)">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-(--text-3) sm:right-4 sm:text-xs">
               {nickname.length} / {MAX_NICKNAME_LENGTH}
             </span>
           </div>
@@ -135,7 +135,7 @@ export function EditProfileModal({
           </div>
         </div>
 
-        <div className="flex gap-2.5 w-full">
+        <div className="flex w-full flex-col gap-2.5 sm:flex-row">
           <button
             type="button"
             onClick={onClose}
@@ -148,7 +148,7 @@ export function EditProfileModal({
             onClick={save}
             disabled={!valid}
             className={cn(
-              "flex-[1.4] text-sm font-extrabold py-3.25 rounded-(--radius-button)",
+              "text-sm font-extrabold py-3.25 rounded-(--radius-button) sm:flex-[1.4]",
               valid
                 ? "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer hover:brightness-105"
                 : "bg-[#efedea] text-[#a3a09a] cursor-not-allowed",

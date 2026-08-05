@@ -59,8 +59,8 @@ const NOTIFICATIONS: NotificationItem[] = [
 
 export function NotificationPanel() {
   return (
-    <div className="absolute top-full right-0 mt-4 w-[380px] bg-(--bg-card) border border-(--border-1) rounded-(--radius-section) shadow-[0_10px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_32px_rgba(0,0,0,0.4)] overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-(--border-1)">
+    <div className="absolute top-full right-0 mt-3 w-[min(380px,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-(--radius-section) border border-(--border-1) bg-(--bg-card) shadow-[0_10px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_32px_rgba(0,0,0,0.4)] sm:mt-4 sm:max-w-none">
+      <div className="flex items-center justify-between border-b border-(--border-1) px-4 py-3.5 sm:px-5 sm:py-4">
         <span className="text-[15px] font-extrabold text-(--text-1)">알림</span>
         <button
           type="button"
@@ -75,7 +75,7 @@ export function NotificationPanel() {
             key={n.id}
             href="#"
             className={cn(
-              "flex gap-3 px-5 py-3.5 border-b border-(--divider)",
+              "flex gap-3 border-b border-(--divider) px-4 py-3 sm:px-5 sm:py-3.5",
               n.unread && "bg-(--bg-unread)",
             )}
           >
@@ -84,12 +84,12 @@ export function NotificationPanel() {
               alt=""
               width={40}
               height={40}
-              className="w-10 h-10 object-contain shrink-0"
+              className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
             />
             <div className="min-w-0">
               <div
                 className={cn(
-                  "text-[13.5px] leading-relaxed",
+                  "text-[13px] leading-relaxed sm:text-[13.5px]",
                   n.unread ? "text-(--text-1)" : "text-(--text-2)",
                 )}
               >
@@ -105,7 +105,7 @@ export function NotificationPanel() {
       </div>
       <Link
         href="#"
-        className="block text-center py-3.5 border-t border-(--border-1) text-[13px] font-bold text-(--text-3)"
+        className="block border-t border-(--border-1) py-3.5 text-center text-[13px] font-bold text-(--text-3)"
       >
         알림 전체 보기
       </Link>
