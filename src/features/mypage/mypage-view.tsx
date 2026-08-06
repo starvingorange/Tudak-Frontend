@@ -141,7 +141,7 @@ export function MyPageView() {
       {loggingOut && (
         <LogoutModal
           onClose={() => setLoggingOut(false)}
-          onConfirm={() => router.push("/login")}
+          onConfirm={() => router.push("/")}
         />
       )}
     </div>

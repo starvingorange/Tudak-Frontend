@@ -10,7 +10,7 @@ type OrvalRequestConfig = {
   data?: unknown;
   body?: unknown;
   headers?: Options["headers"];
-  signal?: AbortSignal;
+  signal?: AbortSignal | null;
 };
 
 const isPrimitiveBody = (value: unknown): value is PrimitiveBody =>
@@ -21,15 +21,17 @@ const isPrimitiveBody = (value: unknown): value is PrimitiveBody =>
   value instanceof ArrayBuffer ||
   ArrayBuffer.isView(value);
 
-export async function orvalApiClient<T>({
-  url,
-  method,
-  params,
-  data,
-  body,
-  headers,
-  signal,
-}: OrvalRequestConfig): Promise<T> {
+export async function orvalApiClient<T>(
+  url: string,
+  {
+    method,
+    params,
+    data,
+    body,
+    headers,
+    signal,
+  }: Omit<OrvalRequestConfig, "url">,
+): Promise<T> {
   const payload = body ?? data;
 
   return apiClient(url, {
