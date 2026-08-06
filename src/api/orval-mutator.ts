@@ -5,7 +5,7 @@ type PrimitiveBody = BodyInit;
 
 type OrvalRequestConfig = {
   url: string;
-  method: NonNullable<Options["method"]>;
+  method?: Options["method"];
   params?: Options["searchParams"];
   data?: unknown;
   body?: unknown;
