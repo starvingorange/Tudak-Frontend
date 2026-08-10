@@ -7,7 +7,5 @@
  */
 
 export interface SignupAuthResponse {
-  jwtToken?: string;
-  userId?: number;
-  nickname?: string;
+  accessToken?: string;
 }

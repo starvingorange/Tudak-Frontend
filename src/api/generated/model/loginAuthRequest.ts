@@ -10,5 +10,5 @@ import type { LoginAuthRequestProviderType } from "./loginAuthRequestProviderTyp
 export interface LoginAuthRequest {
   providerType: LoginAuthRequestProviderType;
   /** @minLength 1 */
-  socialToken: string;
+  socialCode: string;
 }

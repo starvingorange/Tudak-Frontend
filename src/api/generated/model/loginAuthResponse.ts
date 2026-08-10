@@ -7,7 +7,7 @@
  */
 
 export interface LoginAuthResponse {
-  providerType?: string;
-  userId?: number;
-  nickname?: string;
+  accessToken?: string;
+  signupToken?: string;
+  isNewUser?: boolean;
 }

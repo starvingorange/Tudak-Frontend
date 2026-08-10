@@ -8,6 +8,7 @@
 import type { FindMyPollResponseCategoryType } from "./findMyPollResponseCategoryType";
 
 export interface FindMyPollResponse {
+  pollId?: number;
   pollName?: string;
   categoryType?: FindMyPollResponseCategoryType;
   agreeNickname?: string;

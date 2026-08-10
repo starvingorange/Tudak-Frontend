@@ -5,15 +5,15 @@
  * 투닥 API 명세서
  * OpenAPI spec version: v1.0.0
  */
-import type { SignupAuthRequestProviderType } from "./signupAuthRequestProviderType";
 
 export interface SignupAuthRequest {
-  providerType: SignupAuthRequestProviderType;
   /** @minLength 1 */
-  socialToken: string;
+  signupToken: string;
   /**
    * @minLength 2
    * @maxLength 20
    */
   nickname: string;
+  /** @minLength 1 */
+  s3ObjectKey: string;
 }

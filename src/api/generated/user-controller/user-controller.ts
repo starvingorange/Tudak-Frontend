@@ -28,8 +28,7 @@ import type {
   CommonResponseFindMyPageResponse,
   CommonResponsePresignedUrlResponse,
   CommonResponseVoid,
-  PreUploadParams,
-  UpdateProfileImageRequest,
+  PreUpload1Params,
   UpdateProfileRequest,
 } from "../model";
 
@@ -145,256 +144,6 @@ export const useModifyProfile = <
   TContext
 > => {
   return useMutation(getModifyProfileMutationOptions(options), queryClient);
-};
-export type preUploadResponse200 = {
-  data: CommonResponsePresignedUrlResponse;
-  status: 200;
-};
-
-export type preUploadResponseSuccess = preUploadResponse200 & {
-  headers: Headers;
-};
-
-export type preUploadResponse = preUploadResponseSuccess;
-
-export const getPreUploadUrl = (params: PreUploadParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/users/my/profile-image?${stringifiedParams}`
-    : `/api/users/my/profile-image`;
-};
-
-export const preUpload = async (
-  params: PreUploadParams,
-  options?: Parameters<typeof orvalApiClient>[1],
-): Promise<preUploadResponse> => {
-  return orvalApiClient<preUploadResponse>(getPreUploadUrl(params), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getPreUploadQueryKey = (params?: PreUploadParams) => {
-  return [`/api/users/my/profile-image`, ...(params ? [params] : [])] as const;
-};
-
-export const getPreUploadQueryOptions = <
-  TData = Awaited<ReturnType<typeof preUpload>>,
-  TError = ErrorType<unknown>,
->(
-  params: PreUploadParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof preUpload>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getPreUploadQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof preUpload>>> = ({
-    signal,
-  }) => preUpload(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof preUpload>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type PreUploadQueryResult = NonNullable<
-  Awaited<ReturnType<typeof preUpload>>
->;
-export type PreUploadQueryError = ErrorType<unknown>;
-
-export function usePreUpload<
-  TData = Awaited<ReturnType<typeof preUpload>>,
-  TError = ErrorType<unknown>,
->(
-  params: PreUploadParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof preUpload>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof preUpload>>,
-          TError,
-          Awaited<ReturnType<typeof preUpload>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function usePreUpload<
-  TData = Awaited<ReturnType<typeof preUpload>>,
-  TError = ErrorType<unknown>,
->(
-  params: PreUploadParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof preUpload>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof preUpload>>,
-          TError,
-          Awaited<ReturnType<typeof preUpload>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function usePreUpload<
-  TData = Awaited<ReturnType<typeof preUpload>>,
-  TError = ErrorType<unknown>,
->(
-  params: PreUploadParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof preUpload>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function usePreUpload<
-  TData = Awaited<ReturnType<typeof preUpload>>,
-  TError = ErrorType<unknown>,
->(
-  params: PreUploadParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof preUpload>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getPreUploadQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export type postUploadResponse200 = {
-  data: CommonResponseVoid;
-  status: 200;
-};
-
-export type postUploadResponseSuccess = postUploadResponse200 & {
-  headers: Headers;
-};
-
-export type postUploadResponse = postUploadResponseSuccess;
-
-export const getPostUploadUrl = () => {
-  return `/api/users/my/profile-image`;
-};
-
-export const postUpload = async (
-  updateProfileImageRequest: UpdateProfileImageRequest,
-  options?: Parameters<typeof orvalApiClient>[1],
-): Promise<postUploadResponse> => {
-  return orvalApiClient<postUploadResponse>(getPostUploadUrl(), {
-    ...options,
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(updateProfileImageRequest),
-  });
-};
-
-export const getPostUploadMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postUpload>>,
-    TError,
-    { data: BodyType<UpdateProfileImageRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof orvalApiClient>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof postUpload>>,
-  TError,
-  { data: BodyType<UpdateProfileImageRequest> },
-  TContext
-> => {
-  const mutationKey = ["postUpload"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postUpload>>,
-    { data: BodyType<UpdateProfileImageRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postUpload(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PostUploadMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postUpload>>
->;
-export type PostUploadMutationBody = BodyType<UpdateProfileImageRequest>;
-export type PostUploadMutationError = ErrorType<unknown>;
-
-export const usePostUpload = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postUpload>>,
-      TError,
-      { data: BodyType<UpdateProfileImageRequest> },
-      TContext
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof postUpload>>,
-  TError,
-  { data: BodyType<UpdateProfileImageRequest> },
-  TContext
-> => {
-  return useMutation(getPostUploadMutationOptions(options), queryClient);
 };
 export type myPageResponse200 = {
   data: CommonResponseFindMyPageResponse;
@@ -525,6 +274,166 @@ export function useMyPage<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getMyPageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type preUpload1Response200 = {
+  data: CommonResponsePresignedUrlResponse;
+  status: 200;
+};
+
+export type preUpload1ResponseSuccess = preUpload1Response200 & {
+  headers: Headers;
+};
+
+export type preUpload1Response = preUpload1ResponseSuccess;
+
+export const getPreUpload1Url = (params: PreUpload1Params) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/users/my/profile-image?${stringifiedParams}`
+    : `/api/users/my/profile-image`;
+};
+
+export const preUpload1 = async (
+  params: PreUpload1Params,
+  options?: Parameters<typeof orvalApiClient>[1],
+): Promise<preUpload1Response> => {
+  return orvalApiClient<preUpload1Response>(getPreUpload1Url(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getPreUpload1QueryKey = (params?: PreUpload1Params) => {
+  return [`/api/users/my/profile-image`, ...(params ? [params] : [])] as const;
+};
+
+export const getPreUpload1QueryOptions = <
+  TData = Awaited<ReturnType<typeof preUpload1>>,
+  TError = ErrorType<unknown>,
+>(
+  params: PreUpload1Params,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof preUpload1>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof orvalApiClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getPreUpload1QueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof preUpload1>>> = ({
+    signal,
+  }) => preUpload1(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof preUpload1>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PreUpload1QueryResult = NonNullable<
+  Awaited<ReturnType<typeof preUpload1>>
+>;
+export type PreUpload1QueryError = ErrorType<unknown>;
+
+export function usePreUpload1<
+  TData = Awaited<ReturnType<typeof preUpload1>>,
+  TError = ErrorType<unknown>,
+>(
+  params: PreUpload1Params,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof preUpload1>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof preUpload1>>,
+          TError,
+          Awaited<ReturnType<typeof preUpload1>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof orvalApiClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePreUpload1<
+  TData = Awaited<ReturnType<typeof preUpload1>>,
+  TError = ErrorType<unknown>,
+>(
+  params: PreUpload1Params,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof preUpload1>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof preUpload1>>,
+          TError,
+          Awaited<ReturnType<typeof preUpload1>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof orvalApiClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePreUpload1<
+  TData = Awaited<ReturnType<typeof preUpload1>>,
+  TError = ErrorType<unknown>,
+>(
+  params: PreUpload1Params,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof preUpload1>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof orvalApiClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePreUpload1<
+  TData = Awaited<ReturnType<typeof preUpload1>>,
+  TError = ErrorType<unknown>,
+>(
+  params: PreUpload1Params,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof preUpload1>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof orvalApiClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPreUpload1QueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

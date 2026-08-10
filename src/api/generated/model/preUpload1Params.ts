@@ -6,7 +6,6 @@
  * OpenAPI spec version: v1.0.0
  */
 
-export type PreUploadParams = {
-  signupToken: string;
+export type PreUpload1Params = {
   contentType: string;
 };

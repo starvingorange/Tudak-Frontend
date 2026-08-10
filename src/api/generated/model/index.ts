@@ -6,6 +6,8 @@
  * OpenAPI spec version: v1.0.0
  */
 
+export * from "./accessTokenResponse";
+export * from "./commonResponseAccessTokenResponse";
 export * from "./commonResponseCreateDebateResponse";
 export * from "./commonResponseDebateDetailResponse";
 export * from "./commonResponseFindMyPageResponse";
@@ -51,9 +53,8 @@ export * from "./postPubDebateDebateIdJoinBodyAgreement";
 export * from "./postPubDebateDebateIdSignalBody";
 export * from "./postPubDebateDebateIdSignalBodyType";
 export * from "./presignedUrlResponse";
+export * from "./preUpload1Params";
 export * from "./preUploadParams";
 export * from "./signupAuthRequest";
-export * from "./signupAuthRequestProviderType";
 export * from "./signupAuthResponse";
-export * from "./updateProfileImageRequest";
 export * from "./updateProfileRequest";
