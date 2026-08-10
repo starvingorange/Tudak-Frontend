@@ -18,16 +18,16 @@ export default async function DebateRoomPage({
   if (!room) notFound();
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 pt-5 pb-10">
-      <div className="relative flex items-center justify-center min-h-[52px]">
+    <div className="mx-auto max-w-[1180px] px-4 pt-4 pb-8 sm:pt-5 sm:pb-10">
+      <div className="relative flex min-h-[52px] flex-col items-start gap-3 sm:items-center sm:justify-center">
         <Link
           href="/debates"
-          className="absolute left-0 inline-flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-1)] rounded-[10px] px-[18px] py-[11px] text-sm font-bold"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border-1)] bg-[var(--bg-card)] px-[16px] py-[10px] text-sm font-bold sm:absolute sm:left-0 sm:px-[18px] sm:py-[11px]"
         >
           <ArrowLeft size={15} strokeWidth={2.4} />
           나가기
         </Link>
-        <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.3px]">
+        <h1 className="m-0 text-left text-2xl font-extrabold tracking-[-0.3px] sm:text-center sm:text-[28px]">
           {room.question}
         </h1>
       </div>
@@ -38,10 +38,10 @@ export default async function DebateRoomPage({
         conVotes={room.conVotes}
       />
 
-      <div className="grid grid-cols-[1fr_88px_1fr] items-center mt-[22px] gap-x-0">
+      <div className="mt-[22px] grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
         <DebaterCard side="pro" debater={room.pro} />
         <div className="flex justify-center">
-          <span className="w-16 h-16 rounded-full bg-[var(--bg-card)] border border-[var(--border-1)] inline-flex items-center justify-center text-xl font-extrabold">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--bg-card)] text-lg font-extrabold sm:h-16 sm:w-16 sm:text-xl">
             VS
           </span>
         </div>

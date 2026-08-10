@@ -24,20 +24,20 @@ export function VoteList() {
 
   return (
     <>
-      <div className="border border-(--border-1) rounded-(--radius-section) mt-6 p-[18px_22px] flex items-end gap-6">
+      <div className="mt-4 flex flex-col gap-3 rounded-(--radius-section) border border-(--border-1) p-3.5 sm:mt-6 sm:items-end sm:gap-6 sm:p-[18px_22px] lg:flex-row">
         <div className="flex-1">
-          <div className="mt-2.5">
+          <div className="mt-0 sm:mt-2.5">
             <CategoryTabBar active={tab} onChange={setTab} />
           </div>
         </div>
-        <div className="w-55">
-          <div className="mt-2.5">
+        <div className="w-full sm:w-55">
+          <div className="mt-0 sm:mt-2.5">
             <VoteSortDropdown value={sort} onChange={setSort} />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3.5 mt-5.5">
+      <div className="mt-3.5 flex flex-col gap-2.5 sm:mt-5.5 sm:gap-3.5">
         {rows.map((vote) => (
           <VoteRow key={vote.id} vote={vote} />
         ))}

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
  * button, and other small dropdown triggers (e.g. the votes sort picker). */
 export const dropdownTriggerClass = (active: boolean) =>
   cn(
-    "inline-flex items-center gap-[9px] text-sm px-6 py-[11px] rounded-(--radius-button) font-sans whitespace-nowrap cursor-pointer hover:border-(--brand-yellow)",
+    "inline-flex items-center gap-1.5 rounded-(--radius-button) px-3.5 py-2 text-[13px] font-sans whitespace-nowrap cursor-pointer hover:border-(--brand-yellow) sm:gap-[9px] sm:px-6 sm:py-[11px] sm:text-sm",
     active
       ? "border-[1.5px] border-(--brand-yellow) bg-(--bg-card) text-(--text-1) font-bold"
       : "border border-(--border-1) bg-(--bg-card) text-(--text-1) font-semibold",

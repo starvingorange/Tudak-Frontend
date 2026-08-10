@@ -4,7 +4,7 @@ import { WaitingRoomsSection } from "@/features/main/waiting-rooms-section";
 
 export default function Home() {
   return (
-    <div className="max-w-241 mx-auto px-2 pt-6">
+    <div className="mx-auto max-w-241 px-3 pt-4 pb-8 sm:px-4 sm:pt-6">
       <HeroSection />
       <PopularVotesSection />
       <WaitingRoomsSection />

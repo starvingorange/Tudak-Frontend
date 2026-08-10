@@ -14,7 +14,7 @@ export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
     "w-[38px] h-[38px] rounded-[10px] border border-[var(--border-1)] bg-[var(--bg-card)] inline-flex items-center justify-center text-[var(--text-2)] cursor-pointer hover:border-[var(--brand-yellow)]";
 
   return (
-    <div className="flex justify-center items-center gap-2 mt-[30px]">
+    <div className="mt-7 flex items-center justify-center gap-1.5 sm:mt-[30px] sm:gap-2">
       <button
         type="button"
         className={navButton}
@@ -29,7 +29,7 @@ export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
           type="button"
           onClick={() => setPage(p)}
           className={cn(
-            "w-[38px] h-[38px] rounded-[10px] text-sm font-semibold cursor-pointer",
+            "h-[38px] w-[34px] rounded-[10px] text-sm font-semibold cursor-pointer sm:w-[38px]",
             p === page
               ? "border-none bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] font-extrabold"
               : "border border-[var(--border-1)] bg-[var(--bg-card)] text-[var(--text-1)] hover:border-[var(--brand-yellow)]",

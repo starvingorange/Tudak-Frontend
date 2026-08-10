@@ -28,13 +28,13 @@ export function MyPageView() {
   const myVotes = getMyVotes();
 
   return (
-    <div className="max-w-241 mx-auto px-4 pt-2 pb-10">
-      <div className="flex items-start justify-between">
-        <div className="py-9">
-          <h1 className="m-0 text-[32px] font-extrabold tracking-[-0.5px]">
+    <div className="mx-auto max-w-241 px-4 pt-2 pb-10">
+      <div className="flex flex-col gap-4 py-6 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:py-9">
+        <div>
+          <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.5px] sm:text-[32px]">
             마이페이지
           </h1>
-          <div className="mt-2 text-[15px] text-(--text-2)">
+          <div className="mt-2 text-[14px] text-(--text-2) sm:text-[15px]">
             내 프로필과 지금까지의 활동 내역을 확인해보세요!
           </div>
         </div>
@@ -44,12 +44,12 @@ export function MyPageView() {
           width={175}
           height={172}
           priority
-          className="w-37.5 h-37.5 object-contain mr-10"
+          className="h-28 w-28 self-end object-contain sm:mr-10 sm:h-37.5 sm:w-37.5"
         />
       </div>
 
       <section className="bg-(--bg-surface) border border-(--border-1) rounded-(--radius-section) overflow-hidden">
-        <div className="flex items-center gap-6 p-[26px_28px]">
+        <div className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-[26px_28px]">
           <Image
             src={photo ?? "/assets/avatar.png"}
             alt="프로필"
@@ -66,18 +66,22 @@ export function MyPageView() {
               토론에서 사용하는 프로필이에요.
             </div>
           </div>
-          <Button variant="outline" onClick={() => setEditing(true)}>
+          <Button
+            variant="outline"
+            onClick={() => setEditing(true)}
+            className="w-full sm:w-auto"
+          >
             프로필 수정
           </Button>
         </div>
         <div className="grid grid-cols-2 border-t border-(--border-1) bg-(--bg-hero)">
-          <div className="flex flex-col items-center gap-1 py-5">
+          <div className="flex flex-col items-center gap-1 py-4 sm:py-5">
             <span className="text-[13px] font-bold text-(--text-2)">
               참여한 토론
             </span>
             <span className="text-[22px] font-black">{myDebates.length}건</span>
           </div>
-          <div className="flex flex-col items-center gap-1 py-5 border-l border-(--border-1)">
+          <div className="flex flex-col items-center gap-1 border-l border-(--border-1) py-4 sm:py-5">
             <span className="text-[13px] font-bold text-(--text-2)">
               참여한 투표
             </span>
@@ -137,7 +141,7 @@ export function MyPageView() {
       {loggingOut && (
         <LogoutModal
           onClose={() => setLoggingOut(false)}
-          onConfirm={() => router.push("/login")}
+          onConfirm={() => router.push("/")}
         />
       )}
     </div>

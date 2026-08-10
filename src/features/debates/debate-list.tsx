@@ -22,10 +22,10 @@ export function DebateList() {
 
   return (
     <>
-      <div className="border border-(--border-1) rounded-(--radius-section) mt-6 p-4">
+      <div className="mt-4 rounded-(--radius-section) border border-(--border-1) p-3.5 sm:mt-6 sm:p-4">
         <CategoryTabBar active={tab} onChange={setTab} />
       </div>
-      <div className="grid grid-cols-3 gap-4.5 mt-5.5">
+      <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:mt-5.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-4.5">
         {rooms.slice(0, 6).map((room) => (
           <DebateCard key={room.id} room={room} onJoin={setOpenRoom} />
         ))}

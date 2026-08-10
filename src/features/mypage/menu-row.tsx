@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 const ROW_CLASS =
-  "flex items-center gap-3.5 w-full px-7 py-4.5 text-left border-b border-(--border-1) last:border-b-0 hover:bg-(--bg-hero) cursor-pointer";
+  "flex w-full items-center gap-3 px-4 py-4 text-left border-b border-(--border-1) last:border-b-0 hover:bg-(--bg-hero) cursor-pointer sm:gap-3.5 sm:px-7 sm:py-4.5";
 
 interface MenuRowProps {
   icon: ReactNode;
@@ -25,9 +25,13 @@ export function MenuRow({
   const content = (
     <>
       <span className="text-(--text-2) shrink-0">{icon}</span>
-      <span className="flex-1 text-[15px] font-bold">{label}</span>
+      <span className="flex-1 text-[14px] font-bold sm:text-[15px]">
+        {label}
+      </span>
       {trailing && (
-        <span className="text-sm font-bold text-(--text-2)">{trailing}</span>
+        <span className="text-[13px] font-bold text-(--text-2) sm:text-sm">
+          {trailing}
+        </span>
       )}
       {href && <ChevronRight size={18} className="text-(--text-3) shrink-0" />}
     </>

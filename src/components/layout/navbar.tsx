@@ -18,24 +18,27 @@ export function Navbar() {
 
   return (
     <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
-      <div className="max-w-295 mx-auto h-16 flex items-center gap-9 px-4">
-        <Link href="/" className="block h-10.5 w-33 relative shrink-0">
+      <div className="mx-auto flex h-16 max-w-295 items-center gap-3 px-3 sm:gap-9 sm:px-4">
+        <Link
+          href="/"
+          className="relative block h-8.5 w-26 shrink-0 sm:h-10.5 sm:w-33"
+        >
           <Image
             src="/assets/logo-nav-light.png"
             alt="투닭"
             fill
-            sizes="132px"
+            sizes="(max-width: 639px) 104px, 132px"
             className="object-contain object-left dark:hidden"
           />
           <Image
             src="/assets/logo-nav-dark.png"
             alt="투닭"
             fill
-            sizes="132px"
+            sizes="(max-width: 639px) 104px, 132px"
             className="object-contain object-left hidden dark:block"
           />
         </Link>
-        <div className="flex items-stretch gap-2 h-16 flex-1">
+        <div className="flex h-16 min-w-0 flex-1 items-stretch gap-0.5 sm:gap-2">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -43,19 +46,23 @@ export function Navbar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-1.75 px-3.5 text-[15px] box-border border-b-[3px]",
+                  "flex min-w-0 items-center gap-1 px-1.5 text-[13px] box-border border-b-[3px] sm:gap-1.75 sm:px-3.5 sm:text-[15px]",
                   active
                     ? "font-bold text-(--text-1) border-(--brand-yellow)"
                     : "font-semibold text-(--text-label) border-transparent",
                 )}
               >
-                <Icon size={17} strokeWidth={active ? 2.4 : 2.2} />
-                {label}
+                <Icon
+                  size={15}
+                  strokeWidth={active ? 2.4 : 2.2}
+                  className="shrink-0 sm:size-[17px]"
+                />
+                <span className="truncate">{label}</span>
               </Link>
             );
           })}
         </div>
-        <div className="flex items-center gap-4.5">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4.5">
           {/* 추후 다크 모드 필요시 활성화 */}
           {/* <ThemeToggle /> */}
           <NotificationBell />
@@ -65,7 +72,8 @@ export function Navbar() {
               alt="프로필"
               width={40}
               height={40}
-              className="rounded-full block"
+              sizes="(max-width: 639px) 32px, 40px"
+              className="block rounded-full size-8 sm:size-10"
             />
           </Link>
         </div>

@@ -12,8 +12,8 @@ function VoteResultBanner({
   const conPercent = 100 - proPercent;
 
   return (
-    <div className="flex justify-center mt-5">
-      <div className="bg-[var(--bg-card)] border border-[var(--border-1)] rounded-xl p-[16px_28px_18px] w-[560px] max-w-full box-border">
+    <div className="mt-5 flex justify-center">
+      <div className="box-border w-[560px] max-w-full rounded-xl border border-[var(--border-1)] bg-[var(--bg-card)] p-[16px_18px_18px] sm:p-[16px_28px_18px]">
         <div className="flex items-center justify-center gap-2">
           <span className="text-[15px] font-extrabold">투표 결과</span>
         </div>
@@ -27,15 +27,15 @@ function VoteResultBanner({
             style={{ width: `${conPercent}%` }}
           />
         </div>
-        <div className="flex justify-between mt-2.5">
-          <span className="text-[19px] font-extrabold text-[var(--vote-blue)]">
+        <div className="mt-2.5 flex justify-between">
+          <span className="text-[18px] font-extrabold text-[var(--vote-blue)] sm:text-[19px]">
             {proPercent}%
           </span>
-          <span className="text-[19px] font-extrabold text-[var(--vote-red)]">
+          <span className="text-[18px] font-extrabold text-[var(--vote-red)] sm:text-[19px]">
             {conPercent}%
           </span>
         </div>
-        <div className="flex justify-between mt-0.5 text-[13px]">
+        <div className="mt-0.5 flex justify-between gap-4 text-[12px] sm:text-[13px]">
           <span className="text-[var(--vote-blue)]">
             찬성 {proVotes.toLocaleString()}명
           </span>
@@ -50,12 +50,12 @@ function VoteResultBanner({
 
 function Stepper() {
   return (
-    <div className="flex justify-center mt-5">
-      <div className="flex items-center gap-3.5 bg-[var(--bg-card)] border border-[var(--border-1)] rounded-xl p-[14px_28px]">
+    <div className="mt-5 flex justify-center">
+      <div className="grid w-full max-w-[720px] grid-cols-2 gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--bg-card)] p-4 sm:flex sm:w-auto sm:max-w-none sm:items-center sm:gap-3.5 sm:p-[14px_28px]">
         {STEPS.map((step, i) => (
-          <div key={step} className="flex items-center gap-3.5">
+          <div key={step} className="flex items-center gap-2.5 sm:gap-3.5">
             {i > 0 && (
-              <span className="text-[#d8d5cf] text-xs tracking-[2px]">
+              <span className="hidden text-xs tracking-[2px] text-[#d8d5cf] sm:inline">
                 ------
               </span>
             )}

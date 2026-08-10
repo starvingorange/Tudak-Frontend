@@ -11,13 +11,17 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
       alt={message.name}
       width={52}
       height={52}
-      className="w-13 h-13 rounded-full border border-(--border-1) shrink-0 bg-(--bg-hero)"
+      className="h-10 w-10 shrink-0 rounded-full border border-(--border-1) bg-(--bg-hero) sm:h-13 sm:w-13"
     />
   );
   const meta = (
-    <div className={`flex items-center gap-2 ${isPro ? "" : "justify-end"}`}>
+    <div
+      className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
+    >
       {isPro && (
-        <span className="text-[15px] font-extrabold">{message.name}</span>
+        <span className="text-sm font-extrabold sm:text-[15px]">
+          {message.name}
+        </span>
       )}
       {isPro && (
         <span
@@ -27,7 +31,9 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
           찬성
         </span>
       )}
-      <span className="text-[12.5px] text-[#909090]">{message.time}</span>
+      <span className="text-[12px] text-[#909090] sm:text-[12.5px]">
+        {message.time}
+      </span>
       {!isPro && (
         <span
           className="text-white text-[11px] font-bold px-2.25 py-0.75 rounded-(--radius-pill)"
@@ -37,13 +43,15 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
         </span>
       )}
       {!isPro && (
-        <span className="text-[15px] font-extrabold">{message.name}</span>
+        <span className="text-sm font-extrabold sm:text-[15px]">
+          {message.name}
+        </span>
       )}
     </div>
   );
   const bubble = (
     <div
-      className="px-4 py-3.25 text-[15px] leading-relaxed whitespace-pre-line"
+      className="px-3.5 py-3 text-[14px] leading-relaxed whitespace-pre-line sm:px-4 sm:py-3.25 sm:text-[15px]"
       style={{
         // Fixed dark text: this tint is always a light pastel in both themes,
         // so it can't use the theme's (theme-flipping) --text-1 color.
@@ -58,12 +66,14 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
 
   return (
     <div
-      className={`flex gap-3.5 items-start max-w-[56%] ${isPro ? "" : "ml-auto justify-end"}`}
+      className={`flex max-w-[92%] items-start gap-2.5 sm:max-w-[72%] lg:max-w-[56%] ${isPro ? "" : "ml-auto justify-end"}`}
     >
       {isPro && avatar}
-      <div className={`flex flex-col gap-2 ${isPro ? "" : "items-end"}`}>
+      <div
+        className={`flex min-w-0 flex-col gap-2 ${isPro ? "" : "items-end"}`}
+      >
         {meta}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {isPro ? (
             bubble
           ) : (
@@ -98,7 +108,7 @@ function PlaybackButton({ color }: { color: string }) {
 
 export function ChatLog({ messages }: { messages: TranscriptMessage[] }) {
   return (
-    <section className="bg-(--bg-card) border border-(--border-1) rounded-2xl mt-6 p-[26px_28px] flex flex-col gap-6.5">
+    <section className="mt-6 flex flex-col gap-5 rounded-2xl border border-(--border-1) bg-(--bg-card) p-4 sm:gap-6.5 sm:p-[26px_28px]">
       {messages.map((message) => (
         <ChatBubble
           key={`${message.side}-${message.time}-${message.text.slice(0, 8)}`}
