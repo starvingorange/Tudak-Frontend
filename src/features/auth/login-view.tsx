@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getKakaoAuthorizeUrl } from "@/lib/kakao";
 
 function KakaoIcon() {
   return (
@@ -51,13 +51,20 @@ function GoogleIcon() {
 }
 
 export function LoginView() {
-  const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [status, setStatus] = useState<"idle" | "redirecting" | "error">(
+    "idle",
+  );
 
-  // TODO: 실제 OAuth 연동 전까지는 로그인 성공을 흉내내고 홈으로 이동
-  const loginWith = (_provider: "kakao" | "google") => {
-    setLoggedIn(true);
-    setTimeout(() => router.push("/"), 1200);
+  const loginWithKakao = () => {
+    const authorizeUrl = getKakaoAuthorizeUrl();
+
+    if (!authorizeUrl) {
+      setStatus("error");
+      return;
+    }
+
+    setStatus("redirecting");
+    window.location.assign(authorizeUrl);
   };
 
   return (
@@ -97,27 +104,24 @@ export function LoginView() {
       <div className="flex flex-col gap-3.5 w-[360px] max-w-[90vw]">
         <button
           type="button"
-          onClick={() => loginWith("kakao")}
+          onClick={loginWithKakao}
+          disabled={status === "redirecting"}
           className="relative flex h-14 w-full items-center justify-center rounded-2xl bg-[#FEE500] text-base font-extrabold text-[#191919] cursor-pointer hover:brightness-[0.97]"
         >
           <KakaoIcon />
-          카카오로 시작하기
+          {status === "redirecting"
+            ? "카카오 로그인 진행 중..."
+            : "카카오로 시작하기"}
         </button>
 
         <button
           type="button"
-          onClick={() => loginWith("google")}
-          className="relative flex h-14 w-full items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] text-base font-extrabold text-[var(--text-1)] cursor-pointer hover:bg-[var(--bg-hero)]"
+          disabled
+          className="relative flex h-14 w-full items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] text-base font-extrabold text-[var(--text-1)] opacity-60 cursor-not-allowed"
         >
           <GoogleIcon />
-          구글로 시작하기
+          구글 로그인 준비 중
         </button>
-
-        {loggedIn && (
-          <div className="rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.25 px-4.5">
-            로그인 성공! 홈으로 이동합니다 🐔
-          </div>
-        )}
 
         <div className="text-center text-[13px] text-[var(--text-3)] leading-relaxed mt-1.5">
           가입 시{" "}

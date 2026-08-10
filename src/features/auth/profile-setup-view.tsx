@@ -3,17 +3,39 @@
 import { Camera } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  preUpload,
+  signup,
+} from "@/api/generated/auth-controller/auth-controller";
+import {
+  clearStoredSignupToken,
+  getStoredSignupToken,
+  setStoredAccessToken,
+  setStoredSignupToken,
+} from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const MIN_NICKNAME_LENGTH = 2;
 const MAX_NICKNAME_LENGTH = 12;
 
-export function ProfileSetupView() {
+type ProfileSetupViewProps = {
+  initialSignupToken?: string;
+};
+
+export function ProfileSetupView({
+  initialSignupToken,
+}: ProfileSetupViewProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [nickname, setNickname] = useState("");
+  const [signupToken, setSignupTokenState] = useState<string | null>(
+    initialSignupToken ?? null,
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const trimmedLength = nickname.trim().length;
   const valid =
@@ -28,15 +50,86 @@ export function ProfileSetupView() {
         ? ""
         : "2자 이상 입력해주세요.";
 
+  useEffect(() => {
+    if (initialSignupToken) {
+      setStoredSignupToken(initialSignupToken);
+      setSignupTokenState(initialSignupToken);
+      return;
+    }
+
+    setSignupTokenState(getStoredSignupToken());
+  }, [initialSignupToken]);
+
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPhotoFile(file);
     setPhoto(URL.createObjectURL(file));
+    setErrorMessage("");
   };
 
-  const submit = () => {
-    if (!valid) return;
-    router.push("/");
+  const submit = async () => {
+    if (!valid || !photoFile || !signupToken || submitting) return;
+
+    setSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const preUploadResponse = await preUpload({
+        signupToken,
+        contentType: photoFile.type,
+      });
+      const uploadData = preUploadResponse.data.data;
+
+      if (
+        !preUploadResponse.data.success ||
+        !uploadData?.presignedUrl ||
+        !uploadData.s3objectKey
+      ) {
+        throw new Error(
+          preUploadResponse.data.message ||
+            "프로필 이미지 업로드 준비에 실패했어요.",
+        );
+      }
+
+      const uploadResult = await fetch(uploadData.presignedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": photoFile.type,
+        },
+        body: photoFile,
+      });
+
+      if (!uploadResult.ok) {
+        throw new Error("프로필 이미지를 업로드하지 못했어요.");
+      }
+
+      const signupResponse = await signup({
+        signupToken,
+        nickname: nickname.trim(),
+        s3ObjectKey: uploadData.s3objectKey,
+      });
+      const accessToken = signupResponse.data.data?.accessToken;
+
+      if (!signupResponse.data.success || !accessToken) {
+        throw new Error(
+          signupResponse.data.message || "회원가입을 완료하지 못했어요.",
+        );
+      }
+
+      setStoredAccessToken(accessToken);
+      clearStoredSignupToken();
+      router.replace("/");
+    } catch (error) {
+      const nextMessage =
+        error instanceof Error
+          ? error.message
+          : "온보딩 중 문제가 생겼어요. 다시 시도해주세요.";
+
+      setErrorMessage(nextMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -124,19 +217,33 @@ export function ProfileSetupView() {
           >
             {hint}
           </div>
+          {!signupToken && (
+            <div className="text-[13px] text-[#FF6B6B]">
+              로그인 세션이 없어요. 카카오 로그인부터 다시 진행해주세요.
+            </div>
+          )}
+          {!photoFile && (
+            <div className="text-[13px] text-[var(--text-3)]">
+              가입을 완료하려면 프로필 사진을 등록해주세요.
+            </div>
+          )}
+          {errorMessage && (
+            <div className="text-[13px] text-[#FF6B6B]">{errorMessage}</div>
+          )}
         </div>
 
         <button
           type="button"
-          onClick={submit}
+          onClick={() => void submit()}
+          disabled={!valid || !photoFile || !signupToken || submitting}
           className={cn(
             "w-full h-14 rounded-2xl text-base font-black font-sans",
-            valid
+            valid && photoFile && signupToken && !submitting
               ? "bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] cursor-pointer hover:brightness-[0.97]"
               : "bg-[var(--border-1)] text-[var(--text-3)] cursor-not-allowed",
           )}
         >
-          투닭 시작하기
+          {submitting ? "가입 완료 중..." : "투닭 시작하기"}
         </button>
       </div>
     </>
