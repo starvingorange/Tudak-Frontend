@@ -4,14 +4,8 @@ import { Camera } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import {
-  preUpload,
-  signup,
-} from "@/api/generated/auth-controller/auth-controller";
-import type {
-  CommonResponsePresignedUrlResponse,
-  CommonResponseSignupAuthResponse,
-} from "@/api/generated/model";
+import { getPreUpload } from "@/api/auth/api/getPreUpload";
+import { postSignup } from "@/api/auth/api/postSignup";
 import {
   clearStoredSignupToken,
   getStoredSignupToken,
@@ -91,32 +85,23 @@ export function ProfileSetupView({
 
     try {
       const contentType = photoFile.type || "image/jpeg";
-      const preUploadResponse = await preUpload({
+      const preUploadResponse = await getPreUpload({
         signupToken,
         contentType,
       });
-      const preUploadBody =
-        preUploadResponse as unknown as CommonResponsePresignedUrlResponse;
-      const uploadData = preUploadBody.data as
-        | {
-            presignedUrl?: string;
-            s3objectKey?: string;
-            s3ObjectKey?: string;
-          }
-        | undefined;
-      const resolvedS3ObjectKey =
-        uploadData?.s3objectKey ?? uploadData?.s3ObjectKey;
+      const uploadData = preUploadResponse.data;
+      const resolvedS3ObjectKey = uploadData?.s3objectKey;
 
       if (
-        !preUploadBody.success ||
+        !preUploadResponse.success ||
         !uploadData?.presignedUrl ||
         !resolvedS3ObjectKey
       ) {
         nextDebugMessage = JSON.stringify(
           {
             stage: "preUpload",
-            success: preUploadBody.success,
-            message: preUploadBody.message,
+            success: preUploadResponse.success,
+            message: preUploadResponse.message,
             uploadData,
             resolvedS3ObjectKey,
           },
@@ -125,7 +110,8 @@ export function ProfileSetupView({
         );
         setDebugMessage(nextDebugMessage);
         throw new Error(
-          preUploadBody.message || "프로필 이미지 업로드 준비에 실패했어요.",
+          preUploadResponse.message ||
+            "프로필 이미지 업로드 준비에 실패했어요.",
         );
       }
 
@@ -151,27 +137,27 @@ export function ProfileSetupView({
         throw new Error("프로필 이미지를 업로드하지 못했어요.");
       }
 
-      const signupResponse = await signup({
+      const signupResponse = await postSignup({
         signupToken,
         nickname: nickname.trim(),
         s3ObjectKey: resolvedS3ObjectKey,
       });
-      const signupBody =
-        signupResponse as unknown as CommonResponseSignupAuthResponse;
-      const accessToken = signupBody.data?.accessToken;
+      const accessToken = signupResponse.data?.accessToken;
 
-      if (!signupBody.success || !accessToken) {
+      if (!signupResponse.success || !accessToken) {
         nextDebugMessage = JSON.stringify(
           {
             stage: "signup",
-            success: signupBody.success,
-            message: signupBody.message,
+            success: signupResponse.success,
+            message: signupResponse.message,
           },
           null,
           2,
         );
         setDebugMessage(nextDebugMessage);
-        throw new Error(signupBody.message || "회원가입을 완료하지 못했어요.");
+        throw new Error(
+          signupResponse.message || "회원가입을 완료하지 못했어요.",
+        );
       }
 
       setStoredAccessToken(accessToken);

@@ -11,17 +11,9 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type {
-  CommonResponseFindMyPageResponse,
-  CommonResponsePresignedUrlResponse,
-  CommonResponseVoid,
-} from "@/api/generated/model";
-import {
-  getMyPageQueryKey,
-  preUpload1,
-  useModifyProfile,
-  useMyPage,
-} from "@/api/generated/user-controller/user-controller";
+import { getPreUpload1 } from "@/api/user/api/getPreUpload1";
+import { getMyPageQueryKey, useGetMyPage } from "@/api/user/hooks/useGetMyPage";
+import { usePatchModifyProfile } from "@/api/user/hooks/usePatchModifyProfile";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { getMyCompletedDebates, getMyVotes } from "./data";
@@ -39,17 +31,14 @@ export function MyPageView() {
 
   const myDebates = getMyCompletedDebates();
   const myVotes = getMyVotes();
-  const { data, isLoading, isError, error } = useMyPage();
-  const myPageBody = data as unknown as
-    | CommonResponseFindMyPageResponse
-    | undefined;
-  const profile = myPageBody?.data;
+  const { data, isLoading, isError, error } = useGetMyPage();
+  const profile = data?.data;
   const nickname = profile?.nickname?.trim() || "사용자";
   const photo = profile?.presignedUrl ?? null;
   const debateCount = profile?.debateCount ?? myDebates.length;
   const pollCount = profile?.pollCount ?? myVotes.length;
 
-  const modifyProfileMutation = useModifyProfile({
+  const modifyProfileMutation = usePatchModifyProfile({
     mutation: {
       onError: (mutationError) => {
         setSaveErrorMessage(
@@ -183,45 +172,28 @@ export function MyPageView() {
             setSaveErrorMessage("");
             setSaveDebugMessage("");
             try {
-              let s3ObjectKey: string | undefined;
-
               if (nextPhotoFile) {
                 const contentType = nextPhotoFile.type || "image/jpeg";
-                const preUploadResponse = await preUpload1({
+                const preUploadResponse = await getPreUpload1({
                   contentType,
                 });
-                const uploadResponse =
-                  preUploadResponse as unknown as CommonResponsePresignedUrlResponse;
-                const uploadData = uploadResponse.data as
-                  | {
-                      presignedUrl?: string;
-                      s3objectKey?: string;
-                      s3ObjectKey?: string;
-                    }
-                  | undefined;
-                const resolvedS3ObjectKey =
-                  uploadData?.s3objectKey ?? uploadData?.s3ObjectKey;
+                const uploadData = preUploadResponse.data;
 
-                if (
-                  !uploadResponse?.success ||
-                  !uploadData?.presignedUrl ||
-                  !resolvedS3ObjectKey
-                ) {
+                if (!preUploadResponse.success || !uploadData?.presignedUrl) {
                   setSaveDebugMessage(
                     JSON.stringify(
                       {
                         stage: "preUpload",
-                        success: uploadResponse?.success,
-                        message: uploadResponse?.message,
+                        success: preUploadResponse.success,
+                        message: preUploadResponse.message,
                         uploadData,
-                        resolvedS3ObjectKey,
                       },
                       null,
                       2,
                     ),
                   );
                   setSaveErrorMessage(
-                    uploadResponse?.message ||
+                    preUploadResponse.message ||
                       "프로필 이미지 업로드 준비에 실패했어요.",
                   );
                   return;
@@ -250,40 +222,27 @@ export function MyPageView() {
                   setSaveErrorMessage("프로필 이미지를 업로드하지 못했어요.");
                   return;
                 }
-
-                s3ObjectKey = resolvedS3ObjectKey;
               }
 
               const response = await modifyProfileMutation.mutateAsync({
-                data: {
-                  nickname: nextNickname,
-                  ...(s3ObjectKey ? { s3ObjectKey } : {}),
-                } as {
-                  nickname: string;
-                  s3ObjectKey?: string;
-                },
+                data: { nickname: nextNickname },
               });
-              const modifyProfileBody =
-                response as unknown as CommonResponseVoid;
 
-              if (!modifyProfileBody.success) {
+              if (!response.success) {
                 setSaveDebugMessage(
                   JSON.stringify(
                     {
                       stage: "modifyProfile",
-                      success: modifyProfileBody.success,
-                      message: modifyProfileBody.message,
-                      payload: {
-                        nickname: nextNickname,
-                        s3ObjectKey,
-                      },
+                      success: response.success,
+                      message: response.message,
+                      payload: { nickname: nextNickname },
                     },
                     null,
                     2,
                   ),
                 );
                 setSaveErrorMessage(
-                  modifyProfileBody.message || "프로필을 저장하지 못했어요.",
+                  response.message || "프로필을 저장하지 못했어요.",
                 );
                 return;
               }

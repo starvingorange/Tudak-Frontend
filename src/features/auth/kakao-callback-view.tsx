@@ -2,11 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
-import { login } from "@/api/generated/auth-controller/auth-controller";
-import {
-  type CommonResponseLoginAuthResponse,
-  LoginAuthRequestProviderType,
-} from "@/api/generated/model";
+import { postLogin } from "@/api/auth/api/postLogin";
+import { LoginAuthRequestProviderType } from "@/api/auth/types/LoginAuthRequestProviderType";
 import {
   clearStoredAccessToken,
   clearStoredSignupToken,
@@ -33,17 +30,15 @@ export function KakaoCallbackView({
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
     try {
-      const response = await login({
+      const response = await postLogin({
         providerType: LoginAuthRequestProviderType.KAKAO,
         socialCode,
       });
-      const responseBody =
-        response as unknown as CommonResponseLoginAuthResponse;
-      const loginData = responseBody.data;
+      const loginData = response.data;
 
       if (!loginData) {
         redirectToLogin("login response body did not contain login data", {
-          responseBody,
+          response,
         });
         return;
       }

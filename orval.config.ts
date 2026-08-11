@@ -52,16 +52,29 @@ if (
 
 export default defineConfig({
   tudack: {
-    input: openApiTarget,
+    input: {
+      target: openApiTarget,
+      filters: {
+        mode: "exclude",
+        tags: ["Debate WebSocket"],
+      },
+    },
     output: {
-      target: "./src/api/generated/endpoints.ts",
-      schemas: "./src/api/generated/model",
+      target: "./.orval-staging/endpoints.ts",
+      schemas: "./.orval-staging/model",
       client: "react-query",
-      mode: "tags-split",
+      mode: "tags-operations-split",
       override: {
         mutator: {
           path: "./src/api/orval-mutator.ts",
           name: "orvalApiClient",
+        },
+        // `orvalApiClient` (src/api/orval-mutator.ts) resolves to parsed JSON
+        // directly (ky's `.json<T>()`), never a `{ data, status, headers }`
+        // envelope — match that so generated return types reflect what the
+        // mutator actually returns at runtime.
+        fetch: {
+          includeHttpResponseReturnType: false,
         },
       },
     },
