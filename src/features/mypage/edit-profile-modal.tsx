@@ -12,7 +12,9 @@ interface EditProfileModalProps {
   nickname: string;
   photo: string | null;
   onClose: () => void;
-  onSave: (nickname: string, photo: string | null) => void;
+  onSave: (nickname: string, photoFile: File | null) => void | Promise<void>;
+  saving?: boolean;
+  errorMessage?: string;
 }
 
 export function EditProfileModal({
@@ -20,9 +22,12 @@ export function EditProfileModal({
   photo: initialPhoto,
   onClose,
   onSave,
+  saving = false,
+  errorMessage = "",
 }: EditProfileModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState(initialPhoto);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [nickname, setNickname] = useState(initialNickname);
 
   const trimmedLength = nickname.trim().length;
@@ -38,15 +43,16 @@ export function EditProfileModal({
         ? ""
         : "2자 이상 입력해주세요.";
 
+  const save = () => {
+    if (!valid || saving) return;
+    onSave(nickname.trim(), photoFile);
+  };
+
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPhotoFile(file);
     setPhoto(URL.createObjectURL(file));
-  };
-
-  const save = () => {
-    if (!valid) return;
-    onSave(nickname.trim(), photo);
   };
 
   return (
@@ -133,12 +139,21 @@ export function EditProfileModal({
           >
             {hint}
           </div>
+          <div className="text-[13px] text-(--text-3)">
+            사진을 바꾸면 업로드 후 함께 저장돼요.
+          </div>
+          {errorMessage && (
+            <div className="whitespace-pre-wrap break-all text-[13px] text-[#FF6B6B]">
+              {errorMessage}
+            </div>
+          )}
         </div>
 
         <div className="flex w-full flex-col gap-2.5 sm:flex-row">
           <button
             type="button"
             onClick={onClose}
+            disabled={saving}
             className="flex-1 border border-(--border-1) bg-(--bg-card) text-(--text-1) text-sm font-bold py-3.25 rounded-(--radius-button) cursor-pointer hover:border-[#c9c5bd]"
           >
             취소
@@ -146,15 +161,15 @@ export function EditProfileModal({
           <button
             type="button"
             onClick={save}
-            disabled={!valid}
+            disabled={!valid || saving}
             className={cn(
               "text-sm font-extrabold py-3.25 rounded-(--radius-button) sm:flex-[1.4]",
-              valid
+              valid && !saving
                 ? "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer hover:brightness-105"
                 : "bg-[#efedea] text-[#a3a09a] cursor-not-allowed",
             )}
           >
-            저장하기
+            {saving ? "저장 중..." : "저장하기"}
           </button>
         </div>
       </div>
