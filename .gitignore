@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# orval — raw pre-restructure output, consumed and deleted by
+# scripts/restructure-api.ts on every `pnpm api:generate`
+/.orval-staging/

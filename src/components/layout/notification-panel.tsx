@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 interface NotificationItem {
   id: string;
-  sticker: string;
   body: ReactNode;
   time: string;
   unread: boolean;
@@ -14,7 +13,6 @@ interface NotificationItem {
 const NOTIFICATIONS: NotificationItem[] = [
   {
     id: "1",
-    sticker: "st-con-basic",
     body: (
       <>
         <strong>치킨왕</strong>님이 반대 측으로 참여했어요 —{" "}
@@ -26,7 +24,6 @@ const NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: "2",
-    sticker: "st-com-idea",
     body: (
       <>
         참여한 토론에 투표가 열렸어요 —{" "}
@@ -38,7 +35,6 @@ const NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: "3",
-    sticker: "st-com-win",
     body: (
       <>
         투표 결과가 나왔어요 — <strong>"민트초코는 디저트인가?"</strong> 찬성
@@ -50,7 +46,6 @@ const NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: "4",
-    sticker: "st-com-read",
     body: "신고 처리 완료 — 접수됐던 신고가 처리되어 해당 사용자에게 조치했어요.",
     time: "2일 전",
     unread: false,
@@ -79,13 +74,6 @@ export function NotificationPanel() {
               n.unread && "bg-(--bg-unread)",
             )}
           >
-            <Image
-              src={`/assets/stickers/${n.sticker}.png`}
-              alt=""
-              width={40}
-              height={40}
-              className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
-            />
             <div className="min-w-0">
               <div
                 className={cn(
