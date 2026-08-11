@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { login } from "@/api/generated/auth-controller/auth-controller";
-import { LoginAuthRequestProviderType } from "@/api/generated/model";
+import {
+  type CommonResponseLoginAuthResponse,
+  LoginAuthRequestProviderType,
+} from "@/api/generated/model";
 import {
   clearStoredAccessToken,
   clearStoredSignupToken,
@@ -14,12 +17,6 @@ import {
 type KakaoCallbackViewProps = {
   authCode?: string;
   authError?: string;
-};
-
-type FlatLoginResponse = {
-  accessToken?: string;
-  signupToken?: string;
-  isNewUser?: boolean;
 };
 
 export function KakaoCallbackView({
@@ -45,18 +42,9 @@ export function KakaoCallbackView({
         providerType: LoginAuthRequestProviderType.KAKAO,
         socialCode,
       });
-      const responseBody = response.data;
-      const wrappedLoginData = responseBody.data;
-      const flatLoginData =
-        wrappedLoginData ??
-        ((responseBody as FlatLoginResponse | undefined)?.accessToken !==
-          undefined ||
-        (responseBody as FlatLoginResponse | undefined)?.signupToken !==
-          undefined ||
-        (responseBody as FlatLoginResponse | undefined)?.isNewUser !== undefined
-          ? (responseBody as FlatLoginResponse)
-          : undefined);
-      const loginData = flatLoginData;
+      const responseBody =
+        response as unknown as CommonResponseLoginAuthResponse;
+      const loginData = responseBody.data;
 
       console.log("[KakaoCallback] login response", responseBody);
 

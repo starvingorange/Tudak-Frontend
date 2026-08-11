@@ -2,12 +2,16 @@
 
 import { Camera } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import {
   preUpload,
   signup,
 } from "@/api/generated/auth-controller/auth-controller";
+import type {
+  CommonResponsePresignedUrlResponse,
+  CommonResponseSignupAuthResponse,
+} from "@/api/generated/model";
 import {
   clearStoredSignupToken,
   getStoredSignupToken,
@@ -26,7 +30,9 @@ type ProfileSetupViewProps = {
 export function ProfileSetupView({
   initialSignupToken,
 }: ProfileSetupViewProps) {
+  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -36,6 +42,7 @@ export function ProfileSetupView({
   );
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [debugMessage, setDebugMessage] = useState("");
 
   const trimmedLength = nickname.trim().length;
   const valid =
@@ -54,11 +61,17 @@ export function ProfileSetupView({
     if (initialSignupToken) {
       setStoredSignupToken(initialSignupToken);
       setSignupTokenState(initialSignupToken);
+
+      const nextSearchParams = new URLSearchParams(searchParams.toString());
+      nextSearchParams.delete("signupToken");
+      const nextQuery = nextSearchParams.toString();
+      const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      router.replace(nextUrl);
       return;
     }
 
     setSignupTokenState(getStoredSignupToken());
-  }, [initialSignupToken]);
+  }, [initialSignupToken, pathname, router, searchParams]);
 
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,60 +86,153 @@ export function ProfileSetupView({
 
     setSubmitting(true);
     setErrorMessage("");
+    setDebugMessage("");
+    let nextDebugMessage = "";
 
     try {
+      const contentType = photoFile.type || "image/jpeg";
       const preUploadResponse = await preUpload({
         signupToken,
-        contentType: photoFile.type,
+        contentType,
       });
-      const uploadData = preUploadResponse.data.data;
+      const preUploadBody =
+        preUploadResponse as unknown as CommonResponsePresignedUrlResponse;
+      const uploadData = preUploadBody.data as
+        | {
+            presignedUrl?: string;
+            s3objectKey?: string;
+            s3ObjectKey?: string;
+          }
+        | undefined;
+      const resolvedS3ObjectKey =
+        uploadData?.s3objectKey ?? uploadData?.s3ObjectKey;
 
       if (
-        !preUploadResponse.data.success ||
+        !preUploadBody.success ||
         !uploadData?.presignedUrl ||
-        !uploadData.s3objectKey
+        !resolvedS3ObjectKey
       ) {
+        nextDebugMessage = JSON.stringify(
+          {
+            stage: "preUpload",
+            success: preUploadBody.success,
+            message: preUploadBody.message,
+            uploadData,
+            resolvedS3ObjectKey,
+          },
+          null,
+          2,
+        );
+        setDebugMessage(nextDebugMessage);
         throw new Error(
-          preUploadResponse.data.message ||
-            "프로필 이미지 업로드 준비에 실패했어요.",
+          preUploadBody.message || "프로필 이미지 업로드 준비에 실패했어요.",
         );
       }
 
       const uploadResult = await fetch(uploadData.presignedUrl, {
         method: "PUT",
         headers: {
-          "Content-Type": photoFile.type,
+          "Content-Type": contentType,
         },
         body: photoFile,
       });
 
       if (!uploadResult.ok) {
+        nextDebugMessage = JSON.stringify(
+          {
+            stage: "s3Upload",
+            status: uploadResult.status,
+            statusText: uploadResult.statusText,
+          },
+          null,
+          2,
+        );
+        setDebugMessage(nextDebugMessage);
         throw new Error("프로필 이미지를 업로드하지 못했어요.");
       }
 
       const signupResponse = await signup({
         signupToken,
         nickname: nickname.trim(),
-        s3ObjectKey: uploadData.s3objectKey,
+        s3ObjectKey: resolvedS3ObjectKey,
       });
-      const accessToken = signupResponse.data.data?.accessToken;
+      const signupBody =
+        signupResponse as unknown as CommonResponseSignupAuthResponse;
+      const accessToken = signupBody.data?.accessToken;
 
-      if (!signupResponse.data.success || !accessToken) {
-        throw new Error(
-          signupResponse.data.message || "회원가입을 완료하지 못했어요.",
+      if (!signupBody.success || !accessToken) {
+        nextDebugMessage = JSON.stringify(
+          {
+            stage: "signup",
+            success: signupBody.success,
+            message: signupBody.message,
+          },
+          null,
+          2,
         );
+        setDebugMessage(nextDebugMessage);
+        throw new Error(signupBody.message || "회원가입을 완료하지 못했어요.");
       }
 
       setStoredAccessToken(accessToken);
       clearStoredSignupToken();
       router.replace("/");
     } catch (error) {
+      const signupRequestPayload = photoFile
+        ? {
+            signupToken,
+            nickname: nickname.trim(),
+            fileName: photoFile.name,
+            fileType: photoFile.type || "image/jpeg",
+            fileSize: photoFile.size,
+          }
+        : {
+            signupToken,
+            nickname: nickname.trim(),
+          };
+      const response = (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response instanceof Response
+          ? error.response
+          : null
+      ) as Response | null;
+      let responseBody: unknown = null;
+
+      if (response) {
+        try {
+          responseBody = await response.clone().json();
+        } catch {
+          try {
+            responseBody = await response.clone().text();
+          } catch {
+            responseBody = null;
+          }
+        }
+      }
+
       const nextMessage =
         error instanceof Error
           ? error.message
           : "온보딩 중 문제가 생겼어요. 다시 시도해주세요.";
 
       setErrorMessage(nextMessage);
+      setDebugMessage(
+        nextDebugMessage ||
+          JSON.stringify(
+            {
+              stage: "exception",
+              message: error instanceof Error ? error.message : String(error),
+              status: response?.status,
+              statusText: response?.statusText,
+              responseBody,
+              signupRequestPayload,
+            },
+            null,
+            2,
+          ),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -222,13 +328,11 @@ export function ProfileSetupView({
               로그인 세션이 없어요. 카카오 로그인부터 다시 진행해주세요.
             </div>
           )}
-          {!photoFile && (
-            <div className="text-[13px] text-[var(--text-3)]">
-              가입을 완료하려면 프로필 사진을 등록해주세요.
-            </div>
-          )}
+
           {errorMessage && (
-            <div className="text-[13px] text-[#FF6B6B]">{errorMessage}</div>
+            <div className="whitespace-pre-wrap break-all text-[13px] text-[#FF6B6B]">
+              {debugMessage ? `${errorMessage}\n${debugMessage}` : errorMessage}
+            </div>
           )}
         </div>
 

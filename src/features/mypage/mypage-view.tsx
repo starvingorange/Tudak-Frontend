@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   History,
   LogOut,
@@ -10,6 +11,17 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type {
+  CommonResponseFindMyPageResponse,
+  CommonResponsePresignedUrlResponse,
+  CommonResponseVoid,
+} from "@/api/generated/model";
+import {
+  getMyPageQueryKey,
+  preUpload1,
+  useModifyProfile,
+  useMyPage,
+} from "@/api/generated/user-controller/user-controller";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { getMyCompletedDebates, getMyVotes } from "./data";
@@ -19,13 +31,38 @@ import { MenuRow } from "./menu-row";
 
 export function MyPageView() {
   const router = useRouter();
-  const [nickname, setNickname] = useState("설렘주의");
-  const [photo, setPhoto] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [saveErrorMessage, setSaveErrorMessage] = useState("");
+  const [saveDebugMessage, setSaveDebugMessage] = useState("");
 
   const myDebates = getMyCompletedDebates();
   const myVotes = getMyVotes();
+  const { data, isLoading, isError, error } = useMyPage();
+  const myPageBody = data as unknown as
+    | CommonResponseFindMyPageResponse
+    | undefined;
+  const profile = myPageBody?.data;
+  const nickname = profile?.nickname?.trim() || "사용자";
+  const photo = profile?.presignedUrl ?? null;
+  const debateCount = profile?.debateCount ?? myDebates.length;
+  const pollCount = profile?.pollCount ?? myVotes.length;
+
+  const modifyProfileMutation = useModifyProfile({
+    mutation: {
+      onError: (mutationError) => {
+        setSaveErrorMessage(
+          mutationError instanceof Error
+            ? mutationError.message
+            : "프로필 저장 중 문제가 생겼어요.",
+        );
+      },
+    },
+  });
+
+  const profileLoadErrorMessage =
+    error instanceof Error ? error.message : "프로필 정보를 불러오지 못했어요.";
 
   return (
     <div className="mx-auto max-w-241 px-4 pt-2 pb-10">
@@ -60,15 +97,21 @@ export function MyPageView() {
           />
           <div className="flex-1 min-w-0">
             <div className="text-xl font-extrabold tracking-[-0.3px]">
-              {nickname}
+              {isLoading ? "불러오는 중..." : nickname}
             </div>
             <div className="mt-1.5 text-sm text-(--text-2)">
               토론에서 사용하는 프로필이에요.
             </div>
+            {isError && (
+              <div className="mt-2 text-[13px] text-[#FF6B6B]">
+                {profileLoadErrorMessage}
+              </div>
+            )}
           </div>
           <Button
             variant="outline"
             onClick={() => setEditing(true)}
+            disabled={isLoading || isError}
             className="w-full sm:w-auto"
           >
             프로필 수정
@@ -79,13 +122,13 @@ export function MyPageView() {
             <span className="text-[13px] font-bold text-(--text-2)">
               참여한 토론
             </span>
-            <span className="text-[22px] font-black">{myDebates.length}건</span>
+            <span className="text-[22px] font-black">{debateCount}건</span>
           </div>
           <div className="flex flex-col items-center gap-1 border-l border-(--border-1) py-4 sm:py-5">
             <span className="text-[13px] font-bold text-(--text-2)">
               참여한 투표
             </span>
-            <span className="text-[22px] font-black">{myVotes.length}건</span>
+            <span className="text-[22px] font-black">{pollCount}건</span>
           </div>
         </div>
       </section>
@@ -130,10 +173,170 @@ export function MyPageView() {
           nickname={nickname}
           photo={photo}
           onClose={() => setEditing(false)}
-          onSave={(nextNickname, nextPhoto) => {
-            setNickname(nextNickname);
-            setPhoto(nextPhoto);
-            setEditing(false);
+          saving={modifyProfileMutation.isPending}
+          errorMessage={
+            saveDebugMessage
+              ? `${saveErrorMessage}\n${saveDebugMessage}`
+              : saveErrorMessage
+          }
+          onSave={async (nextNickname, nextPhotoFile) => {
+            setSaveErrorMessage("");
+            setSaveDebugMessage("");
+            try {
+              let s3ObjectKey: string | undefined;
+
+              if (nextPhotoFile) {
+                const contentType = nextPhotoFile.type || "image/jpeg";
+                console.log("[profile] preUpload request", {
+                  fileName: nextPhotoFile.name,
+                  fileSize: nextPhotoFile.size,
+                  fileType: nextPhotoFile.type,
+                  contentType,
+                });
+                const preUploadResponse = await preUpload1({
+                  contentType,
+                });
+                const uploadResponse =
+                  preUploadResponse as unknown as CommonResponsePresignedUrlResponse;
+                const uploadData = uploadResponse.data as
+                  | {
+                      presignedUrl?: string;
+                      s3objectKey?: string;
+                      s3ObjectKey?: string;
+                    }
+                  | undefined;
+                const resolvedS3ObjectKey =
+                  uploadData?.s3objectKey ?? uploadData?.s3ObjectKey;
+
+                console.log("[profile] preUpload response", {
+                  success: uploadResponse?.success,
+                  message: uploadResponse?.message,
+                  uploadData,
+                  resolvedS3ObjectKey,
+                });
+
+                if (
+                  !uploadResponse?.success ||
+                  !uploadData?.presignedUrl ||
+                  !resolvedS3ObjectKey
+                ) {
+                  setSaveDebugMessage(
+                    JSON.stringify(
+                      {
+                        stage: "preUpload",
+                        success: uploadResponse?.success,
+                        message: uploadResponse?.message,
+                        uploadData,
+                        resolvedS3ObjectKey,
+                      },
+                      null,
+                      2,
+                    ),
+                  );
+                  setSaveErrorMessage(
+                    uploadResponse?.message ||
+                      "프로필 이미지 업로드 준비에 실패했어요.",
+                  );
+                  return;
+                }
+
+                const uploadResult = await fetch(uploadData.presignedUrl, {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": contentType,
+                  },
+                  body: nextPhotoFile,
+                });
+
+                console.log("[profile] image upload response", {
+                  ok: uploadResult.ok,
+                  status: uploadResult.status,
+                  statusText: uploadResult.statusText,
+                });
+
+                if (!uploadResult.ok) {
+                  setSaveDebugMessage(
+                    JSON.stringify(
+                      {
+                        stage: "s3Upload",
+                        status: uploadResult.status,
+                        statusText: uploadResult.statusText,
+                      },
+                      null,
+                      2,
+                    ),
+                  );
+                  setSaveErrorMessage("프로필 이미지를 업로드하지 못했어요.");
+                  return;
+                }
+
+                s3ObjectKey = resolvedS3ObjectKey;
+              }
+
+              const response = await modifyProfileMutation.mutateAsync({
+                data: {
+                  nickname: nextNickname,
+                  ...(s3ObjectKey ? { s3ObjectKey } : {}),
+                } as {
+                  nickname: string;
+                  s3ObjectKey?: string;
+                },
+              });
+              const modifyProfileBody =
+                response as unknown as CommonResponseVoid;
+
+              console.log("[profile] modifyProfile response", {
+                success: modifyProfileBody.success,
+                message: modifyProfileBody.message,
+                payload: {
+                  nickname: nextNickname,
+                  s3ObjectKey,
+                },
+              });
+
+              if (!modifyProfileBody.success) {
+                setSaveDebugMessage(
+                  JSON.stringify(
+                    {
+                      stage: "modifyProfile",
+                      success: modifyProfileBody.success,
+                      message: modifyProfileBody.message,
+                      payload: {
+                        nickname: nextNickname,
+                        s3ObjectKey,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                );
+                setSaveErrorMessage(
+                  modifyProfileBody.message || "프로필을 저장하지 못했어요.",
+                );
+                return;
+              }
+
+              await queryClient.invalidateQueries({
+                queryKey: getMyPageQueryKey(),
+              });
+              setSaveErrorMessage("");
+              setSaveDebugMessage("");
+              setEditing(false);
+            } catch (error) {
+              setSaveDebugMessage(
+                JSON.stringify(
+                  {
+                    stage: "exception",
+                    message:
+                      error instanceof Error ? error.message : String(error),
+                  },
+                  null,
+                  2,
+                ),
+              );
+              console.error("[profile] save failed", error);
+              // The mutation-level error handler already surfaces the message.
+            }
           }}
         />
       )}
