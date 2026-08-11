@@ -35,18 +35,18 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
   const isTalking = talking && myTurn;
 
   return (
-    <div className="sticky bottom-0 z-20 bg-[var(--bg-surface)] border-t border-[var(--border-1)]">
-      <div className="relative mx-auto flex max-w-[1180px] flex-col items-center gap-3 p-[14px_16px] sm:flex-row sm:justify-center sm:gap-7">
+    <div className="sticky bottom-0 z-20 bg-(--bg-surface) border-t border-(--border-1)">
+      <div className="relative mx-auto flex max-w-295 flex-col items-center gap-3 p-[14px_16px] sm:flex-row sm:justify-center sm:gap-7">
         <div ref={pickerRef} className="relative self-start sm:self-auto">
           <button
             type="button"
             title="이모티콘"
             onClick={() => setPickerOpen((v) => !v)}
             className={cn(
-              "inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full hover:bg-[var(--bg-hero)]",
+              "inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full hover:bg-(--bg-hero)",
               pickerOpen
-                ? "border-[1.5px] border-[var(--brand-yellow)] bg-[#fff8e8]"
-                : "border border-[var(--border-1)] bg-[var(--bg-card)]",
+                ? "border-[1.5px] border-(--brand-yellow) bg-[#fff8e8]"
+                : "border border-(--border-1) bg-(--bg-card)",
             )}
           >
             <Image
@@ -55,7 +55,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
               width={175}
               height={172}
               style={{ width: "auto" }}
-              className="h-[30px]"
+              className="h-7.5"
             />
           </button>
 
@@ -71,12 +71,12 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
           onTouchStart={() => myTurn && setTalking(true)}
           onTouchEnd={() => setTalking(false)}
           className={cn(
-            "inline-flex w-full items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:px-[34px]",
+            "inline-flex w-full items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:px-8.5",
             !myTurn
               ? "bg-[#efedea] text-[#a3a09a] cursor-not-allowed"
               : isTalking
                 ? "bg-[#e93a3a] text-white cursor-pointer scale-105"
-                : "bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] cursor-pointer",
+                : "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer",
           )}
         >
           <Mic size={18} />
@@ -87,7 +87,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
               : "누르고 말하기"}
         </button>
 
-        <div className="w-full max-w-[320px] text-center text-[13px] text-[#909090] sm:w-[220px] sm:text-left">
+        <div className="w-full max-w-[320px] text-center text-[13px] text-[#909090] sm:w-55 sm:text-left">
           {!myTurn
             ? "내 차례가 되면 버튼이 활성화돼요. 이모티콘으로 의사를 표현해 보세요!"
             : "버튼을 누르고 있는 동안 발언이 전달돼요."}
@@ -96,7 +96,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
         {reactions.map((r) => (
           <span
             key={r.id}
-            className="absolute bottom-[76px] w-[88px] h-[88px] pointer-events-none [animation:tdk-react-pop_1.6s_ease-out_forwards]"
+            className="absolute bottom-19 w-22 h-22 pointer-events-none animate-[tdk-react-pop_1.6s_ease-out_forwards]"
             style={{ left: r.left }}
           >
             <Image

@@ -55,7 +55,7 @@ export function Navbar() {
                 <Icon
                   size={15}
                   strokeWidth={active ? 2.4 : 2.2}
-                  className="shrink-0 sm:size-[17px]"
+                  className="shrink-0 sm:size-4.25"
                 />
                 <span className="truncate">{label}</span>
               </Link>

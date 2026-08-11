@@ -23,8 +23,8 @@ const STICKERS: [string, string][] = [
 
 export function EmojiPicker({ onSend }: { onSend: (sticker: string) => void }) {
   return (
-    <div className="absolute bottom-[calc(100%+12px)] left-0 box-border w-[min(392px,calc(100vw-32px))] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] p-3 shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:left-4 sm:w-[392px] sm:max-w-none sm:p-4">
-      <div className="mb-2.5 text-[13px] font-extrabold text-[var(--text-2)]">
+    <div className="absolute bottom-[calc(100%+12px)] left-0 box-border w-[min(392px,calc(100vw-32px))] max-w-[calc(100vw-32px)] rounded-2xl border border-(--border-1) bg-(--bg-card) p-3 shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:left-4 sm:w-[392px] sm:max-w-none sm:p-4">
+      <div className="mb-2.5 text-[13px] font-extrabold text-(--text-2)">
         이모티콘 보내기
       </div>
       <div className="grid grid-cols-4 gap-1.5 min-[420px]:grid-cols-5 sm:grid-cols-6">
@@ -34,14 +34,14 @@ export function EmojiPicker({ onSend }: { onSend: (sticker: string) => void }) {
             type="button"
             title={label}
             onClick={() => onSend(sticker)}
-            className="flex h-13 items-center justify-center rounded-[10px] border-none bg-transparent p-1.5 hover:bg-[var(--bg-hero)] sm:h-14"
+            className="flex h-13 items-center justify-center rounded-[10px] border-none bg-transparent p-1.5 hover:bg-(--bg-hero) sm:h-14"
           >
             <Image
               src={`/assets/stickers/${sticker}.png`}
               alt={label}
               width={46}
               height={46}
-              className="block max-h-10 max-w-full sm:max-h-[46px]"
+              className="block max-h-10 max-w-full sm:max-h-11.5"
             />
           </button>
         ))}

@@ -19,17 +19,17 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <div
-      className={cn("flex items-center gap-[9px] font-sans", className)}
+      className={cn("flex items-center gap-2.25 font-sans", className)}
       {...rest}
     >
       {icon}
-      <span className="text-lg font-extrabold flex-1 text-[var(--text-1)]">
+      <span className="text-lg font-extrabold flex-1 text-(--text-1)">
         {title}
       </span>
       {moreHref && (
         <Link
           href={moreHref}
-          className="text-[13px] text-[var(--text-3)] no-underline"
+          className="text-[13px] text-(--text-3) no-underline"
         >
           더보기 ›
         </Link>

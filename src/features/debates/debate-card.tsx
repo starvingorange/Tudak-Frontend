@@ -19,13 +19,13 @@ function Seat({
     return (
       <div className="flex flex-col items-center gap-2">
         <span
-          className="inline-flex h-15 w-15 items-center justify-center rounded-full border-2 border-dashed bg-[var(--bg-card)] text-2xl font-extrabold box-border sm:h-[72px] sm:w-[72px] sm:text-[26px]"
+          className="inline-flex h-15 w-15 items-center justify-center rounded-full border-2 border-dashed bg-(--bg-card) text-2xl font-extrabold box-border sm:h-18 sm:w-18 sm:text-[26px]"
           style={{ borderColor: "#d8d5cf", color: "#c2beb6" }}
         >
           ?
         </span>
         <span
-          className="rounded-[var(--radius-pill)] border px-[10px] py-[3px] text-[11px] font-bold sm:px-[11px]"
+          className="rounded-(--radius-pill) border px-2.5 py-0.75 text-[11px] font-bold sm:px-2.75"
           style={{ borderColor: "#d8d5cf", color: "#909090" }}
         >
           {label}
@@ -40,7 +40,7 @@ function Seat({
   return (
     <div className="flex flex-col items-center gap-2">
       <span
-        className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-[72px] sm:w-[72px]"
+        className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-18 sm:w-18"
         style={{ background: tint, borderColor: color }}
       >
         <Image
@@ -52,7 +52,7 @@ function Seat({
         />
       </span>
       <span
-        className="rounded-[var(--radius-pill)] px-[10px] py-[3px] text-[11px] font-bold text-white sm:px-[11px]"
+        className="rounded-(--radius-pill) px-2.5 py-0.75 text-[11px] font-bold text-white sm:px-2.75"
         style={{ background: color }}
       >
         {label}
