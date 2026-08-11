@@ -1,5 +1,22 @@
 import { ProfileSetupView } from "@/features/auth/profile-setup-view";
 
-export default function OnboardingPage() {
-  return <ProfileSetupView />;
+type OnboardingPageProps = {
+  searchParams: Promise<{
+    signupToken?: string | string[];
+  }>;
+};
+
+const readSearchParam = (value?: string | string[]) =>
+  Array.isArray(value) ? value[0] : value;
+
+export default async function OnboardingPage({
+  searchParams,
+}: OnboardingPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return (
+    <ProfileSetupView
+      initialSignupToken={readSearchParam(resolvedSearchParams.signupToken)}
+    />
+  );
 }
