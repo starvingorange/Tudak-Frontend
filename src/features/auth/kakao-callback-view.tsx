@@ -33,11 +33,6 @@ export function KakaoCallbackView({
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
     try {
-      console.log("[KakaoCallback] sending login request", {
-        providerType: LoginAuthRequestProviderType.KAKAO,
-        socialCode,
-      });
-
       const response = await login({
         providerType: LoginAuthRequestProviderType.KAKAO,
         socialCode,
@@ -45,8 +40,6 @@ export function KakaoCallbackView({
       const responseBody =
         response as unknown as CommonResponseLoginAuthResponse;
       const loginData = responseBody.data;
-
-      console.log("[KakaoCallback] login response", responseBody);
 
       if (!loginData) {
         redirectToLogin("login response body did not contain login data", {
@@ -63,9 +56,6 @@ export function KakaoCallbackView({
 
         clearStoredAccessToken();
         setStoredSignupToken(loginData.signupToken);
-        console.log("[KakaoCallback] redirecting to onboarding", {
-          isNewUser: loginData.isNewUser,
-        });
         router.replace(
           `/onboarding?signupToken=${encodeURIComponent(loginData.signupToken)}`,
         );
@@ -82,7 +72,6 @@ export function KakaoCallbackView({
 
       setStoredAccessToken(loginData.accessToken);
       clearStoredSignupToken();
-      console.log("[KakaoCallback] redirecting to /");
       router.replace("/");
     } catch (error) {
       redirectToLogin("login request threw an error", error);
@@ -90,11 +79,6 @@ export function KakaoCallbackView({
   });
 
   useEffect(() => {
-    console.log("[KakaoCallback] callback params", {
-      authCode,
-      authError,
-    });
-
     if (authError || !authCode) {
       redirectToLogin("missing authCode or authError returned from kakao", {
         authCode,
@@ -104,7 +88,6 @@ export function KakaoCallbackView({
     }
 
     if (processedCodeRef.current === authCode) {
-      console.log("[KakaoCallback] auth code already processed");
       return;
     }
 

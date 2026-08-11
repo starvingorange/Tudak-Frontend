@@ -187,12 +187,6 @@ export function MyPageView() {
 
               if (nextPhotoFile) {
                 const contentType = nextPhotoFile.type || "image/jpeg";
-                console.log("[profile] preUpload request", {
-                  fileName: nextPhotoFile.name,
-                  fileSize: nextPhotoFile.size,
-                  fileType: nextPhotoFile.type,
-                  contentType,
-                });
                 const preUploadResponse = await preUpload1({
                   contentType,
                 });
@@ -207,13 +201,6 @@ export function MyPageView() {
                   | undefined;
                 const resolvedS3ObjectKey =
                   uploadData?.s3objectKey ?? uploadData?.s3ObjectKey;
-
-                console.log("[profile] preUpload response", {
-                  success: uploadResponse?.success,
-                  message: uploadResponse?.message,
-                  uploadData,
-                  resolvedS3ObjectKey,
-                });
 
                 if (
                   !uploadResponse?.success ||
@@ -248,12 +235,6 @@ export function MyPageView() {
                   body: nextPhotoFile,
                 });
 
-                console.log("[profile] image upload response", {
-                  ok: uploadResult.ok,
-                  status: uploadResult.status,
-                  statusText: uploadResult.statusText,
-                });
-
                 if (!uploadResult.ok) {
                   setSaveDebugMessage(
                     JSON.stringify(
@@ -284,15 +265,6 @@ export function MyPageView() {
               });
               const modifyProfileBody =
                 response as unknown as CommonResponseVoid;
-
-              console.log("[profile] modifyProfile response", {
-                success: modifyProfileBody.success,
-                message: modifyProfileBody.message,
-                payload: {
-                  nickname: nextNickname,
-                  s3ObjectKey,
-                },
-              });
 
               if (!modifyProfileBody.success) {
                 setSaveDebugMessage(

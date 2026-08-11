@@ -33,11 +33,6 @@ export function GoogleCallbackView({
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
     try {
-      console.log("[GoogleCallback] sending login request", {
-        providerType: LoginAuthRequestProviderType.GOOGLE,
-        socialCode,
-      });
-
       const response = await login({
         providerType: LoginAuthRequestProviderType.GOOGLE,
         socialCode,
@@ -45,8 +40,6 @@ export function GoogleCallbackView({
       const responseBody =
         response as unknown as CommonResponseLoginAuthResponse;
       const loginData = responseBody.data;
-
-      console.log("[GoogleCallback] login response", responseBody);
 
       if (!loginData) {
         redirectToLogin("login response body did not contain login data", {
@@ -63,9 +56,6 @@ export function GoogleCallbackView({
 
         clearStoredAccessToken();
         setStoredSignupToken(loginData.signupToken);
-        console.log("[GoogleCallback] redirecting to onboarding", {
-          isNewUser: loginData.isNewUser,
-        });
         router.replace(
           `/onboarding?signupToken=${encodeURIComponent(loginData.signupToken)}`,
         );
@@ -82,7 +72,6 @@ export function GoogleCallbackView({
 
       setStoredAccessToken(loginData.accessToken);
       clearStoredSignupToken();
-      console.log("[GoogleCallback] redirecting to /");
       router.replace("/");
     } catch (error) {
       redirectToLogin("login request threw an error", error);
@@ -90,11 +79,6 @@ export function GoogleCallbackView({
   });
 
   useEffect(() => {
-    console.log("[GoogleCallback] callback params", {
-      authCode,
-      authError,
-    });
-
     if (authError || !authCode) {
       redirectToLogin("missing authCode or authError returned from google", {
         authCode,
@@ -104,7 +88,6 @@ export function GoogleCallbackView({
     }
 
     if (processedCodeRef.current === authCode) {
-      console.log("[GoogleCallback] auth code already processed");
       return;
     }
 
