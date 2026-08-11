@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { getGoogleAuthorizeUrl } from "@/lib/google";
 import { getKakaoAuthorizeUrl } from "@/lib/kakao";
 
 function KakaoIcon() {
@@ -67,6 +68,18 @@ export function LoginView() {
     window.location.assign(authorizeUrl);
   };
 
+  const loginWithGoogle = () => {
+    const authorizeUrl = getGoogleAuthorizeUrl();
+
+    if (!authorizeUrl) {
+      setStatus("error");
+      return;
+    }
+
+    setStatus("redirecting");
+    window.location.assign(authorizeUrl);
+  };
+
   return (
     <>
       <div className="flex flex-col items-center gap-5.5">
@@ -116,11 +129,14 @@ export function LoginView() {
 
         <button
           type="button"
-          disabled
-          className="relative flex h-14 w-full items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] text-base font-extrabold text-[var(--text-1)] opacity-60 cursor-not-allowed"
+          onClick={loginWithGoogle}
+          disabled={status === "redirecting"}
+          className="relative flex h-14 w-full items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] text-base font-extrabold text-[var(--text-1)] cursor-pointer hover:brightness-[0.97]"
         >
           <GoogleIcon />
-          구글 로그인 준비 중
+          {status === "redirecting"
+            ? "구글 로그인 진행 중..."
+            : "구글로 시작하기"}
         </button>
 
         <div className="text-center text-[13px] text-[var(--text-3)] leading-relaxed mt-1.5">

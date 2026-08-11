@@ -1,4 +1,4 @@
-const ACCESS_TOKEN_STORAGE_KEY = "tudack.access-token";
+const ACCESS_TOKEN_STORAGE_KEY = "accessToken";
 const SIGNUP_TOKEN_STORAGE_KEY = "tudack.signup-token";
 
 const canUseStorage = () => typeof window !== "undefined";
