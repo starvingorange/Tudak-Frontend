@@ -32,7 +32,7 @@ export function WaitingRoomsSection() {
           >
             <CategoryBadge
               category={room.category}
-              className="shrink-0 self-start"
+              className="shrink-0 self-start sm:self-center"
             />
             <span className="flex-1 text-[15px] leading-relaxed font-bold">
               {room.title}

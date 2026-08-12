@@ -35,7 +35,7 @@ export function VoteRow({ vote, onRequireLogin }: VoteRowProps) {
         <div className="min-w-0 flex-1 lg:contents">
           <CategoryBadge
             category={vote.category}
-            className="mb-2 px-2.5 py-1 text-[11px] sm:mb-0 sm:px-3 sm:py-1.25 sm:text-xs lg:order-1 lg:mb-0 lg:shrink-0"
+            className="mb-2 px-2.5 py-1 text-[11px] sm:mb-0 sm:px-3 sm:py-1.25 sm:text-xs lg:order-1 lg:mb-0 lg:shrink-0 lg:self-center"
           />
           <span className="block min-w-0 truncate text-[16px] leading-snug font-extrabold tracking-[-0.3px] sm:text-[19px] lg:order-3 lg:min-w-0 lg:flex-1">
             {vote.title}
