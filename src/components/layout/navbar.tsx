@@ -4,6 +4,9 @@ import { House, MessageCircle, Vote } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { isAuthenticated } from "@/api/api-client";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "./notification-bell";
 
@@ -15,6 +18,20 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname isn't read here, but re-running on route change re-checks auth after a login/logout redirect that lands on a route sharing this layout (so Navbar doesn't remount).
+  useEffect(() => {
+    let cancelled = false;
+
+    isAuthenticated().then((ok) => {
+      if (!cancelled) setIsLoggedIn(ok);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   return (
     <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
@@ -66,16 +83,22 @@ export function Navbar() {
           {/* 추후 다크 모드 필요시 활성화 */}
           {/* <ThemeToggle /> */}
           <NotificationBell />
-          <Link href="/mypage" className="block shrink-0">
-            <Image
-              src="/assets/avatar.png"
-              alt="프로필"
-              width={40}
-              height={40}
-              sizes="(max-width: 639px) 32px, 40px"
-              className="block rounded-full size-8 sm:size-10"
-            />
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/mypage" className="block shrink-0">
+              <Image
+                src="/assets/avatar.png"
+                alt="프로필"
+                width={40}
+                height={40}
+                sizes="(max-width: 639px) 32px, 40px"
+                className="block rounded-full size-8 sm:size-10"
+              />
+            </Link>
+          ) : (
+            <Button href="/login" size="sm" className="shrink-0">
+              로그인
+            </Button>
+          )}
         </div>
       </div>
     </nav>

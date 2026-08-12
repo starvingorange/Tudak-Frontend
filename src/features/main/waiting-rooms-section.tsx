@@ -2,15 +2,20 @@
 
 import { Clock } from "lucide-react";
 import { useState } from "react";
+import { useLoginGate } from "@/components/auth/use-login-gate";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import type { DebateRoom } from "@/features/debates/data";
 import { JoinModal } from "@/features/debates/join-modal";
+import { getStoredAccessToken } from "@/lib/auth";
 import { WAITING_ROOMS } from "./data";
 
 export function WaitingRoomsSection() {
   const [openRoom, setOpenRoom] = useState<DebateRoom | null>(null);
+  const { requireLogin, loginModal } = useLoginGate(
+    "토론에 참여하려면 로그인이 필요해요.",
+  );
 
   return (
     <section className="mt-5 rounded-(--radius-section) border border-(--border-1) bg-(--bg-surface) p-4 sm:mt-7 sm:p-[24px_28px_26px]">
@@ -35,7 +40,13 @@ export function WaitingRoomsSection() {
             <Button
               size="sm"
               className="justify-center sm:justify-start"
-              onClick={() => setOpenRoom(room)}
+              onClick={() => {
+                if (!getStoredAccessToken()) {
+                  requireLogin();
+                  return;
+                }
+                setOpenRoom(room);
+              }}
             >
               입장하기
             </Button>
@@ -45,6 +56,7 @@ export function WaitingRoomsSection() {
       {openRoom && (
         <JoinModal room={openRoom} onClose={() => setOpenRoom(null)} />
       )}
+      {loginModal}
     </section>
   );
 }

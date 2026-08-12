@@ -16,6 +16,7 @@ import { getMyPageQueryKey, useGetMyPage } from "@/api/user/hooks/useGetMyPage";
 import { usePatchModifyProfile } from "@/api/user/hooks/usePatchModifyProfile";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
+import { clearStoredAccessToken } from "@/lib/auth";
 import { getMyCompletedDebates, getMyVotes } from "./data";
 import { EditProfileModal } from "./edit-profile-modal";
 import { LogoutModal } from "./logout-modal";
@@ -275,7 +276,10 @@ export function MyPageView() {
       {loggingOut && (
         <LogoutModal
           onClose={() => setLoggingOut(false)}
-          onConfirm={() => router.push("/")}
+          onConfirm={() => {
+            clearStoredAccessToken();
+            router.push("/");
+          }}
         />
       )}
     </div>

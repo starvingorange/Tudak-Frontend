@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { getStoredAccessToken } from "@/lib/auth";
 import type { DebateRoom, DebateSeat } from "./data";
 
 function Seat({
@@ -70,9 +71,10 @@ function Seat({
 interface DebateCardProps {
   room: DebateRoom;
   onJoin: (room: DebateRoom) => void;
+  onRequireLogin: () => void;
 }
 
-export function DebateCard({ room, onJoin }: DebateCardProps) {
+export function DebateCard({ room, onJoin, onRequireLogin }: DebateCardProps) {
   const isFull = room.pro !== null && room.con !== null;
 
   return (
@@ -96,6 +98,12 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
         {isFull ? (
           <Link
             href={`/debates/${room.id}`}
+            onClick={(e) => {
+              if (!getStoredAccessToken()) {
+                e.preventDefault();
+                onRequireLogin();
+              }
+            }}
             className="inline-flex w-full items-center justify-center gap-1.75 rounded-lg border border-(--border-1) px-5 py-2.25 text-[13px] font-extrabold text-(--text-1) hover:border-(--brand-yellow) sm:w-auto"
           >
             관전하기
@@ -104,7 +112,13 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
           <Button
             size="sm"
             className="w-full justify-center sm:w-auto"
-            onClick={() => onJoin(room)}
+            onClick={() => {
+              if (!getStoredAccessToken()) {
+                onRequireLogin();
+                return;
+              }
+              onJoin(room);
+            }}
           >
             참여하기
           </Button>
