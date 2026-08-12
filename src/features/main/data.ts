@@ -33,7 +33,7 @@ export const POPULAR_DEBATES: PopularDebate[] = [
   },
   {
     id: "youth-basic-income",
-    category: "사회",
+    category: "시사",
     title: "청년 기본소득,\n지급해야 할까?",
     participants: 74,
     fireCount: 812,

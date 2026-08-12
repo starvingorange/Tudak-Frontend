@@ -31,7 +31,7 @@ export const VOTE_ROWS: VoteRow[] = [
   },
   {
     id: "youth-basic-income",
-    category: "사회",
+    category: "시사",
     title: "청년 기본소득, 지급해야 할까?",
     proName: "토닥이123",
     conName: "현실주의자",
@@ -49,7 +49,7 @@ export const VOTE_ROWS: VoteRow[] = [
   },
   {
     id: "ai-judge",
-    category: "사회",
+    category: "시사",
     title: "AI가 판사를 대신하는 시대, 가능할까?",
     proName: "미래생각",
     conName: "인간최우선",
@@ -67,12 +67,4 @@ export const VOTE_ROWS: VoteRow[] = [
   },
 ];
 
-export const VOTE_FILTER_TABS = [
-  "전체",
-  "시사",
-  "연애",
-  "사회",
-  "학교",
-  "기타",
-] as const;
 export const VOTE_SORT_OPTIONS = ["최신순", "인기순", "마감임박순"] as const;

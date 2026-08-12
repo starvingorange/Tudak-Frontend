@@ -1,22 +1,146 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, X } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { CategoryBadge } from "@/components/ui/category-badge";
-import type { WaitingRoomInfo } from "./data";
+import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
+import { useCurrentUserId } from "@/lib/auth/jwt";
+import { ROUTES } from "@/lib/routes";
+import type { Agreement, RoomParticipant } from "@/lib/ws/types";
+import { useDebateRoomSocket } from "@/lib/ws/use-debate-room-socket";
 
-interface WaitingRoomViewProps {
-  room: WaitingRoomInfo;
+interface Seat {
+  name: string;
+  sticker: string;
 }
 
-export function WaitingRoomView({ room }: WaitingRoomViewProps) {
+// The debate-detail API doesn't return a chosen sticker per seat — these are
+// the same defaults the create flow's preview used.
+const SEAT_STICKER = { pro: "st-pro-basic", con: "st-con-basic" } as const;
+
+interface WaitingRoomViewProps {
+  debateId: string;
+}
+
+function isAgreement(value: string | null): value is Agreement {
+  return value === "AGREE" || value === "DISAGREE";
+}
+
+function seatFromParticipants(
+  participants: RoomParticipant[],
+  wanted: Agreement,
+): Seat | null {
+  const participant = participants.find((p) => p.agreement === wanted);
+  return participant
+    ? {
+        name: participant.nickname,
+        sticker: wanted === "AGREE" ? SEAT_STICKER.pro : SEAT_STICKER.con,
+      }
+    : null;
+}
+
+export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const numericId = Number(debateId);
+  const myUserId = useCurrentUserId();
   const [copyLabel, setCopyLabel] = useState("복사하기");
-  const [started, setStarted] = useState(false);
-  const inviteLink = `tudak.app/join/${room.id}`;
-  const bothSeated = room.pro !== null && room.con !== null;
+  const [kickedMessage, setKickedMessage] = useState<string | null>(null);
+  const inviteLink = `tudak.app/join/${debateId}`;
+
+  // Set by the create-debate flow (host) or the join modal (guest) — the
+  // seat this client is claiming. Missing only if someone lands here without
+  // going through either flow (e.g. a stale bookmark).
+  const agreementParam = searchParams.get("agreement");
+  const agreement = isAgreement(agreementParam) ? agreementParam : undefined;
+
+  const { data, isLoading, isError } = useGetDebate(numericId, {
+    query: { enabled: Number.isFinite(numericId) },
+  });
+
+  const {
+    connectionState,
+    room: liveRoom,
+    error: wsError,
+    kick,
+    start,
+    leave,
+    refreshStatus,
+  } = useDebateRoomSocket(debateId, {
+    agreement,
+    onKicked: (message) => setKickedMessage(message.message),
+  });
+
+  // No `agreement` (stale link) means the hook never joined — fetch a
+  // read-only status snapshot instead, once connected.
+  const statusRequestedRef = useRef(false);
+  useEffect(() => {
+    if (agreement || statusRequestedRef.current) return;
+    if (connectionState !== "connected") return;
+    statusRequestedRef.current = true;
+    refreshStatus();
+  }, [agreement, connectionState, refreshStatus]);
+
+  useEffect(() => {
+    if (!kickedMessage) return;
+    const timer = setTimeout(() => router.push(ROUTES.debates()), 1500);
+    return () => clearTimeout(timer);
+  }, [kickedMessage, router]);
+
+  useEffect(() => {
+    if (liveRoom?.status === "STARTED") {
+      router.push(ROUTES.debateDetail(debateId));
+    }
+  }, [liveRoom?.status, debateId, router]);
+
+  if (!Number.isFinite(numericId) || isError) {
+    notFound();
+  }
+
+  const room = data?.data;
+  if (isLoading || !room) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-240 items-center justify-center px-4">
+        <span className="text-sm font-bold text-(--text-2)">
+          불러오는 중...
+        </span>
+      </div>
+    );
+  }
+
+  // REST snapshot for the very first paint; once the socket delivers a live
+  // `RoomStatusMessage` (join/leave/kick both broadcast one), that's the
+  // source of truth for who's seated.
+  const restPro: Seat | null =
+    room.hostAgreement === "AGREE" && room.hostNickname
+      ? { name: room.hostNickname, sticker: SEAT_STICKER.pro }
+      : room.opponentAgreement === "AGREE" && room.opponentNickname
+        ? { name: room.opponentNickname, sticker: SEAT_STICKER.pro }
+        : null;
+  const restCon: Seat | null =
+    room.hostAgreement === "DISAGREE" && room.hostNickname
+      ? { name: room.hostNickname, sticker: SEAT_STICKER.con }
+      : room.opponentAgreement === "DISAGREE" && room.opponentNickname
+        ? { name: room.opponentNickname, sticker: SEAT_STICKER.con }
+        : null;
+
+  const pro = liveRoom
+    ? seatFromParticipants(liveRoom.participants, "AGREE")
+    : restPro;
+  const con = liveRoom
+    ? seatFromParticipants(liveRoom.participants, "DISAGREE")
+    : restCon;
+  const bothSeated = pro !== null && con !== null;
+  const category = room.category ? BACKEND_TO_CATEGORY[room.category] : "기타";
+
+  const myAgreement: Agreement | null =
+    agreement ??
+    liveRoom?.participants.find((p) => p.userId === myUserId)?.agreement ??
+    null;
+  const isHost = myAgreement !== null && myAgreement === room.hostAgreement;
 
   const copyInvite = async () => {
     try {
@@ -28,23 +152,43 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
     setTimeout(() => setCopyLabel("복사하기"), 1500);
   };
 
-  const startDebate = () => {
-    if (!bothSeated) return;
-    setStarted(true);
-    setTimeout(() => router.push(`/debates/${room.id}`), 1200);
+  const leaveRoom = () => {
+    leave();
+    router.push(ROUTES.debates());
   };
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-240 flex-col justify-between gap-6 px-4 py-6 sm:py-8">
       <div className="flex flex-col justify-between gap-5">
+        <div className="relative flex min-h-9 flex-col items-start gap-3 sm:items-center sm:justify-center">
+          <button
+            type="button"
+            onClick={leaveRoom}
+            className="inline-flex items-center gap-2 rounded-[10px] border border-(--border-1) bg-(--bg-card) px-4 py-2.5 text-sm font-bold sm:absolute sm:left-0 sm:top-1/2 sm:-translate-y-1/2 sm:px-4.5 sm:py-2.75"
+          >
+            <ArrowLeft size={15} strokeWidth={2.4} />
+            나가기
+          </button>
+        </div>
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm font-extrabold text-(--brand-yellow) tracking-wide">
             토론 대기방
           </span>
           <h1 className="m-0 text-center text-3xl font-black tracking-[-0.5px] sm:text-4xl">
-            {room.topic}
+            {room.title}
           </h1>
         </div>
+
+        {kickedMessage && (
+          <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+            {kickedMessage}
+          </div>
+        )}
+        {!kickedMessage && wsError && (
+          <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+            {wsError.message}
+          </div>
+        )}
 
         <div className="flex flex-col gap-3.5 rounded-2xl bg-(--bg-hero) p-4 sm:p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
@@ -52,17 +196,19 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
               카테고리
             </span>
             <span className="hidden h-4.5 w-px bg-(--border-1) sm:block" />
-            <CategoryBadge category={room.category} />
+            <CategoryBadge category={category} />
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <span className="w-20 shrink-0 text-sm font-bold text-(--text-2)">
-              안건 설명
-            </span>
-            <span className="hidden h-4.5 w-px bg-(--border-1) sm:block" />
-            <span className="text-[15px] font-bold leading-relaxed">
-              {room.description}
-            </span>
-          </div>
+          {room.content && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <span className="w-20 shrink-0 text-sm font-bold text-(--text-2)">
+                안건 설명
+              </span>
+              <span className="hidden h-4.5 w-px bg-(--border-1) sm:block" />
+              <span className="text-[15px] font-bold leading-relaxed">
+                {room.content}
+              </span>
+            </div>
+          )}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             <span className="w-20 shrink-0 text-sm font-bold text-(--text-2)">
               발언 시간
@@ -80,18 +226,28 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
         <div className="grid items-stretch gap-4 sm:gap-6 md:grid-cols-[1fr_auto_1fr]">
           <WaitingSeat
             label="찬성"
-            stance={room.proStance}
-            seat={room.pro}
+            stance={room.agreeLabel ?? "찬성"}
+            seat={pro}
             color="var(--vote-blue)"
+            onKick={
+              isHost && pro !== null && myAgreement !== "AGREE"
+                ? kick
+                : undefined
+            }
           />
           <div className="self-center justify-self-center px-2 text-[28px] font-black text-(--text-3) md:text-[34px]">
             VS
           </div>
           <WaitingSeat
             label="반대"
-            stance={room.conStance}
-            seat={room.con}
+            stance={room.disagreeLabel ?? "반대"}
+            seat={con}
             color="var(--vote-red)"
+            onKick={
+              isHost && con !== null && myAgreement !== "DISAGREE"
+                ? kick
+                : undefined
+            }
           />
         </div>
       </div>
@@ -118,18 +274,17 @@ export function WaitingRoomView({ room }: WaitingRoomViewProps) {
 
         <button
           type="button"
-          onClick={startDebate}
-          disabled={!bothSeated}
+          onClick={() => isHost && start()}
+          disabled={!isHost || !bothSeated}
           className="h-14 rounded-2xl border-none bg-(--brand-yellow) text-(--brand-on-yellow) text-base font-black font-sans flex items-center justify-center gap-2.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:brightness-[0.96]"
         >
           <MessageCircle size={18} strokeWidth={2.2} />
-          {bothSeated ? "토론 시작하기" : "상대방을 기다리는 중..."}
+          {!bothSeated
+            ? "상대방을 기다리는 중..."
+            : isHost
+              ? "토론 시작하기"
+              : "호스트가 곧 시작해요..."}
         </button>
-        {started && (
-          <div className="rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.5 px-4.5">
-            토론이 시작됩니다! 🔥
-          </div>
-        )}
       </div>
     </div>
   );
@@ -140,17 +295,29 @@ function WaitingSeat({
   stance,
   seat,
   color,
+  onKick,
 }: {
   label: string;
   stance: string;
-  seat: { name: string; sticker: string } | null;
+  seat: Seat | null;
   color: string;
+  onKick?: () => void;
 }) {
   return (
     <div
-      className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 bg-(--bg-card) px-4 py-5 sm:px-5 sm:py-6"
+      className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 bg-(--bg-card) px-4 py-5 sm:px-5 sm:py-6"
       style={{ borderColor: seat ? color : "var(--border-1)" }}
     >
+      {onKick && (
+        <button
+          type="button"
+          onClick={onKick}
+          title="강퇴하기"
+          className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-(--border-1) bg-(--bg-card) text-(--text-2) cursor-pointer hover:border-(--vote-red) hover:text-(--vote-red)"
+        >
+          <X size={14} strokeWidth={2.4} />
+        </button>
+      )}
       <div
         className="text-sm font-extrabold px-3.5 py-1 rounded-full text-white"
         style={{ background: seat ? color : "var(--text-3)" }}

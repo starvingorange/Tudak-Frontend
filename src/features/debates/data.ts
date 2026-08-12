@@ -38,7 +38,7 @@ export const DEBATE_ROOMS: DebateRoom[] = [
   },
   {
     id: "youth-basic-income",
-    category: "사회",
+    category: "시사",
     title: "청년 기본소득, 지급해야 할까?",
     proStance: "지급해야 한다",
     conStance: "지급하지 말아야 한다",
@@ -47,7 +47,7 @@ export const DEBATE_ROOMS: DebateRoom[] = [
   },
   {
     id: "tuition-fees",
-    category: "학교",
+    category: "기타",
     title: "대학교 등록금, 지금이 적정할까?",
     proStance: "적정하다",
     conStance: "너무 비싸다",
@@ -65,7 +65,7 @@ export const DEBATE_ROOMS: DebateRoom[] = [
   },
   {
     id: "ai-judge",
-    category: "사회",
+    category: "시사",
     title: "AI가 판사를 대신하는 시대, 가능할까?",
     proStance: "가능하다",
     conStance: "불가능하다",

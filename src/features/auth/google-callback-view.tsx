@@ -4,12 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { postLogin } from "@/api/auth/api/postLogin";
 import { LoginAuthRequestProviderType } from "@/api/auth/types/LoginAuthRequestProviderType";
-import {
-  clearStoredAccessToken,
-  clearStoredSignupToken,
-  setStoredAccessToken,
-  setStoredSignupToken,
-} from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/stores/auth-store";
 
 type GoogleCallbackViewProps = {
   authCode?: string;
@@ -22,10 +18,14 @@ export function GoogleCallbackView({
 }: GoogleCallbackViewProps) {
   const router = useRouter();
   const processedCodeRef = useRef<string | null>(null);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
+  const setSignupToken = useAuthStore((s) => s.setSignupToken);
+  const clearSignupToken = useAuthStore((s) => s.clearSignupToken);
 
   const redirectToLogin = useEffectEvent((reason: string, detail?: unknown) => {
     console.error("[GoogleCallback] redirecting to /login:", reason, detail);
-    router.replace("/login");
+    router.replace(ROUTES.login());
   });
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
@@ -49,11 +49,9 @@ export function GoogleCallbackView({
           return;
         }
 
-        clearStoredAccessToken();
-        setStoredSignupToken(loginData.signupToken);
-        router.replace(
-          `/onboarding?signupToken=${encodeURIComponent(loginData.signupToken)}`,
-        );
+        clearAccessToken();
+        setSignupToken(loginData.signupToken);
+        router.replace(ROUTES.onboarding(loginData.signupToken));
         return;
       }
 
@@ -65,9 +63,9 @@ export function GoogleCallbackView({
         return;
       }
 
-      setStoredAccessToken(loginData.accessToken);
-      clearStoredSignupToken();
-      router.replace("/");
+      setAccessToken(loginData.accessToken);
+      clearSignupToken();
+      router.replace(ROUTES.home());
     } catch (error) {
       redirectToLogin("login request threw an error", error);
     }

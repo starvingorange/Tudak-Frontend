@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getMyVotes } from "@/features/mypage/data";
 import { VoteRow } from "@/features/votes/vote-row";
+import { ROUTES } from "@/lib/routes";
 
 export default function MyVotesPage() {
   const votes = getMyVotes();
@@ -12,7 +13,7 @@ export default function MyVotesPage() {
       <div className="flex items-start justify-between">
         <div className="py-9">
           <Link
-            href="/mypage"
+            href={ROUTES.myPage()}
             className="inline-flex items-center gap-1.5 text-sm font-bold text-(--text-2) hover:text-(--text-1)"
           >
             <ArrowLeft size={16} />

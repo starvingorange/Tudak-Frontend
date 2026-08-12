@@ -6,13 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { getPreUpload } from "@/api/auth/api/getPreUpload";
 import { postSignup } from "@/api/auth/api/postSignup";
-import {
-  clearStoredSignupToken,
-  getStoredSignupToken,
-  setStoredAccessToken,
-  setStoredSignupToken,
-} from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 const MIN_NICKNAME_LENGTH = 2;
 const MAX_NICKNAME_LENGTH = 12;
@@ -31,9 +27,10 @@ export function ProfileSetupView({
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [nickname, setNickname] = useState("");
-  const [signupToken, setSignupTokenState] = useState<string | null>(
-    initialSignupToken ?? null,
-  );
+  const signupToken = useAuthStore((s) => s.signupToken);
+  const setSignupToken = useAuthStore((s) => s.setSignupToken);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const clearSignupToken = useAuthStore((s) => s.clearSignupToken);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [debugMessage, setDebugMessage] = useState("");
@@ -52,20 +49,16 @@ export function ProfileSetupView({
         : "2자 이상 입력해주세요.";
 
   useEffect(() => {
-    if (initialSignupToken) {
-      setStoredSignupToken(initialSignupToken);
-      setSignupTokenState(initialSignupToken);
+    if (!initialSignupToken) return;
 
-      const nextSearchParams = new URLSearchParams(searchParams.toString());
-      nextSearchParams.delete("signupToken");
-      const nextQuery = nextSearchParams.toString();
-      const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
-      router.replace(nextUrl);
-      return;
-    }
+    setSignupToken(initialSignupToken);
 
-    setSignupTokenState(getStoredSignupToken());
-  }, [initialSignupToken, pathname, router, searchParams]);
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.delete("signupToken");
+    const nextQuery = nextSearchParams.toString();
+    const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    router.replace(nextUrl);
+  }, [initialSignupToken, pathname, router, searchParams, setSignupToken]);
 
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -160,9 +153,9 @@ export function ProfileSetupView({
         );
       }
 
-      setStoredAccessToken(accessToken);
-      clearStoredSignupToken();
-      router.replace("/");
+      setAccessToken(accessToken);
+      clearSignupToken();
+      router.replace(ROUTES.home());
     } catch (error) {
       const signupRequestPayload = photoFile
         ? {
@@ -227,7 +220,7 @@ export function ProfileSetupView({
   return (
     <>
       <div className="flex flex-col items-center gap-3.5">
-        <div className="relative w-[140px] h-[52px]">
+        <div className="relative w-35 h-13">
           <Image
             src="/assets/logo-hero-light.png"
             alt="투닭"
@@ -246,14 +239,14 @@ export function ProfileSetupView({
         <h1 className="text-[26px] font-black tracking-[-0.5px] m-0">
           프로필을 설정해주세요
         </h1>
-        <div className="text-[15px] font-semibold text-[var(--text-2)] whitespace-nowrap">
+        <div className="text-[15px] font-semibold text-(--text-2) whitespace-nowrap">
           토론에서 사용할 프로필이에요. 나중에 바꿀 수 있어요.
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-7 w-[420px] max-w-[90vw] bg-[var(--bg-card)] border border-[var(--border-1)] rounded-3xl p-10 box-border">
-        <div className="relative w-[140px] h-[140px]">
-          <div className="w-[140px] h-[140px] rounded-full overflow-hidden border-[3px] border-[var(--brand-yellow)] box-border bg-[var(--bg-hero)]">
+      <div className="flex flex-col items-center gap-7 w-105 max-w-[90vw] bg-(--bg-card) border border-(--border-1) rounded-3xl p-10 box-border">
+        <div className="relative w-35 h-35">
+          <div className="w-35 h-35 rounded-full overflow-hidden border-[3px] border-(--brand-yellow) box-border bg-[v ar(--bg-hero)]">
             <Image
               src={photo ?? "/assets/profile-placeholder.png"}
               alt="프로필 사진"
@@ -267,7 +260,7 @@ export function ProfileSetupView({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="프로필 사진 변경"
-            className="absolute bottom-0.5 right-0.5 w-[38px] h-[38px] rounded-full bg-[var(--brand-yellow)] border-[3px] border-[var(--bg-card)] box-border flex items-center justify-center cursor-pointer"
+            className="absolute bottom-0.5 right-0.5 w-9.5 h-9.5 rounded-full bg-(--brand-yellow) border-[3px] border-(--bg-card) box-border flex items-center justify-center cursor-pointer"
           >
             <Camera size={17} strokeWidth={2} />
           </button>
@@ -289,21 +282,21 @@ export function ProfileSetupView({
               maxLength={MAX_NICKNAME_LENGTH}
               placeholder="닉네임을 입력해주세요"
               className={cn(
-                "w-full h-[54px] rounded-2xl border-[1.5px] pr-[76px] pl-[18px] text-[15px] font-bold box-border bg-[var(--bg-card)] outline-none",
+                "w-full h-13.5 rounded-2xl border-[1.5px] pr-19 pl- [18px] text-[15px] font-bold box-border bg-(--bg-card) outline-none",
                 !valid && nickname.length > 0
                   ? "border-[#FF6B6B]"
-                  : "border-[var(--border-1)]",
+                  : "border-(--border-1)",
               )}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--text-3)]">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-(--text-3)">
               {nickname.length} / {MAX_NICKNAME_LENGTH}
             </span>
           </div>
           <div
             className={cn(
-              "text-[13px] min-h-[18px]",
+              "text-[13px] min-h-4.5",
               nickname.length === 0 || valid
-                ? "text-[var(--text-3)]"
+                ? "text-(--text-3)"
                 : "text-[#FF6B6B]",
             )}
           >
@@ -329,8 +322,8 @@ export function ProfileSetupView({
           className={cn(
             "w-full h-14 rounded-2xl text-base font-black font-sans",
             valid && photoFile && signupToken && !submitting
-              ? "bg-[var(--brand-yellow)] text-[var(--brand-on-yellow)] cursor-pointer hover:brightness-[0.97]"
-              : "bg-[var(--border-1)] text-[var(--text-3)] cursor-not-allowed",
+              ? "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer hover:brightness-[0.97]"
+              : "bg-(--border-1) text-(--text-3) cursor-not-allowed",
           )}
         >
           {submitting ? "가입 완료 중..." : "투닭 시작하기"}

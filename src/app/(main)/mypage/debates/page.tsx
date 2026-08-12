@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getMyCompletedDebates } from "@/features/mypage/data";
 import { MyDebateRow } from "@/features/mypage/my-debate-row";
+import { ROUTES } from "@/lib/routes";
 
 export default function MyDebatesPage() {
   const debates = getMyCompletedDebates();
@@ -12,7 +13,7 @@ export default function MyDebatesPage() {
       <div className="flex items-start justify-between">
         <div className="py-9">
           <Link
-            href="/mypage"
+            href={ROUTES.myPage()}
             className="inline-flex items-center gap-1.5 text-sm font-bold text-(--text-2) hover:text-(--text-1)"
           >
             <ArrowLeft size={16} />

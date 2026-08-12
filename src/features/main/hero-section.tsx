@@ -1,6 +1,7 @@
 import { MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/routes";
 
 export function HeroSection() {
   return (
@@ -51,7 +52,7 @@ export function HeroSection() {
           당신의 목소리가 승부를 바꿉니다.
         </div>
         <Button
-          href="/debates"
+          href={ROUTES.debates()}
           icon={<MessageCircle size={16} />}
           className="mt-5 w-fit sm:mt-5.5"
         >

@@ -13,8 +13,15 @@ interface Reaction {
   left: string;
 }
 
-export function ControlBar({ myTurn }: { myTurn: boolean }) {
-  const [talking, setTalking] = useState(false);
+interface ControlBarProps {
+  myTurn: boolean;
+  /** Whether the local mic track is currently unmuted and transmitting. */
+  micOn: boolean;
+  /** Toggles it — first press starts transmitting, second press stops. */
+  onToggleMic: () => void;
+}
+
+export function ControlBar({ myTurn, micOn, onToggleMic }: ControlBarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const pickerRef = useDismissableOpen<HTMLDivElement>(
@@ -32,7 +39,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
     }, 1600);
   };
 
-  const isTalking = talking && myTurn;
+  const isTalking = micOn && myTurn;
 
   return (
     <div className="sticky bottom-0 z-20 bg-(--bg-surface) border-t border-(--border-1)">
@@ -65,11 +72,7 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
         <button
           type="button"
           disabled={!myTurn}
-          onMouseDown={() => myTurn && setTalking(true)}
-          onMouseUp={() => setTalking(false)}
-          onMouseLeave={() => setTalking(false)}
-          onTouchStart={() => myTurn && setTalking(true)}
-          onTouchEnd={() => setTalking(false)}
+          onClick={() => myTurn && onToggleMic()}
           className={cn(
             "inline-flex w-full items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:px-8.5",
             !myTurn
@@ -83,14 +86,14 @@ export function ControlBar({ myTurn }: { myTurn: boolean }) {
           {!myTurn
             ? "상대 발언 중"
             : isTalking
-              ? "말하는 중…"
-              : "누르고 말하기"}
+              ? "말하는 중… (누르면 종료)"
+              : "눌러서 말하기"}
         </button>
 
         <div className="w-full max-w-[320px] text-center text-[13px] text-[#909090] sm:w-55 sm:text-left">
           {!myTurn
             ? "내 차례가 되면 버튼이 활성화돼요. 이모티콘으로 의사를 표현해 보세요!"
-            : "버튼을 누르고 있는 동안 발언이 전달돼요."}
+            : "버튼을 누르면 말하기가 시작되고, 다시 누르면 끝나요."}
         </div>
 
         {reactions.map((r) => (

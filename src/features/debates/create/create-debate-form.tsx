@@ -1,11 +1,16 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { usePostCreateDebate } from "@/api/debate/hooks/usePostCreateDebate";
+import { CreateDebateRequestAgreement } from "@/api/debate/types/CreateDebateRequestAgreement";
 import {
   CATEGORY_FILTERS,
+  CATEGORY_TO_BACKEND,
   type CategorySlug,
 } from "@/features/shared/categories";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 const MAX_TOPIC_LENGTH = 100;
@@ -15,13 +20,15 @@ const MAX_LABEL_LENGTH = 10;
 type Side = "left" | "right";
 
 export function CreateDebateForm() {
+  const router = useRouter();
   const [topic, setTopic] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<CategorySlug>("사회");
+  const [category, setCategory] = useState<CategorySlug>("시사");
   const [leftLabel, setLeftLabel] = useState("찬성");
   const [rightLabel, setRightLabel] = useState("반대");
   const [side, setSide] = useState<Side>("left");
-  const [created, setCreated] = useState(false);
+
+  const { mutate: createDebate, isPending, error } = usePostCreateDebate();
 
   const valid =
     topic.trim() !== "" &&
@@ -30,9 +37,34 @@ export function CreateDebateForm() {
     rightLabel.trim() !== "";
 
   const submit = () => {
-    if (!valid) return;
-    setCreated(true);
-    setTimeout(() => setCreated(false), 2500);
+    if (!valid || isPending) return;
+    createDebate(
+      {
+        data: {
+          title: topic,
+          content: description,
+          category: CATEGORY_TO_BACKEND[category],
+          agreeLabel: leftLabel,
+          disagreeLabel: rightLabel,
+          agreement:
+            side === "left"
+              ? CreateDebateRequestAgreement.AGREE
+              : CreateDebateRequestAgreement.DISAGREE,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const debateId = res.data?.debateId;
+          if (debateId) {
+            const agreement =
+              side === "left"
+                ? CreateDebateRequestAgreement.AGREE
+                : CreateDebateRequestAgreement.DISAGREE;
+            router.push(ROUTES.debateWaiting(debateId, agreement));
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -204,25 +236,26 @@ export function CreateDebateForm() {
         </div>
       </div>
 
+      {error != null && (
+        <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+          토론방을 만들지 못했어요. 잠시 후 다시 시도해주세요.
+        </div>
+      )}
+
       <button
         type="button"
         onClick={submit}
-        disabled={!valid}
+        disabled={!valid || isPending}
         className={cn(
           "h-15 rounded-2xl text-[17px] font-black font-sans flex items-center justify-center gap-2.5 py-4",
-          valid
+          valid && !isPending
             ? "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer hover:brightness-[0.97]"
             : "bg-(--border-1) text-(--text-3) cursor-not-allowed",
         )}
       >
         <MessageCircle size={20} strokeWidth={2.2} />
-        토론방 생성하기
+        {isPending ? "생성 중..." : "토론방 생성하기"}
       </button>
-      {created && (
-        <div className="rounded-xl bg-[#E7F8EE] text-[#1F9D55] text-center text-sm font-bold py-3.5 px-4.5">
-          토론방이 생성되었습니다! 🎉
-        </div>
-      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getAccessToken } from "@/lib/auth/token";
+import { useAuthHydrated, useAuthStore } from "@/stores/auth-store";
 import { DebateRoomSocketClient } from "./debate-room-socket-client";
 import type {
   Agreement,
@@ -64,24 +64,40 @@ export function useDebateRoomSocket(
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
-  useEffect(() => {
-    if (debateId === undefined) return;
+  // Wait for the auth store's localStorage rehydration — connecting before
+  // it resolves sends the first CONNECT with no token at all, which the
+  // backend rejects (a real STOMP ERROR, not a network blip). stompjs's
+  // automatic reconnect papers over it a few seconds later, but there's no
+  // reason to let that failure happen in the first place.
+  const authHydrated = useAuthHydrated();
 
-    const client = new DebateRoomSocketClient(debateId, getAccessToken, {
-      onConnectionStateChange: setConnectionState,
-      onRoomStatus: setRoom,
-      onError: setError,
-      onKicked: (message) => optionsRef.current.onKicked?.(message),
-      onSignal: (message) => optionsRef.current.onSignal?.(message),
-      onConnect: (isReconnect) => {
-        if (isReconnect) {
-          client.refreshStatus();
-          return;
-        }
-        const agreement = optionsRef.current.agreement;
-        if (agreement) client.join(agreement);
+  useEffect(() => {
+    if (debateId === undefined || !authHydrated) return;
+
+    const client = new DebateRoomSocketClient(
+      debateId,
+      () => useAuthStore.getState().accessToken,
+      {
+        onConnectionStateChange: setConnectionState,
+        onRoomStatus: setRoom,
+        onError: setError,
+        onKicked: (message) => optionsRef.current.onKicked?.(message),
+        onSignal: (message) => optionsRef.current.onSignal?.(message),
+        onConnect: (isReconnect) => {
+          // A successful (re)connect means whatever caused a prior
+          // `onStompError` (e.g. the very first CONNECT racing the auth
+          // store's localStorage rehydration on cold page load) is resolved
+          // — don't leave a stale error banner up once the room is fine.
+          setError(null);
+          if (isReconnect) {
+            client.refreshStatus();
+            return;
+          }
+          const agreement = optionsRef.current.agreement;
+          if (agreement) client.join(agreement);
+        },
       },
-    });
+    );
 
     clientRef.current = client;
     client.connect();
@@ -92,7 +108,7 @@ export function useDebateRoomSocket(
     };
     // `options` is intentionally excluded — read via optionsRef above so
     // that a new callback identity doesn't reconnect the socket.
-  }, [debateId]);
+  }, [debateId, authHydrated]);
 
   return {
     connectionState,

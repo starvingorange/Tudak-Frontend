@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { ROUTES } from "@/lib/routes";
 import type { DebateRoom, DebateSeat } from "./data";
 
 function Seat({
@@ -95,7 +96,7 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
       <div className="mt-3.5 flex justify-stretch border-t border-(--border-1) pt-3.5 sm:mt-4.5 sm:justify-end sm:pt-4">
         {isFull ? (
           <Link
-            href={`/debates/${room.id}`}
+            href={ROUTES.debateDetail(room.id)}
             className="inline-flex w-full items-center justify-center gap-1.75 rounded-lg border border-(--border-1) px-5 py-2.25 text-[13px] font-extrabold text-(--text-1) hover:border-(--brand-yellow) sm:w-auto"
           >
             관전하기

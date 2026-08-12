@@ -1,6 +1,7 @@
 import { Home, Lightbulb, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { ROUTES } from "@/lib/routes";
 import type { DebateResult } from "./data";
 
 interface ResultViewProps {
@@ -90,7 +91,7 @@ export function ResultView({ result }: ResultViewProps) {
       </div>
 
       <Link
-        href="/"
+        href={ROUTES.home()}
         className="h-14 rounded-2xl bg-(--brand-yellow) text-(--brand-on-yellow) text-base font-black flex items-center justify-center gap-2.5 hover:brightness-[0.96]"
       >
         <Home size={18} strokeWidth={2} />

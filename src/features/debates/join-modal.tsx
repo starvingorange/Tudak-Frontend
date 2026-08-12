@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { DebateRoom } from "./data";
 
@@ -131,7 +132,14 @@ export function JoinModal({ room, onClose }: JoinModalProps) {
             취소
           </button>
           <Link
-            href={canConfirm ? `/debates/${room.id}/waiting` : "#"}
+            href={
+              canConfirm
+                ? ROUTES.debateWaiting(
+                    room.id,
+                    picked === "pro" ? "AGREE" : "DISAGREE",
+                  )
+                : "#"
+            }
             aria-disabled={!canConfirm}
             className={cn(
               "inline-flex flex-1 items-center justify-center rounded-(--radius-button) py-3.25 text-sm font-extrabold no-underline sm:flex-[1.4]",
