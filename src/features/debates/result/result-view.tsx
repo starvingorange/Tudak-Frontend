@@ -91,7 +91,7 @@ export function ResultView({ result }: ResultViewProps) {
       </div>
 
       <Link
-        href={ROUTES.home()}
+        href={ROUTES.HOME()}
         className="h-14 rounded-2xl bg-(--brand-yellow) text-(--brand-on-yellow) text-base font-black flex items-center justify-center gap-2.5 hover:brightness-[0.96]"
       >
         <Home size={18} strokeWidth={2} />

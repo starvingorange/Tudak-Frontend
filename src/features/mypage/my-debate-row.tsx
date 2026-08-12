@@ -29,7 +29,7 @@ export function MyDebateRow({ debate }: { debate: MyDebateSummary }) {
 
   return (
     <Link
-      href={ROUTES.debateResult(debate.id)}
+      href={ROUTES.DEBATE_RESULT(debate.id)}
       className="flex items-center gap-5 border border-(--border-1) rounded-(--radius-card) px-6.5 py-5 hover:border-(--brand-yellow)"
     >
       <CategoryBadge category={debate.category} className="shrink-0" />

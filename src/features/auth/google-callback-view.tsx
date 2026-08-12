@@ -25,7 +25,7 @@ export function GoogleCallbackView({
 
   const redirectToLogin = useEffectEvent((reason: string, detail?: unknown) => {
     console.error("[GoogleCallback] redirecting to /login:", reason, detail);
-    router.replace(ROUTES.login());
+    router.replace(ROUTES.LOGIN());
   });
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
@@ -51,7 +51,7 @@ export function GoogleCallbackView({
 
         clearAccessToken();
         setSignupToken(loginData.signupToken);
-        router.replace(ROUTES.onboarding(loginData.signupToken));
+        router.replace(ROUTES.ONBOARDING(loginData.signupToken));
         return;
       }
 
@@ -65,7 +65,7 @@ export function GoogleCallbackView({
 
       setAccessToken(loginData.accessToken);
       clearSignupToken();
-      router.replace(ROUTES.home());
+      router.replace(ROUTES.HOME());
     } catch (error) {
       redirectToLogin("login request threw an error", error);
     }

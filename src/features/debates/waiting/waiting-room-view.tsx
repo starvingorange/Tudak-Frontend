@@ -86,13 +86,13 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
 
   useEffect(() => {
     if (!kickedMessage) return;
-    const timer = setTimeout(() => router.push(ROUTES.debates()), 1500);
+    const timer = setTimeout(() => router.push(ROUTES.DEBATES()), 1500);
     return () => clearTimeout(timer);
   }, [kickedMessage, router]);
 
   useEffect(() => {
     if (liveRoom?.status === "STARTED") {
-      router.push(ROUTES.debateDetail(debateId));
+      router.push(ROUTES.DEBATE_DETAIL(debateId));
     }
   }, [liveRoom?.status, debateId, router]);
 
@@ -154,7 +154,7 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
 
   const leaveRoom = () => {
     leave();
-    router.push(ROUTES.debates());
+    router.push(ROUTES.DEBATES());
   };
 
   return (

@@ -134,7 +134,7 @@ export function JoinModal({ room, onClose }: JoinModalProps) {
           <Link
             href={
               canConfirm
-                ? ROUTES.debateWaiting(
+                ? ROUTES.DEBATE_WAITING(
                     room.id,
                     picked === "pro" ? "AGREE" : "DISAGREE",
                   )

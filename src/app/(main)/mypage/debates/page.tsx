@@ -13,7 +13,7 @@ export default function MyDebatesPage() {
       <div className="flex items-start justify-between">
         <div className="py-9">
           <Link
-            href={ROUTES.myPage()}
+            href={ROUTES.MY_PAGE()}
             className="inline-flex items-center gap-1.5 text-sm font-bold text-(--text-2) hover:text-(--text-1)"
           >
             <ArrowLeft size={16} />

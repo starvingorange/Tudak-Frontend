@@ -60,7 +60,7 @@ export function CreateDebateForm() {
               side === "left"
                 ? CreateDebateRequestAgreement.AGREE
                 : CreateDebateRequestAgreement.DISAGREE;
-            router.push(ROUTES.debateWaiting(debateId, agreement));
+            router.push(ROUTES.DEBATE_WAITING(debateId, agreement));
           }
         },
       },

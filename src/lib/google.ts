@@ -11,7 +11,7 @@ export const getGoogleRedirectUri = () => {
     return null;
   }
 
-  return `${window.location.origin}${ROUTES.loginGoogleCallback()}`;
+  return `${window.location.origin}${ROUTES.LOGIN_GOOGLE_CALLBACK()}`;
 };
 
 export const getGoogleAuthorizeUrl = () => {

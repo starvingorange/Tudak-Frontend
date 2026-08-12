@@ -155,7 +155,7 @@ export function ProfileSetupView({
 
       setAccessToken(accessToken);
       clearSignupToken();
-      router.replace(ROUTES.home());
+      router.replace(ROUTES.HOME());
     } catch (error) {
       const signupRequestPayload = photoFile
         ? {

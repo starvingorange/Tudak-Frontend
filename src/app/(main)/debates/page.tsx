@@ -16,7 +16,7 @@ export default function DebatesPage() {
             다양한 주제로 열려있는 토론방에 참여해보세요!
           </div>
           <Button
-            href={ROUTES.createDebate()}
+            href={ROUTES.CREATE_DEBATE()}
             icon={<Plus size={20} />}
             className="mt-4 w-fit sm:mt-5"
           >

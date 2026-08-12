@@ -52,7 +52,7 @@ export function HeroSection() {
           당신의 목소리가 승부를 바꿉니다.
         </div>
         <Button
-          href={ROUTES.debates()}
+          href={ROUTES.DEBATES()}
           icon={<MessageCircle size={16} />}
           className="mt-5 w-fit sm:mt-5.5"
         >

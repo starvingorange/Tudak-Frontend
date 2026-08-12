@@ -132,13 +132,13 @@ export function MyPageView() {
         />
         <div className="bg-(--bg-surface) border border-(--border-1) rounded-(--radius-section) mt-4.5 overflow-hidden">
           <MenuRow
-            href={ROUTES.myPageDebates()}
+            href={ROUTES.MY_PAGE_DEBATES()}
             icon={<MessageCircle size={20} />}
             label="참여한 토론"
             trailing={`${myDebates.length}건`}
           />
           <MenuRow
-            href={ROUTES.myPageVotes()}
+            href={ROUTES.MY_PAGE_VOTES()}
             icon={<ThumbsUp size={20} />}
             label="참여한 투표"
             trailing={`${myVotes.length}건`}
@@ -280,7 +280,7 @@ export function MyPageView() {
           onClose={() => setLoggingOut(false)}
           onConfirm={() => {
             clearAccessToken();
-            router.push(ROUTES.home());
+            router.push(ROUTES.HOME());
           }}
         />
       )}

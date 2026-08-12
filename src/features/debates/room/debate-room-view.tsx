@@ -133,7 +133,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
   useEffect(() => {
     if (liveRoom?.status === "CLOSED") {
-      router.push(ROUTES.debateResult(debateId));
+      router.push(ROUTES.DEBATE_RESULT(debateId));
     }
   }, [liveRoom?.status, debateId, router]);
 
@@ -184,7 +184,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
   const leaveRoom = () => {
     leave();
-    router.push(ROUTES.debates());
+    router.push(ROUTES.DEBATES());
   };
 
   return (

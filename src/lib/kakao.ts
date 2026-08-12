@@ -11,7 +11,7 @@ export const getKakaoRedirectUri = () => {
     return null;
   }
 
-  return `${window.location.origin}${ROUTES.loginKakaoCallback()}`;
+  return `${window.location.origin}${ROUTES.LOGIN_KAKAO_CALLBACK()}`;
 };
 
 export const getKakaoAuthorizeUrl = () => {

@@ -8,7 +8,7 @@ import type { VoteRow as VoteRowData } from "./data";
 export function VoteRow({ vote }: { vote: VoteRowData }) {
   return (
     <Link
-      href={ROUTES.debateDetail(vote.id)}
+      href={ROUTES.DEBATE_DETAIL(vote.id)}
       className="flex flex-col gap-3 rounded-(--radius-card) border border-(--border-1) px-3.5 py-3.5 hover:border-(--brand-yellow) sm:px-6.5 sm:py-5 sm:gap-4 lg:flex-row lg:items-center lg:gap-5"
     >
       <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">

@@ -11,9 +11,9 @@ import { useIsLoggedIn } from "@/stores/auth-store";
 import { NotificationBell } from "./notification-bell";
 
 const NAV_LINKS = [
-  { href: ROUTES.home(), label: "홈", icon: House },
-  { href: ROUTES.votes(), label: "투표", icon: Vote },
-  { href: ROUTES.debates(), label: "토론", icon: MessageCircle },
+  { href: ROUTES.HOME(), label: "홈", icon: House },
+  { href: ROUTES.VOTES(), label: "투표", icon: Vote },
+  { href: ROUTES.DEBATES(), label: "토론", icon: MessageCircle },
 ] as const;
 
 export function Navbar() {
@@ -27,7 +27,7 @@ export function Navbar() {
     <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
       <div className="mx-auto flex h-16 max-w-295 items-center gap-3 px-3 sm:gap-9 sm:px-4">
         <Link
-          href={ROUTES.home()}
+          href={ROUTES.HOME()}
           className="relative block h-8.5 w-26 shrink-0 sm:h-10.5 sm:w-33"
         >
           <Image
@@ -74,7 +74,7 @@ export function Navbar() {
           {/* <ThemeToggle /> */}
           <NotificationBell />
           {loggedIn ? (
-            <Link href={ROUTES.myPage()} className="block shrink-0">
+            <Link href={ROUTES.MY_PAGE()} className="block shrink-0">
               <Image
                 src="/assets/avatar.png"
                 alt="프로필"
@@ -87,7 +87,7 @@ export function Navbar() {
           ) : (
             <Button
               size="sm"
-              onClick={() => router.push(ROUTES.login())}
+              onClick={() => router.push(ROUTES.LOGIN())}
               className="shrink-0"
             >
               로그인
