@@ -1,5 +1,5 @@
 import ky from "ky";
-import { getStoredAccessToken } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth-store";
 
 export const apiClient = ky.create({
   prefix: process.env.NEXT_PUBLIC_API_URL,
@@ -7,7 +7,7 @@ export const apiClient = ky.create({
   hooks: {
     beforeRequest: [
       ({ request }) => {
-        const accessToken = getStoredAccessToken();
+        const accessToken = useAuthStore.getState().accessToken;
 
         if (accessToken) {
           request.headers.set("Authorization", `Bearer ${accessToken}`);

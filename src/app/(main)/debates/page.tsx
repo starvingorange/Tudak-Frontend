@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { DebateList } from "@/features/debates/debate-list";
+import { ROUTES } from "@/lib/routes";
 
 export default function DebatesPage() {
   return (
@@ -15,7 +16,7 @@ export default function DebatesPage() {
             다양한 주제로 열려있는 토론방에 참여해보세요!
           </div>
           <Button
-            href="/debates/new"
+            href={ROUTES.CREATE_DEBATE()}
             icon={<Plus size={20} />}
             className="mt-4 w-fit sm:mt-5"
           >

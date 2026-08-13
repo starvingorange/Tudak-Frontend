@@ -45,7 +45,7 @@ export function SpectatorVote({
   };
 
   return (
-    <section className="mx-auto mt-6 box-border max-w-[720px] rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] p-4 sm:p-[26px_28px]">
+    <section className="mx-auto mt-6 box-border max-w-180 rounded-2xl border border-(--border-1) bg-(--bg-card) p-4 sm:p-[26px_28px]">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2.5">
         <SquareCheckBig size={18} />
         <span className="flex-1 text-lg font-extrabold">
@@ -55,12 +55,12 @@ export function SpectatorVote({
           투표 마감 {deadlineLabel}
         </span>
       </div>
-      <div className="mt-2 text-[13.5px] text-[var(--text-2)]">
+      <div className="mt-2 text-[13.5px] text-(--text-2)">
         토론 종료 후 3일간 투표할 수 있어요. 마감 전까지 언제든 바꿀 수
         있습니다.
       </div>
 
-      <div className="mt-[18px] grid gap-3.5 sm:grid-cols-2">
+      <div className="mt-4.5 grid gap-3.5 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setMyVote("pro")}
@@ -75,13 +75,13 @@ export function SpectatorVote({
             className="h-14 sm:h-16"
           />
           <span className="flex flex-col items-start gap-1">
-            <span className="text-[15px] font-extrabold text-[var(--vote-blue)] sm:text-base">
+            <span className="text-[15px] font-extrabold text-(--vote-blue) sm:text-base">
               찬성 · {proName}
             </span>
             <span
               className={cn(
                 "text-[13px]",
-                myVote !== "pro" && "text-[var(--text-2)]",
+                myVote !== "pro" && "text-(--text-2)",
               )}
               style={myVote === "pro" ? { color: "#6f6f6f" } : undefined}
             >
@@ -103,13 +103,13 @@ export function SpectatorVote({
             className="h-14 sm:h-16"
           />
           <span className="flex flex-col items-start gap-1">
-            <span className="text-[15px] font-extrabold text-[var(--vote-red)] sm:text-base">
+            <span className="text-[15px] font-extrabold text-(--vote-red) sm:text-base">
               반대 · {conName}
             </span>
             <span
               className={cn(
                 "text-[13px]",
-                myVote !== "con" && "text-[var(--text-2)]",
+                myVote !== "con" && "text-(--text-2)",
               )}
               style={myVote === "con" ? { color: "#6f6f6f" } : undefined}
             >

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Cpu,
   Gamepad2,
   Grid2x2,
   Heart,
@@ -9,7 +8,6 @@ import {
   Palette,
   ScrollText,
   Trophy,
-  Users,
 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
@@ -20,18 +18,14 @@ import {
 import { useDismissableOpen } from "@/lib/use-dismissable-open";
 import { LIST_FILTER_CATEGORIES, type ListFilter } from "./categories";
 
-// Record<ListFilter, ...> must cover every CategorySlug (incl. "학교"), even
-// though "학교" is never in LIST_FILTER_CATEGORIES and so never gets a tab.
 const TAB_ICONS: Record<ListFilter, React.ElementType> = {
   전체: Grid2x2,
   시사: ScrollText,
   연애: Heart,
-  사회: Users,
   스포츠: Trophy,
   게임: Gamepad2,
   문화: Palette,
-  과학기술: Cpu,
-  학교: Users,
+  기타: MoreHorizontal,
 };
 
 const CANDIDATES: ListFilter[] = ["전체", ...LIST_FILTER_CATEGORIES];
@@ -165,7 +159,7 @@ export function CategoryTabBar({ active, onChange }: CategoryTabBarProps) {
               {isOverflowActive ? active : "기타"}
             </button>
             {menuOpen && (
-              <div className={`${dropdownPanelClass} left-0 min-w-[160px]`}>
+              <div className={`${dropdownPanelClass} left-0 min-w-40`}>
                 {overflow.map((tab) => {
                   const Icon = TAB_ICONS[tab];
                   return (

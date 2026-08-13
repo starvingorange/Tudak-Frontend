@@ -1,3 +1,5 @@
+import { ROUTES } from "@/lib/routes";
+
 const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 export const getGoogleRedirectUri = () => {
@@ -9,7 +11,7 @@ export const getGoogleRedirectUri = () => {
     return null;
   }
 
-  return `${window.location.origin}/login/google/callback`;
+  return `${window.location.origin}${ROUTES.LOGIN_GOOGLE_CALLBACK()}`;
 };
 
 export const getGoogleAuthorizeUrl = () => {

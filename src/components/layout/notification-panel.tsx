@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -86,7 +85,7 @@ export function NotificationPanel() {
               <div className="text-xs text-(--text-3) mt-1">{n.time}</div>
             </div>
             {n.unread && (
-              <span className="w-[7px] h-[7px] rounded-full bg-(--noti-dot) shrink-0 mt-1.5" />
+              <span className="w-1.75 h-1.75 rounded-full bg-(--noti-dot) shrink-0 mt-1.5" />
             )}
           </Link>
         ))}

@@ -1,3 +1,5 @@
+import { ROUTES } from "@/lib/routes";
+
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 
 export const getKakaoRedirectUri = () => {
@@ -9,7 +11,7 @@ export const getKakaoRedirectUri = () => {
     return null;
   }
 
-  return `${window.location.origin}/login/kakao/callback`;
+  return `${window.location.origin}${ROUTES.LOGIN_KAKAO_CALLBACK()}`;
 };
 
 export const getKakaoAuthorizeUrl = () => {

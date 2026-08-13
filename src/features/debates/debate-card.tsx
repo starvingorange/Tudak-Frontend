@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { ROUTES } from "@/lib/routes";
 import type { DebateRoom, DebateSeat } from "./data";
 
 function Seat({
@@ -19,13 +20,13 @@ function Seat({
     return (
       <div className="flex flex-col items-center gap-2">
         <span
-          className="inline-flex h-15 w-15 items-center justify-center rounded-full border-2 border-dashed bg-[var(--bg-card)] text-2xl font-extrabold box-border sm:h-[72px] sm:w-[72px] sm:text-[26px]"
+          className="inline-flex h-15 w-15 items-center justify-center rounded-full border-2 border-dashed bg-(--bg-card) text-2xl font-extrabold box-border sm:h-18 sm:w-18 sm:text-[26px]"
           style={{ borderColor: "#d8d5cf", color: "#c2beb6" }}
         >
           ?
         </span>
         <span
-          className="rounded-[var(--radius-pill)] border px-[10px] py-[3px] text-[11px] font-bold sm:px-[11px]"
+          className="rounded-(--radius-pill) border px-2.5 py-0.75 text-[11px] font-bold sm:px-2.75"
           style={{ borderColor: "#d8d5cf", color: "#909090" }}
         >
           {label}
@@ -40,7 +41,7 @@ function Seat({
   return (
     <div className="flex flex-col items-center gap-2">
       <span
-        className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-[72px] sm:w-[72px]"
+        className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-18 sm:w-18"
         style={{ background: tint, borderColor: color }}
       >
         <Image
@@ -52,7 +53,7 @@ function Seat({
         />
       </span>
       <span
-        className="rounded-[var(--radius-pill)] px-[10px] py-[3px] text-[11px] font-bold text-white sm:px-[11px]"
+        className="rounded-(--radius-pill) px-2.5 py-0.75 text-[11px] font-bold text-white sm:px-2.75"
         style={{ background: color }}
       >
         {label}
@@ -95,7 +96,7 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
       <div className="mt-3.5 flex justify-stretch border-t border-(--border-1) pt-3.5 sm:mt-4.5 sm:justify-end sm:pt-4">
         {isFull ? (
           <Link
-            href={`/debates/${room.id}`}
+            href={ROUTES.DEBATE_DETAIL(room.id)}
             className="inline-flex w-full items-center justify-center gap-1.75 rounded-lg border border-(--border-1) px-5 py-2.25 text-[13px] font-extrabold text-(--text-1) hover:border-(--brand-yellow) sm:w-auto"
           >
             관전하기

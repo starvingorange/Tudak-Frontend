@@ -409,7 +409,7 @@ for (const name of inlineTypes) {
 }
 
 function typeImportPath(name: string, fromTypesDir: boolean): string {
-  if (promotedTypes.has(name)) return "@/api/common/types/" + name;
+  if (promotedTypes.has(name)) return `@/api/common/types/${name}`;
   return fromTypesDir ? `./${name}` : `../types/${name}`;
 }
 
@@ -436,7 +436,7 @@ for (const name of promotedTypes) {
   if (!text) continue;
   fs.writeFileSync(
     path.join(COMMON_TYPES_DIR, `${name}.ts`),
-    HEADER + resolveTypeImports(text, name) + "\n",
+    `${HEADER + resolveTypeImports(text, name)}\n`,
   );
 }
 
@@ -453,7 +453,7 @@ for (const domain of domains) {
     if (!text) continue;
     fs.writeFileSync(
       path.join(domainTypesDir, `${name}.ts`),
-      HEADER + resolveTypeImports(text, name) + "\n",
+      `${HEADER + resolveTypeImports(text, name)}\n`,
     );
   }
 }
@@ -600,7 +600,7 @@ for (const op of opMetas) {
 
   fs.writeFileSync(
     path.join(hooksDir, `${op.hookName}.ts`),
-    HEADER + hookBody.trim() + "\n",
+    `${HEADER + hookBody.trim()}\n`,
   );
 }
 

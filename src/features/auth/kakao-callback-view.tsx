@@ -4,12 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { postLogin } from "@/api/auth/api/postLogin";
 import { LoginAuthRequestProviderType } from "@/api/auth/types/LoginAuthRequestProviderType";
-import {
-  clearStoredAccessToken,
-  clearStoredSignupToken,
-  setStoredAccessToken,
-  setStoredSignupToken,
-} from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/stores/auth-store";
 
 type KakaoCallbackViewProps = {
   authCode?: string;
@@ -22,10 +18,14 @@ export function KakaoCallbackView({
 }: KakaoCallbackViewProps) {
   const router = useRouter();
   const processedCodeRef = useRef<string | null>(null);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
+  const setSignupToken = useAuthStore((s) => s.setSignupToken);
+  const clearSignupToken = useAuthStore((s) => s.clearSignupToken);
 
   const redirectToLogin = useEffectEvent((reason: string, detail?: unknown) => {
     console.error("[KakaoCallback] redirecting to /login:", reason, detail);
-    router.replace("/login");
+    router.replace(ROUTES.LOGIN());
   });
 
   const handleLoginResponse = useEffectEvent(async (socialCode: string) => {
@@ -49,11 +49,9 @@ export function KakaoCallbackView({
           return;
         }
 
-        clearStoredAccessToken();
-        setStoredSignupToken(loginData.signupToken);
-        router.replace(
-          `/onboarding?signupToken=${encodeURIComponent(loginData.signupToken)}`,
-        );
+        clearAccessToken();
+        setSignupToken(loginData.signupToken);
+        router.replace(ROUTES.ONBOARDING(loginData.signupToken));
         return;
       }
 
@@ -65,9 +63,9 @@ export function KakaoCallbackView({
         return;
       }
 
-      setStoredAccessToken(loginData.accessToken);
-      clearStoredSignupToken();
-      router.replace("/");
+      setAccessToken(loginData.accessToken);
+      clearSignupToken();
+      router.replace(ROUTES.HOME());
     } catch (error) {
       redirectToLogin("login request threw an error", error);
     }
