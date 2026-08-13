@@ -3,41 +3,31 @@
 import { House, MessageCircle, Vote } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { isAuthenticated } from "@/api/api-client";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { useIsLoggedIn } from "@/stores/auth-store";
 import { NotificationBell } from "./notification-bell";
 
 const NAV_LINKS = [
-  { href: "/", label: "홈", icon: House },
-  { href: "/votes", label: "투표", icon: Vote },
-  { href: "/debates", label: "토론", icon: MessageCircle },
+  { href: ROUTES.HOME(), label: "홈", icon: House },
+  { href: ROUTES.VOTES(), label: "투표", icon: Vote },
+  { href: ROUTES.DEBATES(), label: "토론", icon: MessageCircle },
 ] as const;
 
 export function Navbar() {
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname isn't read here, but re-running on route change re-checks auth after a login/logout redirect that lands on a route sharing this layout (so Navbar doesn't remount).
-  useEffect(() => {
-    let cancelled = false;
-
-    isAuthenticated().then((ok) => {
-      if (!cancelled) setIsLoggedIn(ok);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const router = useRouter();
+  // The auth store starts `accessToken: null` (matching SSR) and only
+  // updates after AuthProvider's rehydrate() runs, so this never mismatches.
+  const loggedIn = useIsLoggedIn();
 
   return (
     <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
       <div className="mx-auto flex h-16 max-w-295 items-center gap-3 px-3 sm:gap-9 sm:px-4">
         <Link
-          href="/"
+          href={ROUTES.HOME()}
           className="relative block h-8.5 w-26 shrink-0 sm:h-10.5 sm:w-33"
         >
           <Image
@@ -72,7 +62,7 @@ export function Navbar() {
                 <Icon
                   size={15}
                   strokeWidth={active ? 2.4 : 2.2}
-                  className="shrink-0 sm:size-[17px]"
+                  className="shrink-0 sm:size-4.25"
                 />
                 <span className="truncate">{label}</span>
               </Link>
@@ -83,8 +73,8 @@ export function Navbar() {
           {/* 추후 다크 모드 필요시 활성화 */}
           {/* <ThemeToggle /> */}
           <NotificationBell />
-          {isLoggedIn ? (
-            <Link href="/mypage" className="block shrink-0">
+          {loggedIn ? (
+            <Link href={ROUTES.MY_PAGE()} className="block shrink-0">
               <Image
                 src="/assets/avatar.png"
                 alt="프로필"
@@ -95,7 +85,11 @@ export function Navbar() {
               />
             </Link>
           ) : (
-            <Button href="/login" size="sm" className="shrink-0">
+            <Button
+              size="sm"
+              onClick={() => router.push(ROUTES.LOGIN())}
+              className="shrink-0"
+            >
               로그인
             </Button>
           )}

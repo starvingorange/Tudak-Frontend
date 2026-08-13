@@ -1,10 +1,6 @@
 import ky from "ky";
 import type { PostReissueResponse } from "@/api/refresh-token/types/PostReissueResponse";
-import {
-  clearStoredAccessToken,
-  getStoredAccessToken,
-  setStoredAccessToken,
-} from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth-store";
 
 // Separate instance (no hooks) so a failed reissue call can't re-trigger
 // apiClient's own 401 handling and deadlock on itself.
@@ -24,7 +20,7 @@ function reissueAccessToken(): Promise<string | null> {
       .then((response) => {
         const accessToken = response.data?.accessToken;
         if (accessToken) {
-          setStoredAccessToken(accessToken);
+          useAuthStore.getState().setAccessToken(accessToken);
         }
         return accessToken ?? null;
       })
@@ -38,7 +34,7 @@ function reissueAccessToken(): Promise<string | null> {
 }
 
 function redirectToLogin() {
-  clearStoredAccessToken();
+  useAuthStore.getState().clearAccessToken();
   if (typeof window !== "undefined") {
     window.location.assign("/login");
   }
@@ -51,7 +47,7 @@ export const apiClient = ky.create({
   hooks: {
     beforeRequest: [
       ({ request }) => {
-        const accessToken = getStoredAccessToken();
+        const accessToken = useAuthStore.getState().accessToken;
 
         if (accessToken) {
           request.headers.set("Authorization", `Bearer ${accessToken}`);
@@ -88,9 +84,9 @@ export const apiClient = ky.create({
 export { reissueAccessToken };
 
 // Shared by AuthGuard and Navbar so they can't drift into different
-// definitions of "logged in" (e.g. one checking localStorage only).
+// definitions of "logged in" (e.g. one checking the store only).
 export async function isAuthenticated(): Promise<boolean> {
-  if (getStoredAccessToken()) {
+  if (useAuthStore.getState().accessToken) {
     return true;
   }
 

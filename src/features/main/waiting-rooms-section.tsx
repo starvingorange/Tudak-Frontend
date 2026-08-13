@@ -8,7 +8,7 @@ import { CategoryBadge } from "@/components/ui/category-badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import type { DebateRoom } from "@/features/debates/data";
 import { JoinModal } from "@/features/debates/join-modal";
-import { getStoredAccessToken } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth-store";
 import { WAITING_ROOMS } from "./data";
 
 export function WaitingRoomsSection() {
@@ -41,7 +41,7 @@ export function WaitingRoomsSection() {
               size="sm"
               className="justify-center sm:justify-start"
               onClick={() => {
-                if (!getStoredAccessToken()) {
+                if (!useAuthStore.getState().accessToken) {
                   requireLogin();
                   return;
                 }

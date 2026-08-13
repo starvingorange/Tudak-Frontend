@@ -1,9 +1,11 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useLoginGate } from "@/components/auth/use-login-gate";
 import { Button } from "@/components/ui/button";
-import { getStoredAccessToken } from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function CreateDebateButton() {
   const { requireLogin, loginModal } = useLoginGate(
@@ -13,11 +15,11 @@ export function CreateDebateButton() {
   return (
     <>
       <Button
-        href="/debates/new"
+        href={ROUTES.CREATE_DEBATE()}
         icon={<Plus size={20} />}
         className="mt-4 w-fit sm:mt-5"
-        onClick={(e) => {
-          if (!getStoredAccessToken()) {
+        onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+          if (!useAuthStore.getState().accessToken) {
             e.preventDefault();
             requireLogin();
           }

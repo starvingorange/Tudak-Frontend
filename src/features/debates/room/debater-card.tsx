@@ -23,16 +23,16 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
   if (!debater) {
     return (
       <section
-        className="relative flex min-h-[170px] items-center justify-center rounded-2xl border bg-[var(--bg-card)] p-5 sm:min-h-[190px] sm:p-6"
+        className="relative flex min-h-42.5 items-center justify-center rounded-2xl border bg-(--bg-card) p-5 sm:min-h-47.5 sm:p-6"
         style={{ borderColor: color }}
       >
         <span
-          className="absolute -top-px text-white text-sm font-extrabold px-[18px] py-2 rounded-b-[10px]"
+          className="absolute -top-px text-white text-sm font-extrabold px-4.5 py-2 rounded-b-[10px]"
           style={{ background: color, [isPro ? "left" : "right"]: "20px" }}
         >
           {label}
         </span>
-        <span className="text-[15px] font-semibold text-[var(--text-2)]">
+        <span className="text-[15px] font-semibold text-(--text-2)">
           상대를 기다리는 중…
         </span>
       </section>
@@ -49,7 +49,7 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       height={POSE_SIZE[pose].height}
       priority
       style={{ height: "auto" }}
-      className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-[26px] sm:w-[clamp(120px,14vw,190px)]"
+      className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]"
     />
   );
 
@@ -60,7 +60,7 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       >
         {!isPro && (
           <span
-            className="border text-[12px] font-bold px-[11px] py-1 rounded-[var(--radius-pill)] whitespace-nowrap"
+            className="border text-[12px] font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ borderColor: "#d8d5cf", color: "var(--text-2)" }}
           >
             {debater.speaking ? "발언 중" : "대기 중"}
@@ -71,24 +71,24 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
         </span>
         {isPro && (
           <span
-            className="text-white text-xs font-bold px-[11px] py-1 rounded-[var(--radius-pill)] whitespace-nowrap"
+            className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ background: color }}
           >
             {debater.speaking ? "발언 중" : "대기 중"}
           </span>
         )}
       </div>
-      <div className="mt-3 rounded-xl bg-[var(--bg-hero)] p-[14px_16px] text-[14px] leading-relaxed whitespace-pre-line sm:text-[15px]">
+      <div className="mt-3 rounded-xl bg-(--bg-hero) p-[14px_16px] text-[14px] leading-relaxed whitespace-pre-line sm:text-[15px]">
         {debater.statement}
       </div>
-      <div className="mt-3.5 text-[13px] text-[var(--text-2)]">남은 시간</div>
+      <div className="mt-3.5 text-[13px] text-(--text-2)">남은 시간</div>
       <div
         className="text-[30px] leading-tight font-extrabold tracking-wide sm:text-[34px]"
         style={{ color }}
       >
         {debater.remainingLabel}
       </div>
-      <div className="mt-2.5 h-1.5 rounded-full bg-[var(--poll-track)] overflow-hidden">
+      <div className="mt-2.5 h-1.5 rounded-full bg-(--poll-track) overflow-hidden">
         <span
           className="block h-full rounded-full"
           style={{ width: `${debater.remainingPercent}%`, background: color }}
@@ -99,11 +99,11 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
 
   return (
     <section
-      className="relative flex flex-col items-center gap-4 rounded-2xl border bg-[var(--bg-card)] p-5 text-left sm:gap-[22px] sm:p-6 md:flex-row"
+      className="relative flex flex-col items-center gap-4 rounded-2xl border bg-(--bg-card) p-5 text-left sm:gap-5.5 sm:p-6 md:flex-row"
       style={{ borderColor: color }}
     >
       <span
-        className="absolute -top-px text-white text-sm font-extrabold px-[18px] py-2 rounded-b-[10px]"
+        className="absolute -top-px text-white text-sm font-extrabold px-4.5 py-2 rounded-b-[10px]"
         style={{ background: color, [isPro ? "left" : "right"]: "20px" }}
       >
         {label}

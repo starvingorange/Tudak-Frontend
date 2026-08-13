@@ -16,7 +16,8 @@ import { getMyPageQueryKey, useGetMyPage } from "@/api/user/hooks/useGetMyPage";
 import { usePatchModifyProfile } from "@/api/user/hooks/usePatchModifyProfile";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
-import { clearStoredAccessToken } from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/stores/auth-store";
 import { getMyCompletedDebates, getMyVotes } from "./data";
 import { EditProfileModal } from "./edit-profile-modal";
 import { LogoutModal } from "./logout-modal";
@@ -24,6 +25,7 @@ import { MenuRow } from "./menu-row";
 
 export function MyPageView() {
   const router = useRouter();
+  const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -130,13 +132,13 @@ export function MyPageView() {
         />
         <div className="bg-(--bg-surface) border border-(--border-1) rounded-(--radius-section) mt-4.5 overflow-hidden">
           <MenuRow
-            href="/mypage/debates"
+            href={ROUTES.MY_PAGE_DEBATES()}
             icon={<MessageCircle size={20} />}
             label="참여한 토론"
             trailing={`${myDebates.length}건`}
           />
           <MenuRow
-            href="/mypage/votes"
+            href={ROUTES.MY_PAGE_VOTES()}
             icon={<ThumbsUp size={20} />}
             label="참여한 투표"
             trailing={`${myVotes.length}건`}
@@ -277,8 +279,8 @@ export function MyPageView() {
         <LogoutModal
           onClose={() => setLoggingOut(false)}
           onConfirm={() => {
-            clearStoredAccessToken();
-            router.push("/");
+            clearAccessToken();
+            router.push(ROUTES.HOME());
           }}
         />
       )}

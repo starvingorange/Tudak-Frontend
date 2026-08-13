@@ -8,8 +8,8 @@ const SERVICE_LINKS = ["이용약관", "개인정보처리방침", "신고하기
 export function Footer() {
   return (
     <footer className="mt-14 px-3 sm:mt-20 sm:px-2">
-      <div className="mx-auto grid max-w-[964px] grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[150px_1fr_200px_200px_140px] sm:gap-6 items-start">
-        <div className="relative h-[96px] w-[96px] sm:h-[130px] sm:w-[130px]">
+      <div className="mx-auto grid max-w-241 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[150px_1fr_200px_200px_140px] sm:gap-6 items-start">
+        <div className="relative h-24 w-24 sm:h-32.5 sm:w-32.5">
           <Image
             src="/assets/footer-chick-light.png"
             alt="투닭 캐릭터"
@@ -26,7 +26,7 @@ export function Footer() {
           />
         </div>
         <div>
-          <div className="relative h-9 w-[72px]">
+          <div className="relative h-9 w-18">
             <Image
               src="/assets/logo-footer-light2.png"
               alt="투닭"
@@ -42,7 +42,7 @@ export function Footer() {
               className="object-contain object-left hidden dark:block"
             />
           </div>
-          <div className="mt-3 max-w-sm text-[13.5px] leading-relaxed text-[var(--text-2)]">
+          <div className="mt-3 max-w-sm text-[13.5px] leading-relaxed text-(--text-2)">
             당신의 말이 세상을 바꿀 수도 있습니다.
             <br />
             토론하고, 투표하고, 함께 결정해요!
@@ -50,9 +50,9 @@ export function Footer() {
         </div>
         <div>
           <div className="text-sm font-extrabold mb-3.5">서비스</div>
-          <div className="flex flex-col gap-[11px] text-[13.5px]">
+          <div className="flex flex-col gap-2.75 text-[13.5px]">
             {SERVICE_LINKS.map((label) => (
-              <Link key={label} href="#" className="text-[var(--text-2)]">
+              <Link key={label} href="#" className="text-(--text-2)">
                 {label}
               </Link>
             ))}
@@ -60,9 +60,9 @@ export function Footer() {
         </div>
         <div>
           <div className="text-sm font-extrabold mb-3.5">카테고리</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-[11px] text-[13.5px]">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2.75 text-[13.5px]">
             {CATEGORY_FILTERS.map((label) => (
-              <Link key={label} href="#" className="text-[var(--text-2)]">
+              <Link key={label} href="#" className="text-(--text-2)">
                 {label}
               </Link>
             ))}
@@ -70,14 +70,14 @@ export function Footer() {
         </div>
         <div>
           <div className="text-sm font-extrabold mb-3.5">팔로우</div>
-          <div className="flex gap-3.5 items-center text-[var(--text-label)]">
+          <div className="flex gap-3.5 items-center text-(--text-label)">
             <Camera size={22} />
             <Video size={21} />
             <MessageCircle size={21} />
           </div>
         </div>
       </div>
-      <div className="mt-8 border-t border-[var(--border-1)] py-6 text-center text-[13px] text-[var(--text-3)] sm:py-7">
+      <div className="mt-8 border-t border-(--border-1) py-6 text-center text-[13px] text-(--text-3) sm:py-7">
         © 2025 투닭. All rights reserved.
       </div>
     </footer>
