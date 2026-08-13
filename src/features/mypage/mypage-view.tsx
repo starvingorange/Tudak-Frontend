@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/stores/auth-store";
-import { getMyCompletedDebates, getMyVotes } from "./data";
+import { getMyVotes } from "./data";
 import { EditProfileModal } from "./edit-profile-modal";
 import { LogoutModal } from "./logout-modal";
 import { MenuRow } from "./menu-row";
@@ -32,13 +32,12 @@ export function MyPageView() {
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [saveDebugMessage, setSaveDebugMessage] = useState("");
 
-  const myDebates = getMyCompletedDebates();
   const myVotes = getMyVotes();
   const { data, isLoading, isError, error } = useGetMyPage();
   const profile = data?.data;
   const nickname = profile?.nickname?.trim() || "사용자";
   const photo = profile?.presignedUrl ?? null;
-  const debateCount = profile?.debateCount ?? myDebates.length;
+  const debateCount = profile?.debateCount ?? 0;
   const pollCount = profile?.pollCount ?? myVotes.length;
 
   const modifyProfileMutation = usePatchModifyProfile({
