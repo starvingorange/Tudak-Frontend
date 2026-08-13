@@ -1,11 +1,4 @@
-import { DEBATE_ROOMS, type DebateRoom } from "@/features/debates/data";
 import type { CategorySlug } from "@/features/shared/categories";
-
-function getDebateRoom(id: string): DebateRoom {
-  const room = DEBATE_ROOMS.find((r) => r.id === id);
-  if (!room) throw new Error(`Unknown debate room id: ${id}`);
-  return room;
-}
 
 export interface PopularDebate {
   id: string;
@@ -37,17 +30,4 @@ export const POPULAR_DEBATES: PopularDebate[] = [
     participants: 74,
     fireCount: 812,
   },
-];
-
-export interface WaitingRoom extends DebateRoom {
-  filled: number;
-  capacity: number;
-}
-
-// Reuses real DEBATE_ROOMS entries (with an open seat) so clicking "입장하기"
-// here can open the same seat-picking JoinModal the debates list uses.
-export const WAITING_ROOMS: WaitingRoom[] = [
-  { ...getDebateRoom("age-gap-dating"), filled: 6, capacity: 10 },
-  { ...getDebateRoom("ai-judge"), filled: 4, capacity: 8 },
-  { ...getDebateRoom("tuition-fees"), filled: 3, capacity: 6 },
 ];
