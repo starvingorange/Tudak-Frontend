@@ -135,13 +135,13 @@ export function MyPageView() {
             href={ROUTES.MY_PAGE_DEBATES()}
             icon={<MessageCircle size={20} />}
             label="참여한 토론"
-            trailing={`${myDebates.length}건`}
+            trailing={`${debateCount}건`}
           />
           <MenuRow
             href={ROUTES.MY_PAGE_VOTES()}
             icon={<ThumbsUp size={20} />}
             label="참여한 투표"
-            trailing={`${myVotes.length}건`}
+            trailing={`${pollCount}건`}
           />
         </div>
       </section>
