@@ -4,6 +4,7 @@ import { House, MessageCircle, Vote } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useGetMyPage } from "@/api/user/hooks/useGetMyPage";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,8 @@ export function Navbar() {
   // The auth store starts `accessToken: null` (matching SSR) and only
   // updates after AuthProvider's rehydrate() runs, so this never mismatches.
   const loggedIn = useIsLoggedIn();
+  const { data } = useGetMyPage({ query: { enabled: loggedIn } });
+  const photo = data?.data?.presignedUrl ?? null;
 
   return (
     <nav className="bg-(--bg-surface) border-b border-(--border-1) sticky top-0 z-10">
@@ -76,12 +79,13 @@ export function Navbar() {
           {loggedIn ? (
             <Link href={ROUTES.MY_PAGE()} className="block shrink-0">
               <Image
-                src="/assets/avatar.png"
+                src={photo ?? "/assets/avatar.png"}
                 alt="프로필"
                 width={40}
                 height={40}
                 sizes="(max-width: 639px) 32px, 40px"
-                className="block rounded-full size-8 sm:size-10"
+                className="block rounded-full size-8 sm:size-10 object-cover"
+                unoptimized={photo !== null}
               />
             </Link>
           ) : (

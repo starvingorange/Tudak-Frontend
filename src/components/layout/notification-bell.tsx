@@ -10,12 +10,12 @@ export function NotificationBell() {
   const ref = useDismissableOpen<HTMLDivElement>(open, setOpen);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative flex">
       <button
         type="button"
         aria-label="알림"
         onClick={() => setOpen((v) => !v)}
-        className="relative w-6 h-6 text-(--text-1) cursor-pointer"
+        className="relative inline-flex w-6 h-6 items-center justify-center text-(--text-1) cursor-pointer"
       >
         <Bell size={22} strokeWidth={2} />
         <span className="absolute -top-px -right-px w-2 h-2 rounded-full bg-(--noti-dot) border-2 border-(--bg-surface)" />
