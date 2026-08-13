@@ -9,13 +9,10 @@ import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import type { DebateRoom } from "@/features/debates/data";
+import { debateRoomFromDetail } from "@/features/debates/debate-room-from-detail";
 import { JoinModal } from "@/features/debates/join-modal";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
 import { useAuthStore } from "@/stores/auth-store";
-
-// The debate-detail API doesn't return a chosen sticker per seat — same
-// defaults the create flow's preview and waiting-room view use.
-const SEAT_STICKER = { pro: "st-pro-basic", con: "st-con-basic" } as const;
 
 export function WaitingRoomsSection() {
   const [openRoom, setOpenRoom] = useState<DebateRoom | null>(null);
@@ -43,27 +40,7 @@ export function WaitingRoomsSection() {
       // 참여 모달에 필요한 라벨, 호스트/상대방 정보는 목록 API에 없어서
       // 클릭 시점에 상세 조회로 채운다 (waiting-room-view.tsx와 동일 패턴).
       const { data: room } = await getDebate(debateId);
-      const pro =
-        room.hostAgreement === "AGREE" && room.hostNickname
-          ? { name: room.hostNickname, sticker: SEAT_STICKER.pro }
-          : room.opponentAgreement === "AGREE" && room.opponentNickname
-            ? { name: room.opponentNickname, sticker: SEAT_STICKER.pro }
-            : null;
-      const con =
-        room.hostAgreement === "DISAGREE" && room.hostNickname
-          ? { name: room.hostNickname, sticker: SEAT_STICKER.con }
-          : room.opponentAgreement === "DISAGREE" && room.opponentNickname
-            ? { name: room.opponentNickname, sticker: SEAT_STICKER.con }
-            : null;
-      setOpenRoom({
-        id: String(debateId),
-        category: room.category ? BACKEND_TO_CATEGORY[room.category] : "기타",
-        title: room.title ?? "",
-        proStance: room.agreeLabel ?? "찬성",
-        conStance: room.disagreeLabel ?? "반대",
-        pro,
-        con,
-      });
+      setOpenRoom(debateRoomFromDetail(debateId, room));
     } catch (error) {
       console.error("Failed to load debate detail", error);
     } finally {

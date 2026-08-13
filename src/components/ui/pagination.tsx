@@ -4,10 +4,22 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-// Visual-only: there's no paginated data source yet, so this just tracks
-// which page number looks active. Wire up real paging once an API exists.
-export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
-  const [page, setPage] = useState(1);
+interface PaginationProps {
+  pageCount?: number;
+  /** Pass together with `onPageChange` for a controlled, API-backed page.
+   * Omit both to keep the old visual-only self-managed state. */
+  page?: number;
+  onPageChange?: (page: number) => void;
+}
+
+export function Pagination({
+  pageCount = 5,
+  page,
+  onPageChange,
+}: PaginationProps) {
+  const [internalPage, setInternalPage] = useState(1);
+  const currentPage = page ?? internalPage;
+  const setPage = onPageChange ?? setInternalPage;
   const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
 
   const navButton =
@@ -18,7 +30,7 @@ export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
       <button
         type="button"
         className={navButton}
-        onClick={() => setPage((p) => Math.max(1, p - 1))}
+        onClick={() => setPage(Math.max(1, currentPage - 1))}
         aria-label="이전 페이지"
       >
         <ChevronLeft size={14} strokeWidth={2.4} />
@@ -30,7 +42,7 @@ export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
           onClick={() => setPage(p)}
           className={cn(
             "h-9.5 w-8.5 rounded-[10px] text-sm font-semibold cursor-pointer sm:w-9.5",
-            p === page
+            p === currentPage
               ? "border-none bg-(--brand-yellow) text-(--brand-on-yellow) font-extrabold"
               : "border border-(--border-1) bg-(--bg-card) text-(--text-1) hover:border-(--brand-yellow)",
           )}
@@ -42,7 +54,7 @@ export function Pagination({ pageCount = 5 }: { pageCount?: number }) {
       <button
         type="button"
         className={navButton}
-        onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+        onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
         aria-label="다음 페이지"
       >
         <ChevronRight size={14} strokeWidth={2.4} />
