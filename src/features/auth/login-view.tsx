@@ -122,9 +122,7 @@ export function LoginView() {
           className="relative flex h-14 w-full items-center justify-center rounded-2xl bg-[#FEE500] text-base font-extrabold text-[#191919] cursor-pointer hover:brightness-[0.97]"
         >
           <KakaoIcon />
-          {status === "redirecting"
-            ? "카카오 로그인 진행 중..."
-            : "카카오로 시작하기"}
+          카카오로 시작하기
         </button>
 
         <button
@@ -134,9 +132,7 @@ export function LoginView() {
           className="relative flex h-14 w-full items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--bg-card)] text-base font-extrabold text-[var(--text-1)] cursor-pointer hover:brightness-[0.97]"
         >
           <GoogleIcon />
-          {status === "redirecting"
-            ? "구글 로그인 진행 중..."
-            : "구글로 시작하기"}
+          구글로 시작하기
         </button>
 
         <div className="text-center text-[13px] text-[var(--text-3)] leading-relaxed mt-1.5">
