@@ -1,4 +1,3 @@
-import type { PollOption } from "@/components/ui/poll-bar";
 import { DEBATE_ROOMS, type DebateRoom } from "@/features/debates/data";
 import type { CategorySlug } from "@/features/shared/categories";
 
@@ -37,69 +36,6 @@ export const POPULAR_DEBATES: PopularDebate[] = [
     title: "청년 기본소득,\n지급해야 할까?",
     participants: 74,
     fireCount: 812,
-  },
-];
-
-interface PopularVsVote {
-  id: string;
-  kind: "vs";
-  category: CategorySlug;
-  title: string;
-  voteCount: number;
-  deadline: string;
-  leftPercent: number;
-  leftLabel: string;
-  rightLabel: string;
-}
-
-interface PopularPollVote {
-  id: string;
-  kind: "poll";
-  category: CategorySlug;
-  title: string;
-  voteCount: number;
-  deadline: string;
-  options: PollOption[];
-}
-
-export type PopularVote = PopularVsVote | PopularPollVote;
-
-export const POPULAR_VOTES: PopularVote[] = [
-  {
-    id: "messi-vs-ronaldo",
-    kind: "vs",
-    category: "스포츠",
-    title: "축구 GOAT는\n메시 vs 호날두?",
-    voteCount: 2341,
-    deadline: "D-2",
-    leftPercent: 62,
-    leftLabel: "메시",
-    rightLabel: "호날두",
-  },
-  {
-    id: "lol-best-position",
-    kind: "poll",
-    category: "게임",
-    title: "롤에서 가장\n재미있는 포지션은?",
-    voteCount: 1872,
-    deadline: "D-1",
-    options: [
-      { label: "미드", percent: 42 },
-      { label: "정글", percent: 28 },
-      { label: "탑", percent: 18 },
-      { label: "기타", percent: 12 },
-    ],
-  },
-  {
-    id: "movie-ott-release",
-    kind: "vs",
-    category: "문화",
-    title: "한국 영화, OTT 공개\n동시 개봉 찬성?",
-    voteCount: 1521,
-    deadline: "D-3",
-    leftPercent: 71,
-    leftLabel: "찬성",
-    rightLabel: "반대",
   },
 ];
 
