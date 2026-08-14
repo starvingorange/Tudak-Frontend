@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/stores/auth-store";
 import type { DebateRoom, DebateSeat } from "./data";
 
 function Seat({
@@ -71,9 +72,10 @@ function Seat({
 interface DebateCardProps {
   room: DebateRoom;
   onJoin: (room: DebateRoom) => void;
+  onRequireLogin: () => void;
 }
 
-export function DebateCard({ room, onJoin }: DebateCardProps) {
+export function DebateCard({ room, onJoin, onRequireLogin }: DebateCardProps) {
   const isFull = room.pro !== null && room.con !== null;
 
   return (
@@ -97,6 +99,12 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
         {isFull ? (
           <Link
             href={ROUTES.DEBATE_DETAIL(room.id)}
+            onClick={(e) => {
+              if (!useAuthStore.getState().accessToken) {
+                e.preventDefault();
+                onRequireLogin();
+              }
+            }}
             className="inline-flex w-full items-center justify-center gap-1.75 rounded-lg border border-(--border-1) px-5 py-2.25 text-[13px] font-extrabold text-(--text-1) hover:border-(--brand-yellow) sm:w-auto"
           >
             관전하기
@@ -105,7 +113,13 @@ export function DebateCard({ room, onJoin }: DebateCardProps) {
           <Button
             size="sm"
             className="w-full justify-center sm:w-auto"
-            onClick={() => onJoin(room)}
+            onClick={() => {
+              if (!useAuthStore.getState().accessToken) {
+                onRequireLogin();
+                return;
+              }
+              onJoin(room);
+            }}
           >
             참여하기
           </Button>

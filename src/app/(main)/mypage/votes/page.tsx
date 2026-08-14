@@ -1,13 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getMyVotes } from "@/features/mypage/data";
-import { VoteRow } from "@/features/votes/vote-row";
+import { MyVotesView } from "@/features/mypage/my-votes-view";
 import { ROUTES } from "@/lib/routes";
 
 export default function MyVotesPage() {
-  const votes = getMyVotes();
-
   return (
     <div className="max-w-241 mx-auto px-4 pt-2 pb-10">
       <div className="flex items-start justify-between">
@@ -36,17 +33,7 @@ export default function MyVotesPage() {
         />
       </div>
 
-      {votes.length > 0 ? (
-        <div className="flex flex-col gap-3.5">
-          {votes.map((vote) => (
-            <VoteRow key={vote.id} vote={vote} />
-          ))}
-        </div>
-      ) : (
-        <div className="border border-dashed border-(--border-1) rounded-(--radius-section) py-14 text-center text-[15px] text-(--text-2)">
-          아직 참여한 투표가 없어요.
-        </div>
-      )}
+      <MyVotesView />
     </div>
   );
 }

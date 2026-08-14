@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLoginGate } from "@/components/auth/use-login-gate";
 import { Pagination } from "@/components/ui/pagination";
 import {
   type ListFilter,
@@ -15,6 +16,9 @@ export function VoteList() {
   const [tab, setTab] = useState<ListFilter>("전체");
   const [sort, setSort] = useState<(typeof VOTE_SORT_OPTIONS)[number]>(
     VOTE_SORT_OPTIONS[0],
+  );
+  const { requireLogin, loginModal } = useLoginGate(
+    "투표를 보려면 로그인이 필요해요.",
   );
 
   const rows = useMemo(
@@ -39,11 +43,13 @@ export function VoteList() {
 
       <div className="mt-3.5 flex flex-col gap-2.5 sm:mt-5.5 sm:gap-3.5">
         {rows.map((vote) => (
-          <VoteRow key={vote.id} vote={vote} />
+          <VoteRow key={vote.id} vote={vote} onRequireLogin={requireLogin} />
         ))}
       </div>
 
       <Pagination />
+
+      {loginModal}
     </>
   );
 }

@@ -1,13 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getMyCompletedDebates } from "@/features/mypage/data";
-import { MyDebateRow } from "@/features/mypage/my-debate-row";
+import { MyDebatesView } from "@/features/mypage/my-debates-view";
 import { ROUTES } from "@/lib/routes";
 
 export default function MyDebatesPage() {
-  const debates = getMyCompletedDebates();
-
   return (
     <div className="max-w-241 mx-auto px-4 pt-2 pb-10">
       <div className="flex items-start justify-between">
@@ -36,17 +33,7 @@ export default function MyDebatesPage() {
         />
       </div>
 
-      {debates.length > 0 ? (
-        <div className="flex flex-col gap-3.5">
-          {debates.map((debate) => (
-            <MyDebateRow key={debate.id} debate={debate} />
-          ))}
-        </div>
-      ) : (
-        <div className="border border-dashed border-(--border-1) rounded-(--radius-section) py-14 text-center text-[15px] text-(--text-2)">
-          아직 종료된 토론이 없어요.
-        </div>
-      )}
+      <MyDebatesView />
     </div>
   );
 }

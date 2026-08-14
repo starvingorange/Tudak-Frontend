@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/stores/auth-store";
-import { getMyCompletedDebates, getMyVotes } from "./data";
 import { EditProfileModal } from "./edit-profile-modal";
 import { LogoutModal } from "./logout-modal";
 import { MenuRow } from "./menu-row";
@@ -32,14 +31,12 @@ export function MyPageView() {
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [saveDebugMessage, setSaveDebugMessage] = useState("");
 
-  const myDebates = getMyCompletedDebates();
-  const myVotes = getMyVotes();
   const { data, isLoading, isError, error } = useGetMyPage();
   const profile = data?.data;
   const nickname = profile?.nickname?.trim() || "사용자";
   const photo = profile?.presignedUrl ?? null;
-  const debateCount = profile?.debateCount ?? myDebates.length;
-  const pollCount = profile?.pollCount ?? myVotes.length;
+  const debateCount = profile?.debateCount ?? 0;
+  const pollCount = profile?.pollCount ?? 0;
 
   const modifyProfileMutation = usePatchModifyProfile({
     mutation: {
@@ -135,13 +132,13 @@ export function MyPageView() {
             href={ROUTES.MY_PAGE_DEBATES()}
             icon={<MessageCircle size={20} />}
             label="참여한 토론"
-            trailing={`${myDebates.length}건`}
+            trailing={`${debateCount}건`}
           />
           <MenuRow
             href={ROUTES.MY_PAGE_VOTES()}
             icon={<ThumbsUp size={20} />}
             label="참여한 투표"
-            trailing={`${myVotes.length}건`}
+            trailing={`${pollCount}건`}
           />
         </div>
       </section>
