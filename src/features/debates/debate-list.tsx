@@ -2,7 +2,7 @@
 
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { getGetDebateQueryOptions } from "@/api/debate/hooks/useGetDebate";
+import { getDebateQueryOptions } from "@/api/debate/hooks/useGetDebate";
 import { useGetDebateList } from "@/api/debate/hooks/useGetDebateList";
 import { useLoginGate } from "@/components/auth/use-login-gate";
 import { Pagination } from "@/components/ui/pagination";
@@ -54,7 +54,7 @@ export function DebateList() {
   // 덧붙이는 용도로만 쓴다. 404는 재시도해도 대개 다시 안 되니 1번만 시도.
   const detailQueries = useQueries({
     queries: debateIds.map((id) =>
-      getGetDebateQueryOptions(id, {
+      getDebateQueryOptions(id, {
         query: { ...QUERY_OPTIONS, retry: 1 },
       }),
     ),

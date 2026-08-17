@@ -1,75 +1,23 @@
-import type {
-  MutationFunction,
-  QueryClient,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import type { UseMutationOptions } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import type { SecondParameter } from "@/api/common/query-helpers";
 import type { BodyType, ErrorType, orvalApiClient } from "@/api/orval-mutator";
-import { postSignup1 as signup1 } from "../api/postSignup1";
-import type { PostSignup1Request as DevLoginRequest } from "../types/PostSignup1Request";
+import { postSignup1 } from "../api/postSignup1";
+import type { PostSignup1Request } from "../types/PostSignup1Request";
+import type { PostSignup1Response } from "../types/PostSignup1Response";
 
-export const getSignup1MutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
+export function usePostSignup1(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof signup1>>,
-    TError,
-    { data: BodyType<DevLoginRequest> },
-    TContext
+    PostSignup1Response,
+    ErrorType<unknown>,
+    { data: BodyType<PostSignup1Request> }
   >;
   request?: SecondParameter<typeof orvalApiClient>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof signup1>>,
-  TError,
-  { data: BodyType<DevLoginRequest> },
-  TContext
-> => {
-  const mutationKey = ["signup1"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
+}) {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof signup1>>,
-    { data: BodyType<DevLoginRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return signup1(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type Signup1MutationResult = NonNullable<
-  Awaited<ReturnType<typeof signup1>>
->;
-export type Signup1MutationBody = BodyType<DevLoginRequest>;
-export type Signup1MutationError = ErrorType<unknown>;
-
-export const usePostSignup1 = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof signup1>>,
-      TError,
-      { data: BodyType<DevLoginRequest> },
-      TContext
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof signup1>>,
-  TError,
-  { data: BodyType<DevLoginRequest> },
-  TContext
-> => {
-  return useMutation(getSignup1MutationOptions(options), queryClient);
-};
+  return useMutation({
+    mutationFn: ({ data }) => postSignup1(data, requestOptions),
+    ...mutationOptions,
+  });
+}

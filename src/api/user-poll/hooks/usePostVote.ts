@@ -2,25 +2,22 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import type { SecondParameter } from "@/api/common/query-helpers";
 import type { BodyType, ErrorType, orvalApiClient } from "@/api/orval-mutator";
-import { postCreateDebate } from "../api/postCreateDebate";
-import type { PostCreateDebateRequest } from "../types/PostCreateDebateRequest";
-import type { PostCreateDebateResponse } from "../types/PostCreateDebateResponse";
+import { postVote } from "../api/postVote";
+import type { PostVoteRequest } from "../types/PostVoteRequest";
+import type { PostVoteResponse } from "../types/PostVoteResponse";
 
-/**
- * @summary 토론 생성
- */
-export function usePostCreateDebate(options?: {
+export function usePostVote(options?: {
   mutation?: UseMutationOptions<
-    PostCreateDebateResponse,
+    PostVoteResponse,
     ErrorType<unknown>,
-    { data: BodyType<PostCreateDebateRequest> }
+    { data: BodyType<PostVoteRequest> }
   >;
   request?: SecondParameter<typeof orvalApiClient>;
 }) {
   const { mutation: mutationOptions, request: requestOptions } = options ?? {};
 
   return useMutation({
-    mutationFn: ({ data }) => postCreateDebate(data, requestOptions),
+    mutationFn: ({ data }) => postVote(data, requestOptions),
     ...mutationOptions,
   });
 }

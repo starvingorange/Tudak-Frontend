@@ -2,25 +2,22 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import type { SecondParameter } from "@/api/common/query-helpers";
 import type { BodyType, ErrorType, orvalApiClient } from "@/api/orval-mutator";
-import { postCreateDebate } from "../api/postCreateDebate";
-import type { PostCreateDebateRequest } from "../types/PostCreateDebateRequest";
-import type { PostCreateDebateResponse } from "../types/PostCreateDebateResponse";
+import { postPreUpload } from "../api/postPreUpload";
+import type { PostPreUploadRequest } from "../types/PostPreUploadRequest";
+import type { PostPreUploadResponse } from "../types/PostPreUploadResponse";
 
-/**
- * @summary 토론 생성
- */
-export function usePostCreateDebate(options?: {
+export function usePostPreUpload(options?: {
   mutation?: UseMutationOptions<
-    PostCreateDebateResponse,
+    PostPreUploadResponse,
     ErrorType<unknown>,
-    { data: BodyType<PostCreateDebateRequest> }
+    { data: BodyType<PostPreUploadRequest> }
   >;
   request?: SecondParameter<typeof orvalApiClient>;
 }) {
   const { mutation: mutationOptions, request: requestOptions } = options ?? {};
 
   return useMutation({
-    mutationFn: ({ data }) => postCreateDebate(data, requestOptions),
+    mutationFn: ({ data }) => postPreUpload(data, requestOptions),
     ...mutationOptions,
   });
 }

@@ -7,7 +7,7 @@ import type { GetPreUpload1Request as PreUpload1Params } from "../types/GetPreUp
 import type { GetPreUpload1Response } from "../types/GetPreUpload1Response";
 
 export const getPreUpload1QueryKey = (params?: PreUpload1Params) =>
-  [`/api/users/my/profile-image`, ...(params ? [params] : [])] as const;
+  [`/auth/signup/profile-image`, ...(params ? [params] : [])] as const;
 
 export const getPreUpload1QueryOptions = (
   params: PreUpload1Params,

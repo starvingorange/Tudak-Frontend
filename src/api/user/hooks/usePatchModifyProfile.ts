@@ -1,78 +1,23 @@
-import type {
-  MutationFunction,
-  QueryClient,
-  UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import type { UseMutationOptions } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import type { SecondParameter } from "@/api/common/query-helpers";
 import type { BodyType, ErrorType, orvalApiClient } from "@/api/orval-mutator";
-import { patchModifyProfile as modifyProfile } from "../api/patchModifyProfile";
-import type { PatchModifyProfileRequest as UpdateProfileRequest } from "../types/PatchModifyProfileRequest";
+import { patchModifyProfile } from "../api/patchModifyProfile";
+import type { PatchModifyProfileRequest } from "../types/PatchModifyProfileRequest";
+import type { PatchModifyProfileResponse } from "../types/PatchModifyProfileResponse";
 
-export const getModifyProfileMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
+export function usePatchModifyProfile(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof modifyProfile>>,
-    TError,
-    { data: BodyType<UpdateProfileRequest> },
-    TContext
+    PatchModifyProfileResponse,
+    ErrorType<unknown>,
+    { data: BodyType<PatchModifyProfileRequest> }
   >;
   request?: SecondParameter<typeof orvalApiClient>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof modifyProfile>>,
-  TError,
-  { data: BodyType<UpdateProfileRequest> },
-  TContext
-> => {
-  const mutationKey = ["modifyProfile"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
+}) {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof modifyProfile>>,
-    { data: BodyType<UpdateProfileRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return modifyProfile(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type ModifyProfileMutationResult = NonNullable<
-  Awaited<ReturnType<typeof modifyProfile>>
->;
-export type ModifyProfileMutationBody = BodyType<UpdateProfileRequest>;
-export type ModifyProfileMutationError = ErrorType<unknown>;
-
-export const usePatchModifyProfile = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof modifyProfile>>,
-      TError,
-      { data: BodyType<UpdateProfileRequest> },
-      TContext
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof modifyProfile>>,
-  TError,
-  { data: BodyType<UpdateProfileRequest> },
-  TContext
-> => {
-  return useMutation(getModifyProfileMutationOptions(options), queryClient);
-};
+  return useMutation({
+    mutationFn: ({ data }) => patchModifyProfile(data, requestOptions),
+    ...mutationOptions,
+  });
+}

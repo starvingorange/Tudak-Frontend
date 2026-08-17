@@ -1,130 +1,28 @@
-import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult,
-} from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import type { SecondParameter } from "@/api/common/query-helpers";
-import { withQueryKey } from "@/api/common/query-helpers";
 import type { ErrorType, orvalApiClient } from "@/api/orval-mutator";
-import { getMyPage as myPage } from "../api/getMyPage";
+import { getMyPage } from "../api/getMyPage";
+import type { GetMyPageResponse } from "../types/GetMyPageResponse";
 
-export const getMyPageQueryKey = () => {
-  return [`/api/users/my`] as const;
-};
+export const getMyPageQueryKey = () => [`/api/users/my`] as const;
 
-export const getMyPageQueryOptions = <
-  TData = Awaited<ReturnType<typeof myPage>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof myPage>>, TError, TData>
-  >;
+export const getMyPageQueryOptions = (options?: {
+  query?: Partial<UseQueryOptions<GetMyPageResponse, ErrorType<unknown>>>;
   request?: SecondParameter<typeof orvalApiClient>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getMyPageQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof myPage>>> = ({
-    signal,
-  }) => myPage({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof myPage>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return {
+    queryKey: getMyPageQueryKey(),
+    queryFn: ({ signal }) => getMyPage({ signal, ...requestOptions }),
+    ...queryOptions,
+  } satisfies UseQueryOptions<GetMyPageResponse, ErrorType<unknown>>;
 };
 
-export type MyPageQueryResult = NonNullable<Awaited<ReturnType<typeof myPage>>>;
-export type MyPageQueryError = ErrorType<unknown>;
-
-export function useGetMyPage<
-  TData = Awaited<ReturnType<typeof myPage>>,
-  TError = ErrorType<unknown>,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof myPage>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof myPage>>,
-          TError,
-          Awaited<ReturnType<typeof myPage>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetMyPage<
-  TData = Awaited<ReturnType<typeof myPage>>,
-  TError = ErrorType<unknown>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof myPage>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof myPage>>,
-          TError,
-          Awaited<ReturnType<typeof myPage>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetMyPage<
-  TData = Awaited<ReturnType<typeof myPage>>,
-  TError = ErrorType<unknown>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof myPage>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function useGetMyPage<
-  TData = Awaited<ReturnType<typeof myPage>>,
-  TError = ErrorType<unknown>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof myPage>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof orvalApiClient>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getMyPageQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
+export function useGetMyPage(options?: {
+  query?: Partial<UseQueryOptions<GetMyPageResponse, ErrorType<unknown>>>;
+  request?: SecondParameter<typeof orvalApiClient>;
+}) {
+  return useQuery(getMyPageQueryOptions(options));
 }
