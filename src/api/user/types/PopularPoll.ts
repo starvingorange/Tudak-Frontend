@@ -5,6 +5,7 @@
 import type { PopularPollCategory } from "./PopularPollCategory";
 
 export interface PopularPoll {
+  pollId?: number;
   title?: string;
   category?: PopularPollCategory;
   voteCount?: number;

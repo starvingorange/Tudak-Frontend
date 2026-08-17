@@ -3,16 +3,14 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import type { CommonResponse } from "@/api/common/types/CommonResponse";
-import type { PageResponse } from "@/api/common/types/PageResponse";
-import type { FindMyPollResponseCategoryType } from "./FindMyPollResponseCategoryType";
+import type { FindMyPollResponse } from "./FindMyPollResponse";
 
-export type GetMyPollListResponse = CommonResponse<
-  PageResponse<{
-    pollId?: number;
-    pollName?: string;
-    categoryType?: FindMyPollResponseCategoryType;
-    agreeNickname?: string;
-    disagreeNickname?: string;
-    voteCount?: number;
-  }>
->;
+export type GetMyPollListResponse = CommonResponse<{
+  content?: FindMyPollResponse[];
+  pageNumber?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+  isFirst?: boolean;
+  isLast?: boolean;
+}>;

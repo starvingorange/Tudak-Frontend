@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 /**
  * Post-processes Orval's `tags-operations-split` output (in `.orval-staging/`)
- * into the domain-scoped `api/ hooks/ types/` layout described in the
- * project's Orval guide. Runs automatically as part of `pnpm api:generate` —
- * nothing here should ever need hand-editing when the OpenAPI spec changes.
+ * into the domain-scoped `api/ types/` layout described in the project's
+ * Orval guide. `hooks/` is hand-written on top of this output, not generated.
+ * Runs automatically as part of `pnpm api:generate` — nothing here should
+ * ever need hand-editing when the OpenAPI spec changes.
  *
  * Design notes (why this reads the way it does):
  * - Names are derived purely from what Orval already generated (the core
@@ -12,10 +13,6 @@
  * - `{verb}{OperationId}` naming would double up when operationId already
  *   starts with the verb (e.g. GET `getDebateList` -> `getGetDebateList`).
  *   `stripLeadingVerb` removes that redundant prefix before re-adding it.
- * - The query/mutation hook bodies (react-query overloads, mutation options,
- *   etc.) are copied verbatim from Orval's output — only the surrounding
- *   imports and the public hook name are rewritten — re-deriving those
- *   generics by hand would be needlessly risky.
  * - `CommonResponse{X}` / `PageResponse{X}` wrapper interfaces are detected
  *   structurally (exact property sets) and collapsed into the shared
  *   generics in `src/api/common/types`, rather than kept as flattened
@@ -139,14 +136,19 @@ interface SchemaIndex {
  * (`.orval-staging/model/`) is always complete and already carries correct
  * relative imports between its own files, so it's used as the single
  * source of truth for schema declarations instead.
+ *
+ * The one thing `model/` does NOT contain is a schema that only exists
+ * inline in the spec (e.g. an anonymous request body never `$ref`'d to a
+ * `components.schemas` entry) — Orval still names and emits it, but only
+ * into that one operation's own `.schemas.ts` file. Those get merged in
+ * as a lower-priority fallback via `mergeSchemaIndex` below, once per
+ * domain's `.schemas.ts` files are read.
  */
-function indexModelDir(project: Project, modelDir: string): SchemaIndex {
+function indexSchemaFiles(project: Project, filePaths: string[]): SchemaIndex {
   const byName = new Map<string, SchemaDecl>();
   const pairedConstText = new Map<string, string>();
-  for (const file of fs
-    .readdirSync(modelDir)
-    .filter((f) => f.endsWith(".ts") && f !== "index.ts")) {
-    const source = project.addSourceFileAtPath(path.join(modelDir, file));
+  for (const filePath of filePaths) {
+    const source = project.addSourceFileAtPath(filePath);
     for (const i of source.getInterfaces()) byName.set(i.getName(), i);
     for (const t of source.getTypeAliases()) byName.set(t.getName(), t);
     for (const v of source.getVariableStatements()) {
@@ -162,6 +164,27 @@ function indexModelDir(project: Project, modelDir: string): SchemaIndex {
     }
   }
   return { byName, pairedConstText };
+}
+
+function indexModelDir(project: Project, modelDir: string): SchemaIndex {
+  const filePaths = fs
+    .readdirSync(modelDir)
+    .filter((f) => f.endsWith(".ts") && f !== "index.ts")
+    .map((f) => path.join(modelDir, f));
+  return indexSchemaFiles(project, filePaths);
+}
+
+/** Adds `source`'s entries into `target` without overwriting a name `target`
+ * already has — `model/` (the caller's existing entries) is the canonical
+ * source whenever a name happens to exist in both. */
+function mergeSchemaIndex(target: SchemaIndex, source: SchemaIndex): void {
+  for (const [name, decl] of source.byName) {
+    if (!target.byName.has(name)) target.byName.set(name, decl);
+  }
+  for (const [name, text] of source.pairedConstText) {
+    if (!target.pairedConstText.has(name))
+      target.pairedConstText.set(name, text);
+  }
 }
 
 /** Resolves a `CommonResponse{X}` (optionally wrapping `PageResponse{Y}`)
@@ -243,14 +266,12 @@ interface OpMeta {
   method: string;
   originalBaseName: string;
   apiName: string;
-  hookName: string;
   requestSourceName: string | null;
   responseLeafNames: string[];
   responseTypeName: string;
   responseAlias: string;
   coreFnText: string;
   urlFnText: string;
-  remainderText: string;
 }
 
 const project = new Project({ skipAddingFilesFromTsConfig: true });
@@ -262,6 +283,16 @@ const domains = fs
   .sort();
 
 const globalIndex = indexModelDir(project, path.join(STAGING, "model"));
+
+for (const domain of domains) {
+  const domainDir = path.join(STAGING, domain);
+  const localSchemaFiles = fs
+    .readdirSync(domainDir)
+    .filter((f) => f.endsWith(".schemas.ts"))
+    .map((f) => path.join(domainDir, f));
+  if (localSchemaFiles.length === 0) continue;
+  mergeSchemaIndex(globalIndex, indexSchemaFiles(project, localSchemaFiles));
+}
 
 const opMetas: OpMeta[] = [];
 // typeName -> declaration text (assumed identical across domains for a given name)
@@ -326,14 +357,18 @@ for (const domain of domains) {
       throw new Error(`response type not found in ${file}: ${returnTypeText}`);
     const originalResponseName = responseMatch[1];
 
+    // Orval always emits params in `(...pathParams, params?, body?, options?)`
+    // order, so the request body — when present — is the last non-`options`
+    // param. `.find()` here would grab a leading path param instead (e.g.
+    // `debateId: number`) on any operation with both a path param and a
+    // body, like `finishDebate(debateId, finishDebateRequest, options?)`.
     const params = arrowFn.getParameters();
-    const requestParam = params.find((p) => p.getName() !== "options");
+    const requestParam = params.findLast((p) => p.getName() !== "options");
     const requestSourceName = requestParam?.getTypeNode()?.getText() ?? null;
 
     const strippedBase = stripLeadingVerb(originalBaseName, method);
     const methodPascal = pascal(method.toLowerCase());
     const apiName = camel(methodPascal) + pascal(strippedBase);
-    const hookName = `use${methodPascal}${pascal(strippedBase)}`;
     const responseTypeName = `${methodPascal}${pascal(strippedBase)}Response`;
 
     const { alias: responseAlias, leafNames: responseLeafNames } =
@@ -364,24 +399,17 @@ for (const domain of domains) {
       .trim()
       .replace(/^export\s+/, "");
 
-    let remainderText = opSource.getFullText();
-    remainderText = remainderText.replace(coreStmt.getFullText(), "");
-    remainderText = remainderText.replace(urlStmt.getFullText(), "");
-    remainderText = remainderText.replace(/^\/\*\*[\s\S]*?\*\/\n/, "");
-
     opMetas.push({
       domain,
       method,
       originalBaseName,
       apiName,
-      hookName,
       requestSourceName,
       responseLeafNames,
       responseTypeName,
       responseAlias,
       coreFnText,
       urlFnText,
-      remainderText,
     });
   }
 }
@@ -458,13 +486,11 @@ for (const domain of domains) {
   }
 }
 
-// ---- write Request/Response alias types, api/, hooks/ per operation ----
+// ---- write Request/Response alias types and api/ per operation ----
 for (const op of opMetas) {
   const apiDir = path.join(OUT, op.domain, "api");
-  const hooksDir = path.join(OUT, op.domain, "hooks");
   const typesDir = path.join(OUT, op.domain, "types");
   fs.mkdirSync(apiDir, { recursive: true });
-  fs.mkdirSync(hooksDir, { recursive: true });
   fs.mkdirSync(typesDir, { recursive: true });
 
   // A request "type" only exists if the leading param's type is an actual
@@ -544,7 +570,7 @@ for (const op of opMetas) {
 
   // Request.ts is always the file that exists (whether it's an alias to a
   // separate type or an inlined body) — import from there, aliased back to
-  // the original bare name the untouched core-function/hook text expects.
+  // the original bare name the untouched core-function text expects.
   const requestImportSpecifier =
     requestTypeName === op.requestSourceName
       ? requestTypeName
@@ -561,68 +587,6 @@ for (const op of opMetas) {
   fs.writeFileSync(
     path.join(apiDir, `${op.apiName}.ts`),
     `${HEADER}${apiImports.join("\n")}\n\n${op.urlFnText}\n\n${coreFnText}\n`,
-  );
-
-  // hooks/{hookName}.ts — the react-query overloads/options builders are
-  // copied verbatim; only imports and the public hook name are rewritten.
-  let hookBody = op.remainderText;
-  hookBody = hookBody.replace(
-    /import \{ orvalApiClient \} from '\.\.\/\.\.\/src\/api\/orval-mutator';\nimport type \{ ([^}]+) \} from '\.\.\/\.\.\/src\/api\/orval-mutator';\n/,
-    (_m, types: string) =>
-      `import { orvalApiClient } from "@/api/orval-mutator";\nimport type { ${types.trim()} } from "@/api/orval-mutator";\n`,
-  );
-  hookBody = hookBody.replace(
-    /import \{ withQueryKey \} from '\.\/[a-z0-9-]+\.helpers';\n/,
-    'import { withQueryKey } from "@/api/common/query-helpers";\n',
-  );
-  hookBody = hookBody.replace(
-    /import type \{ SecondParameter \} from '\.\/[a-z0-9-]+\.helpers';\n/,
-    'import type { SecondParameter } from "@/api/common/query-helpers";\n',
-  );
-  hookBody = hookBody.replace(
-    /import type \{[^}]*\} from '\.\/[a-z0-9-]+\.schemas';\n\n/,
-    "",
-  );
-
-  const coreImportSpecifier =
-    op.apiName === op.originalBaseName
-      ? op.apiName
-      : `${op.apiName} as ${op.originalBaseName}`;
-  const coreImport = `import { ${coreImportSpecifier} } from "../api/${op.apiName}";\n`;
-  const requestImport = hasRequestType
-    ? `import type { ${requestImportSpecifier} } from "../types/${requestTypeName}";\n`
-    : "";
-  hookBody = coreImport + requestImport + hookBody;
-  hookBody = hookBody.replace(
-    new RegExp(`\\buse${pascal(op.originalBaseName)}\\b`, "g"),
-    op.hookName,
-  );
-
-  fs.writeFileSync(
-    path.join(hooksDir, `${op.hookName}.ts`),
-    `${HEADER + hookBody.trim()}\n`,
-  );
-}
-
-// ---- shared query helpers (SecondParameter / withQueryKey), hoisted once —
-// every `*.helpers.ts` Orval writes per tag is byte-identical generic code. ----
-const firstHelpers = domains
-  .map((d) => path.join(STAGING, d))
-  .flatMap((dir) =>
-    fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith(".helpers.ts"))
-      .map((f) => path.join(dir, f)),
-  )
-  .at(0);
-if (firstHelpers) {
-  const helpersText = fs
-    .readFileSync(firstHelpers, "utf8")
-    .replace(/^\/\*\*[\s\S]*?\*\/\n/, "");
-  fs.mkdirSync(OUT, { recursive: true });
-  fs.writeFileSync(
-    path.join(OUT, "common/query-helpers.ts"),
-    HEADER + helpersText.trimStart(),
   );
 }
 
