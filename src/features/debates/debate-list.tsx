@@ -117,10 +117,10 @@ export function DebateList() {
           ))}
         </div>
       )}
-      {list && list.totalPages > 1 && (
+      {list && (list.totalPages ?? 0) > 1 && (
         <Pagination
           page={page + 1}
-          pageCount={list.totalPages}
+          pageCount={list.totalPages ?? 0}
           onPageChange={(p) => setPage(p - 1)}
         />
       )}
