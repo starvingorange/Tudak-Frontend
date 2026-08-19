@@ -3,19 +3,14 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import type { CommonResponse } from "@/api/common/types/CommonResponse";
-import type { PageResponse } from "@/api/common/types/PageResponse";
-import type { DebateListResponseCategory } from "./DebateListResponseCategory";
-import type { DebateListResponseStatus } from "./DebateListResponseStatus";
+import type { DebateListResponse } from "./DebateListResponse";
 
-export type GetDebateListResponse = CommonResponse<
-  PageResponse<{
-    /** 토론 ID */
-    debateId?: number;
-    /** 토론 제목 */
-    title?: string;
-    /** 카테고리 */
-    category?: DebateListResponseCategory;
-    /** 토론 상태 */
-    status?: DebateListResponseStatus;
-  }>
->;
+export type GetDebateListResponse = CommonResponse<{
+  content?: DebateListResponse[];
+  pageNumber?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+  isFirst?: boolean;
+  isLast?: boolean;
+}>;

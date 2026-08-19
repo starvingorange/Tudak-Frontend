@@ -28,9 +28,10 @@ Next.js 자체는 예약된 라우팅 파일명(`page`, `layout`, `loading`, `er
 - `src/lib/` — "우리 백엔드에 REST로 요청" 이외의 크로스커팅 유틸리티.
   3rd-party 연동 헬퍼(OAuth 리다이렉트 URL 빌더), WebSocket 등 REST가 아닌
   프로토콜 코드, 범용 훅/유틸이 여기 속함.
-- `src/api/` — **생성 전용**. 아래 "Orval 생성 API 레이어" 참고. 이 안에는
-  `api-client.ts`, `orval-mutator.ts`(생성 코드가 의존하는 파일) 외에는
-  절대 손으로 파일을 만들지 않는다.
+- `src/api/` — `api/`, `types/`는 **생성 전용**, `hooks/`는 그 위에
+  손으로 작성. 아래 "Orval 생성 API 레이어" 참고. `api-client.ts`,
+  `orval-mutator.ts`(생성 코드가 의존하는 파일), `common/query-helpers.ts`,
+  `{domain}/hooks/*.ts` 외에는 절대 손으로 파일을 만들지 않는다.
 - `src/stores/` — Zustand 스토어. `src/providers/` — `app/layout.tsx`를
   감싸야 하는 React context provider.
 
@@ -53,8 +54,8 @@ Next.js 자체는 예약된 라우팅 파일명(`page`, `layout`, `loading`, `er
     훅 자체가 JSX를 반환하면 `.tsx` 사용 (예: `use-login-gate.tsx`는
     모달 엘리먼트를 반환함)
   - `data.ts` — 해당 feature 폴더 안에서만 쓰는 목업/정적 데이터. 새로
-    목업을 추가하기 전에 대응되는 Orval 훅이 이미 있는지부터 확인할 것
-    (아래 참고)
+    목업을 추가하기 전에 대응되는 `src/api/{domain}/hooks/`가 이미 있는지
+    부터 확인할 것 (아래 참고)
 
 ## 컴포넌트 하나당 파일 하나 (폴더 아님)
 
@@ -75,24 +76,31 @@ Next.js 자체는 예약된 라우팅 파일명(`page`, `layout`, `loading`, `er
 
 ## Orval 생성 API 레이어
 
-`src/api/{domain}/{api,hooks,types}/`는 백엔드 OpenAPI 스펙으로부터
+`src/api/{domain}/{api,types}/`는 백엔드 OpenAPI 스펙으로부터
 `pnpm api:generate`(`orval.config.ts` + `scripts/restructure-api.ts`)가
-전부 생성한다 — 생성된 파일마다 "Do not edit manually" 표시가 있고, 다음
+생성한다 — 생성된 파일마다 "Do not edit manually" 표시가 있고, 다음
 재생성 때 그대로 덮어써진다. 생성 결과가 이상해 보이면 `scripts/restructure-api.ts`나
-스펙 쪽을 고치는 것이지, 산출물을 손으로 고치는 게 아니다.
+스펙 쪽을 고치는 것이지, 산출물을 손으로 고치는 게 아니다. `orval.config.ts`의
+`client`는 `"fetch"`로 설정돼 있어 orval은 react-query 훅을 생성하지 않고
+fetch 함수와 URL 헬퍼만 만든다.
+
+`src/api/{domain}/hooks/`는 생성되지 않는다 — 그 도메인의 `api/`, `types/`가
+생성된 뒤, 그걸 감싸는 `useQuery`/`useMutation` 훅을 손으로 작성한다. 공용
+`SecondParameter`/`withQueryKey` 헬퍼는 `src/api/common/query-helpers.ts`에
+손으로 유지되며, 새 훅을 작성할 때 참고용으로 기존 `hooks/*.ts` 파일들의
+패턴(쿼리 키 함수, `useQuery`/`useMutation` 옵션 빌더)을 따른다.
 
 - `api/{op}.ts` — 실제 fetch 호출 (`orvalApiClient`, ky 기반). react-query가
   필요 없는 곳(이벤트 핸들러 등, 훅을 못 쓰는 위치)에서는 직접 호출해도 됨
   — OAuth 콜백 뷰들이 `postLogin`을 이렇게 쓰고 있음.
-- `hooks/{op}.ts` — `api/` 함수를 감싼 `useQuery`/`useMutation` 래퍼.
-  로딩/에러 상태나 캐시 무효화가 필요한 컴포넌트에서 사용.
+- `hooks/{op}.ts` — `api/` 함수를 감싼 `useQuery`/`useMutation` 래퍼. 손으로
+  작성. 로딩/에러 상태나 캐시 무효화가 필요한 컴포넌트에서 사용.
 - `types/` — 순수 `Request`/`Response` 타입 alias, 로직 없음. 2개 이상
   도메인이 같이 쓰는 타입은 `src/api/common/types/`로 자동 승격됨.
 
 `features/*/data.ts` 목업 데이터를 아직 쓰고 있는 feature라면, 새로 fetch
-로직을 짜기 전에 `src/api/`에 대응되는 생성된 훅이 이미 있는지부터 확인할
-것 — `useGetDebateList`, `useGetHome` 등 몇 개는 이미 생성만 되고 아직
-연결 안 된 상태다.
+로직을 짜기 전에 `src/api/`에 대응되는 훅이 이미 있는지부터 확인할 것 —
+`api/`, `types/`는 생성만 되고 아직 훅이 없는 도메인도 있다.
 
 ## 컴포넌트
 
@@ -145,12 +153,12 @@ Emotion/styled-components도 없고, 컴포넌트마다 별도 `.styles.ts` 파�
 
 ## 데이터 페칭
 
-- 컴포넌트에서는 Orval이 생성한 `hooks/{op}.ts`를 쓰고, 원본
+- 컴포넌트에서는 손으로 작성한 `hooks/{op}.ts`를 쓰고, 원본
   `api/{op}.ts` 함수는 컴포넌트 밖(훅을 못 쓰는 이벤트 핸들러 등)에서만
   사용 — 위 "Orval 생성 API 레이어" 참고.
 - 실제로 추가할 로직이 있는 게 아니라면 `useQuery`/`useMutation` 결과를
-  또 다른 커스텀 훅으로 감싸지 않는다 — 생성된 훅을 컴포넌트에서 바로
-  호출한다.
+  또 다른 커스텀 훅으로 감싸지 않는다 — `hooks/{op}.ts`를 컴포넌트에서
+  바로 호출한다.
 - 이 코드베이스 어디에도(`features/`, `components/`, `lib/`) `index.ts`
   배럴 파일이 없다 — 파일에서 바로 import한다
   (`@/features/debates/debate-card`, re-export하는 `index.ts` 아님).
@@ -200,15 +208,16 @@ Conventional Commits 스타일 접두사 + 한국어 설명, 기존 히스토리
 ## 하지 말 것
 
 - `href`/`router.push()`에 경로 문자열 하드코딩 — `ROUTES` 쓸 것.
-- `src/api/{domain}/` 밑을 손으로 작성/수정 — `scripts/restructure-api.ts`나
-  스펙을 고칠 것.
+- `src/api/{domain}/{api,types}/` 밑을 손으로 작성/수정 —
+  `scripts/restructure-api.ts`나 스펙을 고칠 것. `hooks/`는 손으로
+  작성하는 게 맞음.
 - 컴포넌트 하나당 폴더 하나 구조나 `index.ts` 배럴 만들기.
 - PascalCase 파일명 — 항상 kebab-case.
 - Next.js 라우트 파일 외에 `React.FC`나 `export default` 쓰기.
 - props 타입을 `interface Props`로 줄여쓰기.
 - Emotion/styled-components/CSS Modules 쓰기 — Tailwind +
   `src/tokens/*.css`만.
-- 생성된 Orval 훅이 이미 있는지 확인 안 하고 `features/*/data.ts`에 목업
-  데이터 추가하기.
+- 대응되는 `src/api/{domain}/hooks/`가 이미 있는지 확인 안 하고
+  `features/*/data.ts`에 목업 데이터 추가하기.
 - `console.log` 쓰기 — `console.warn`/`console.error`는 실제 경고/에러
   상황이면 괜찮음 (지금도 딱 그런 몇 곳에서만 쓰이고 있음).

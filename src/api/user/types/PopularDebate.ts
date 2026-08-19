@@ -5,6 +5,7 @@
 import type { PopularDebateCategory } from "./PopularDebateCategory";
 
 export interface PopularDebate {
+  debateId?: number;
   title?: string;
   category?: PopularDebateCategory;
 }
