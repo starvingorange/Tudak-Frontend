@@ -3,19 +3,12 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import { orvalApiClient } from "@/api/orval-mutator";
+import { orvalParamsSerializer } from "@/api/orval-params-serializer";
 import type { GetPreUpload1Request as PreUpload1Params } from "../types/GetPreUpload1Request";
 import type { GetPreUpload1Response } from "../types/GetPreUpload1Response";
 
 const getPreUpload1Url = (params: PreUpload1Params) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = orvalParamsSerializer(params);
 
   return stringifiedParams.length > 0
     ? `/auth/signup/profile-image?${stringifiedParams}`
