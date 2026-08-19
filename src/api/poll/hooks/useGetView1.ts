@@ -7,7 +7,7 @@ import type { GetView1Request as View1Params } from "../types/GetView1Request";
 import type { GetView1Response } from "../types/GetView1Response";
 
 export const getView1QueryKey = (params?: View1Params) =>
-  [`/api/notifications`, ...(params ? [params] : [])] as const;
+  [`/api/polls`, ...(params ? [params] : [])] as const;
 
 export const getView1QueryOptions = (
   params: View1Params,
