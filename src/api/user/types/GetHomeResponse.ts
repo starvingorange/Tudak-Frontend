@@ -9,5 +9,4 @@ import type { PopularPoll } from "./PopularPoll";
 export type GetHomeResponse = CommonResponse<{
   popularPolls?: PopularPoll[];
   openDebates?: PopularDebate[];
-  alertExist?: boolean;
 }>;
