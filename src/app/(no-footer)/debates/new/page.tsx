@@ -9,7 +9,7 @@ export default function NewDebatePage() {
           토론 방 생성
         </h1>
         <Image
-          src="/assets/mascot-write.png"
+          src="/assets/mascot-write.webp"
           alt="글 쓰는 투닭"
           width={210}
           height={155}

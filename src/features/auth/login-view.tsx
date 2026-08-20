@@ -84,7 +84,7 @@ export function LoginView() {
     <>
       <div className="flex flex-col items-center gap-5.5">
         <Image
-          src="/assets/mascot-megaphone.png"
+          src="/assets/mascot-megaphone.webp"
           alt="투닭 마스코트"
           width={196}
           height={192}
@@ -93,18 +93,11 @@ export function LoginView() {
         <div className="flex flex-col items-center gap-2">
           <div className="relative w-[140px] h-[52px]">
             <Image
-              src="/assets/logo-hero-light.png"
+              src="/assets/logo/logo-light.svg"
               alt="투닭"
               fill
               sizes="140px"
-              className="object-contain dark:hidden"
-            />
-            <Image
-              src="/assets/logo-hero-dark.png"
-              alt="투닭"
-              fill
-              sizes="140px"
-              className="object-contain hidden dark:block"
+              className="object-contain"
             />
           </div>
           <div className="text-[17px] font-bold text-[var(--text-2)] whitespace-nowrap">

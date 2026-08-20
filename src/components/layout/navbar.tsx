@@ -34,18 +34,11 @@ export function Navbar() {
           className="relative block h-8.5 w-26 shrink-0 sm:h-10.5 sm:w-33"
         >
           <Image
-            src="/assets/logo-nav-light.png"
+            src="/assets/logo/logo-light.svg"
             alt="투닭"
             fill
             sizes="(max-width: 639px) 104px, 132px"
-            className="object-contain object-left dark:hidden"
-          />
-          <Image
-            src="/assets/logo-nav-dark.png"
-            alt="투닭"
-            fill
-            sizes="(max-width: 639px) 104px, 132px"
-            className="object-contain object-left hidden dark:block"
+            className="object-contain object-left"
           />
         </Link>
         <div className="flex h-16 min-w-0 flex-1 items-stretch gap-0.5 sm:gap-2">
@@ -79,7 +72,7 @@ export function Navbar() {
           {loggedIn ? (
             <Link href={ROUTES.MY_PAGE()} className="block shrink-0">
               <Image
-                src={photo ?? "/assets/avatar.png"}
+                src={photo ?? "/assets/avatar.webp"}
                 alt="프로필"
                 width={40}
                 height={40}

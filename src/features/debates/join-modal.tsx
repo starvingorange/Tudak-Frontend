@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { DebateRoom } from "./data";
@@ -65,7 +66,7 @@ export function JoinModal({ room, onClose }: JoinModalProps) {
         {taken && host && (
           <span className="inline-flex items-center gap-1.75 text-[12px] font-bold text-[#909090] sm:text-[12.5px]">
             <Image
-              src={`/assets/stickers/${host.sticker}.png`}
+              src={getStickerSrc(host.sticker)}
               alt="방장"
               width={26}
               height={26}

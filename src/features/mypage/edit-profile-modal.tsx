@@ -85,7 +85,7 @@ export function EditProfileModal({
         <div className="relative h-28 w-28 sm:h-35 sm:w-35">
           <div className="h-28 w-28 overflow-hidden rounded-full border-3 border-(--brand-yellow) box-border bg-(--bg-hero) sm:h-35 sm:w-35">
             <Image
-              src={photo ?? "/assets/avatar.png"}
+              src={photo ?? "/assets/avatar.webp"}
               alt="프로필 사진"
               width={140}
               height={140}

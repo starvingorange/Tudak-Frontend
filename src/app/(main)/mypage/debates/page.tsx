@@ -24,7 +24,7 @@ export default function MyDebatesPage() {
           </div>
         </div>
         <Image
-          src="/assets/stickers/st-com-win.png"
+          src="/assets-characters/com-win.webp"
           alt="투닭 캐릭터"
           width={200}
           height={160}

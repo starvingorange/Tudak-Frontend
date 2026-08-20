@@ -7,7 +7,11 @@ function ChatBubble({ message }: { message: TranscriptMessage }) {
   const tint = isPro ? "#eef1fd" : "#fdecec";
   const avatar = (
     <Image
-      src={`/assets/avatar-${message.side}.png`}
+      src={
+        isPro
+          ? "/assets-characters/pro-conf.webp"
+          : "/assets-characters/con-conf.webp"
+      }
       alt={message.name}
       width={52}
       height={52}

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 import { useCurrentUserId } from "@/lib/auth/jwt";
 import { ROUTES } from "@/lib/routes";
 import type { Agreement, RoomParticipant } from "@/lib/ws/types";
@@ -51,9 +52,9 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const [kickedMessage, setKickedMessage] = useState<string | null>(null);
   const inviteLink = `tudak.app/join/${debateId}`;
 
-  // Set by the create-debate flow (host) or the join modal (guest) — the
-  // seat this client is claiming. Missing only if someone lands here without
-  // going through either flow (e.g. a stale bookmark).
+  // 방 생성 플로우(방장) 또는 참여 모달(게스트)에서 설정됨 — 이 클라이언트가
+  // 차지할 좌석을 나타냄. 두 플로우 중 어느 쪽도 거치지 않고 바로 들어온
+  // 경우(예: 오래된 북마크)에만 값이 없음.
   const agreementParam = searchParams.get("agreement");
   const agreement = isAgreement(agreementParam) ? agreementParam : undefined;
 
@@ -74,8 +75,8 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     onKicked: (message) => setKickedMessage(message.message),
   });
 
-  // No `agreement` (stale link) means the hook never joined — fetch a
-  // read-only status snapshot instead, once connected.
+  // `agreement`가 없으면(오래된 링크) 훅이 join을 보내지 않았다는 뜻 —
+  // 연결되면 대신 읽기 전용 상태 스냅샷만 조회한다.
   const statusRequestedRef = useRef(false);
   useEffect(() => {
     if (agreement || statusRequestedRef.current) return;
@@ -111,9 +112,9 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     );
   }
 
-  // REST snapshot for the very first paint; once the socket delivers a live
-  // `RoomStatusMessage` (join/leave/kick both broadcast one), that's the
-  // source of truth for who's seated.
+  // 최초 렌더링용 REST 스냅샷일 뿐이고, 소켓이 실시간 `RoomStatusMessage`를
+  // 전달하기 시작하면(join/leave/kick 각각 모든 참가자의 개인 큐로 하나씩
+  // push함) 그때부턴 그게 좌석 정보의 기준이 된다.
   const restPro: Seat | null =
     room.hostAgreement === "AGREE" && room.hostNickname
       ? { name: room.hostNickname, sticker: SEAT_STICKER.pro }
@@ -330,7 +331,7 @@ function WaitingSeat({
       {seat ? (
         <>
           <Image
-            src={`/assets/stickers/${seat.sticker}.png`}
+            src={getStickerSrc(seat.sticker)}
             alt={seat.name}
             width={120}
             height={120}
