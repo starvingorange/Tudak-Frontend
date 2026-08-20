@@ -44,11 +44,10 @@ export const useAuthStore = create<AuthState>()(
 export const useIsLoggedIn = () =>
   useAuthStore((state) => state.accessToken !== null);
 
-/** True once `AuthProvider`'s `rehydrate()` call has resolved. Callers that
- * read `accessToken` synchronously outside React state (e.g. the STOMP
- * client's `beforeConnect`) should wait on this first — otherwise a
- * component that connects on mount can race rehydration and send that first
- * request with no token at all. */
+/** `AuthProvider`의 `rehydrate()` 호출이 끝나면 true가 된다. 리액트 상태 밖에서
+ * `accessToken`을 동기적으로 읽는 쪽(예: STOMP 클라이언트의 `beforeConnect`)은
+ * 먼저 이 값을 기다려야 한다 — 안 그러면 마운트 시점에 연결하는 컴포넌트가
+ * 리하이드레이션과 경합해서 토큰 없이 첫 요청을 보내버릴 수 있다. */
 export const useAuthHydrated = () =>
   useSyncExternalStore(
     (onChange) => useAuthStore.persist.onFinishHydration(onChange),

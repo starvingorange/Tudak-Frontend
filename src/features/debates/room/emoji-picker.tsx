@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 
 const STICKERS: [string, string][] = [
   ["st-pro-basic", "찬성!"],
@@ -37,7 +38,7 @@ export function EmojiPicker({ onSend }: { onSend: (sticker: string) => void }) {
             className="flex h-13 items-center justify-center rounded-[10px] border-none bg-transparent p-1.5 hover:bg-(--bg-hero) sm:h-14"
           >
             <Image
-              src={`/assets/stickers/${sticker}.png`}
+              src={getStickerSrc(sticker)}
               alt={label}
               width={46}
               height={46}

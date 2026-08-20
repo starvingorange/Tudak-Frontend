@@ -28,14 +28,14 @@ export function VoteList() {
 
   return (
     <>
-      <div className="mt-4 flex flex-col gap-3 rounded-(--radius-section) border border-(--border-1) p-3.5 sm:mt-6 sm:items-end sm:gap-6 sm:p-[18px_22px] lg:flex-row">
+      <div className="mt-4 flex flex-col gap-3 rounded-(--radius-section) border border-(--border-1) p-3.5 lg:mt-6 lg:flex-row lg:items-end lg:gap-6 lg:p-[18px_22px]">
         <div className="flex-1">
-          <div className="mt-0 sm:mt-2.5">
+          <div className="mt-0 lg:mt-2.5">
             <CategoryTabBar active={tab} onChange={setTab} />
           </div>
         </div>
-        <div className="w-full sm:w-55">
-          <div className="mt-0 sm:mt-2.5">
+        <div className="w-full lg:w-55">
+          <div className="mt-0 lg:mt-2.5">
             <VoteSortDropdown value={sort} onChange={setSort} />
           </div>
         </div>

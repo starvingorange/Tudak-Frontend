@@ -22,11 +22,11 @@ interface DebateRoomViewProps {
   debateId: string;
 }
 
-// "1인당 7분 (입론+반론 6분 · 최종발언 1분)" per the waiting room copy — 찬성
-// speaks first, 반대 second; once both budgets are spent the host ends the
-// debate. There's no server-pushed clock (WS_PROTOCOL.md has no turn/timer
-// message), so every client just times its own copy of the same two windows
-// starting from the moment it saw `status` become `STARTED`.
+// 대기방 문구에 나오는 "1인당 7분(입론+반론 6분 · 최종발언 1분)" 기준 — 찬성이
+// 먼저 말하고 반대가 그다음. 양쪽 예산을 다 쓰면 방장이 토론을 종료한다.
+// 서버가 밀어주는 타이머는 따로 없어서(WS_PROTOCOL.md에 턴/타이머 메시지 없음),
+// 각 클라이언트가 `status`가 `STARTED`로 바뀐 시점부터 스스로 같은 두 구간을
+// 계산한다.
 const TURN_SECONDS = 7 * 60;
 
 function formatClock(totalSeconds: number): string {
@@ -76,10 +76,10 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     onSignal: (message) => audioCallRef.current?.handleSignal(message),
   });
 
-  // This view is only ever reached once the room's already STARTED (the
-  // waiting room navigates here on that transition), but this is a fresh
-  // socket connection — nothing auto-joins/refreshes on first connect, so
-  // ask for the current status explicitly to learn `participants`/`callerId`.
+  // 이 화면은 방이 이미 STARTED된 다음에만 진입하지만(대기방에서 그 시점에
+  // 라우팅해줌), 여기서는 완전히 새로운 소켓 연결이라 최초 연결 시 자동으로
+  // join/refresh가 되지 않는다. 그래서 `participants`/`callerId`를 알기 위해
+  // 명시적으로 현재 상태를 요청한다.
   const statusRequestedRef = useRef(false);
   useEffect(() => {
     if (statusRequestedRef.current || connectionState !== "connected") return;
@@ -104,8 +104,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     }
   }, [audioCall.remoteStream]);
 
-  // Speaking clock — only ticks once the socket confirms the room is
-  // actually STARTED.
+  // 발언 타이머 — 소켓이 방이 실제로 STARTED임을 확인해줘야만 흐른다.
   const started = liveRoom?.status === "STARTED";
   const startedAtRef = useRef<number | null>(null);
   const endCalledRef = useRef(false);
@@ -206,9 +205,8 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
         </h1>
       </div>
 
-      {/* Chat transcript, spectator voting, and vote counts aren't part of
-          the debate WS protocol yet — this panel just shows the step
-          tracker until that's wired up. */}
+      {/* 채팅 로그, 관전자 투표, 득표수는 아직 토론 WS 프로토콜에 없는 기능이라
+          — 연동되기 전까지 이 패널은 스텝 트래커만 보여준다. */}
       <VoteProgressPanel voteEnded={false} proVotes={0} conVotes={0} />
 
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">

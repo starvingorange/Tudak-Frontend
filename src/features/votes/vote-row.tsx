@@ -4,6 +4,7 @@ import { Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/stores/auth-store";
 import type { VoteRow as VoteRowData } from "./data";
@@ -28,7 +29,7 @@ export function VoteRow({ vote, onRequireLogin }: VoteRowProps) {
       <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
         <span className="relative mt-0.5 inline-block h-10 w-10 shrink-0 sm:mt-0 sm:h-11.5 sm:w-11.5">
           <Image
-            src={`/assets/stickers/${vote.sticker}.png`}
+            src={getStickerSrc(vote.sticker)}
             alt="캐릭터"
             fill
             sizes="(max-width: 639px) 40px, 46px"
