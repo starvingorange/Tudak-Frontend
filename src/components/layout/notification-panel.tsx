@@ -3,43 +3,44 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { getCheckQueryKey } from "@/api/notification/hooks/useGetCheck";
 import {
-  getView1QueryKey,
-  useGetView1,
-} from "@/api/notification/hooks/useGetView1";
+  getViewQueryKey,
+  useGetView,
+} from "@/api/notification/hooks/useGetView";
 import { usePatchRead } from "@/api/notification/hooks/usePatchRead";
 import { usePatchReadAll } from "@/api/notification/hooks/usePatchReadAll";
 import { cn } from "@/lib/utils";
+import { useIsLoggedIn } from "@/stores/auth-store";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
-// noticeDateTime의 초/밀리초 단위가 스펙 example에 없어서 밀리초로 가정함 —
-// 실제로 보이는 값이 몇 년씩 어긋나면 1000을 곱하도록 고쳐야 함.
-function formatNoticeTime(epochMs?: number) {
-  if (!epochMs) return "";
-  const diffMin = Math.floor((Date.now() - epochMs) / 60_000);
-  if (diffMin < 1) return "방금 전";
-  if (diffMin < 60) return `${diffMin}분 전`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}시간 전`;
-  return `${Math.floor(diffHour / 24)}일 전`;
+function formatRelativeTime(epochMs: number): string {
+  const diffMs = Math.max(0, Date.now() - epochMs);
+  const minute = 60_000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diffMs < minute) return "방금 전";
+  if (diffMs < hour) return `${Math.floor(diffMs / minute)}분 전`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}시간 전`;
+  return `${Math.floor(diffMs / day)}일 전`;
 }
 
 export function NotificationPanel() {
+  const loggedIn = useIsLoggedIn();
   const queryClient = useQueryClient();
-  const { data, isLoading } = useGetView1({
-    pageable: { page: 0, size: PAGE_SIZE },
-  });
+
+  const { data, isLoading } = useGetView(
+    { pageable: { page: 0, size: PAGE_SIZE } },
+    { query: { enabled: loggedIn } },
+  );
   const notifications = data?.data?.content ?? [];
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getView1QueryKey() });
+    queryClient.invalidateQueries({ queryKey: getViewQueryKey() });
     queryClient.invalidateQueries({ queryKey: getCheckQueryKey() });
   };
 
-  const { mutate: markRead } = usePatchRead({
-    mutation: { onSuccess: invalidate },
-  });
-  const { mutate: markAllRead, isPending: markingAllRead } = usePatchReadAll({
+  const readMutation = usePatchRead({ mutation: { onSuccess: invalidate } });
+  const readAllMutation = usePatchReadAll({
     mutation: { onSuccess: invalidate },
   });
 
@@ -49,55 +50,60 @@ export function NotificationPanel() {
         <span className="text-[15px] font-extrabold text-(--text-1)">알림</span>
         <button
           type="button"
-          onClick={() => markAllRead()}
-          disabled={markingAllRead || notifications.length === 0}
-          className="border-none bg-transparent cursor-pointer text-[12.5px] font-bold text-(--text-3) disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={readAllMutation.isPending}
+          onClick={() => readAllMutation.mutate()}
+          className="border-none bg-transparent cursor-pointer text-[12.5px] font-bold text-(--text-3) disabled:opacity-50"
         >
           모두 읽음
         </button>
       </div>
-      <div className="flex flex-col">
-        {isLoading ? (
-          <div className="px-4 py-8 text-center text-[13px] text-(--text-3)">
-            불러오는 중...
+      <div className="flex max-h-100 flex-col overflow-y-auto">
+        {!loggedIn ? (
+          <div className="px-4 py-10 text-center text-[13px] font-bold text-(--text-2)">
+            로그인 후 알림을 확인할 수 있어요.
           </div>
-        ) : notifications.length === 0 ? (
-          <div className="px-4 py-8 text-center text-[13px] text-(--text-3)">
-            새 알림이 없어요
+        ) : isLoading ? null : notifications.length === 0 ? (
+          <div className="px-4 py-10 text-center text-[13px] font-bold text-(--text-2)">
+            아직 알림이 없어요
           </div>
         ) : (
-          notifications.map((n) => (
-            <button
-              key={n.notificationId}
-              type="button"
-              onClick={() => {
-                if (!n.isRead && n.notificationId !== undefined) {
-                  markRead(n.notificationId);
-                }
-              }}
-              className={cn(
-                "flex w-full gap-3 border-b border-(--divider) px-4 py-3 text-left sm:px-5 sm:py-3.5",
-                !n.isRead && "bg-(--bg-unread)",
-              )}
-            >
-              <div className="min-w-0">
-                <div
-                  className={cn(
-                    "text-[13px] leading-relaxed sm:text-[13.5px]",
-                    n.isRead ? "text-(--text-2)" : "text-(--text-1)",
-                  )}
-                >
-                  {n.message}
+          notifications.map((n) => {
+            const unread = n.isRead === false;
+            return (
+              <button
+                key={n.notificationId}
+                type="button"
+                onClick={() => {
+                  if (unread && n.notificationId !== undefined) {
+                    readMutation.mutate(n.notificationId);
+                  }
+                }}
+                className={cn(
+                  "flex gap-3 border-b border-(--divider) px-4 py-3 text-left sm:px-5 sm:py-3.5",
+                  unread && "bg-(--bg-unread)",
+                )}
+              >
+                <div className="min-w-0">
+                  <div
+                    className={cn(
+                      "text-[13px] leading-relaxed sm:text-[13.5px]",
+                      unread ? "text-(--text-1)" : "text-(--text-2)",
+                    )}
+                  >
+                    {n.message}
+                  </div>
+                  <div className="text-xs text-(--text-3) mt-1">
+                    {n.noticeDateTime !== undefined
+                      ? formatRelativeTime(n.noticeDateTime)
+                      : ""}
+                  </div>
                 </div>
-                <div className="text-xs text-(--text-3) mt-1">
-                  {formatNoticeTime(n.noticeDateTime)}
-                </div>
-              </div>
-              {!n.isRead && (
-                <span className="w-1.75 h-1.75 rounded-full bg-(--noti-dot) shrink-0 mt-1.5" />
-              )}
-            </button>
-          ))
+                {unread && (
+                  <span className="w-1.75 h-1.75 rounded-full bg-(--noti-dot) shrink-0 mt-1.5" />
+                )}
+              </button>
+            );
+          })
         )}
       </div>
     </div>

@@ -3,19 +3,12 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import { orvalApiClient } from "@/api/orval-mutator";
+import { orvalParamsSerializer } from "@/api/orval-params-serializer";
 import type { GetViewRequest as ViewParams } from "../types/GetViewRequest";
 import type { GetViewResponse } from "../types/GetViewResponse";
 
 const getViewUrl = (params: ViewParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = orvalParamsSerializer(params);
 
   return stringifiedParams.length > 0
     ? `/api/notifications?${stringifiedParams}`

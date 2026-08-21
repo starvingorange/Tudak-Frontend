@@ -1,8 +1,12 @@
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import type { CategorySlug } from "@/features/shared/categories";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 interface MyDebateRowProps {
+  debateId: number;
   category: CategorySlug;
   title: string;
   agrees: number;
@@ -10,6 +14,7 @@ interface MyDebateRowProps {
 }
 
 export function MyDebateRow({
+  debateId,
   category,
   title,
   agrees,
@@ -43,9 +48,10 @@ export function MyDebateRow({
   };
 
   return (
-    // 목록 조회 API가 토론 id를 안 줘서 결과 페이지로 링크를 걸 수가 없다 —
-    // id가 추가되면 Link + ChevronRight로 되돌린다.
-    <div className="flex items-center gap-5 border border-(--border-1) rounded-(--radius-card) px-6.5 py-5">
+    <Link
+      href={ROUTES.DEBATE_RESULT(debateId)}
+      className="flex items-center gap-5 border border-(--border-1) rounded-(--radius-card) px-6.5 py-5 hover:border-(--brand-yellow)"
+    >
       <CategoryBadge category={category} className="shrink-0 self-center" />
       <span className="flex-1 text-[19px] font-extrabold tracking-[-0.3px] min-w-0">
         {title}
@@ -53,6 +59,7 @@ export function MyDebateRow({
       {side("찬성")}
       <span className="text-sm font-extrabold text-(--text-2)">VS</span>
       {side("반대")}
-    </div>
+      <ChevronRight size={18} className="shrink-0 text-(--text-3)" />
+    </Link>
   );
 }

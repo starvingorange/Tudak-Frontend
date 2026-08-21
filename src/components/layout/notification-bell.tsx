@@ -11,6 +11,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useDismissableOpen<HTMLDivElement>(open, setOpen);
   const loggedIn = useIsLoggedIn();
+
   const { data } = useGetCheck({ query: { enabled: loggedIn } });
   const hasUnread = data?.data?.notificationExist ?? false;
 

@@ -1,33 +1,23 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
-import { useCurrentUserId } from "@/lib/auth/jwt";
+import { useDebateCall } from "@/features/debates/shared/debate-call-provider";
+import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { ROUTES } from "@/lib/routes";
-import {
-  type UseDebateAudioCallResult,
-  useDebateAudioCall,
-} from "@/lib/webrtc/use-debate-audio-call";
-import type { Agreement } from "@/lib/ws/types";
-import { useDebateRoomSocket } from "@/lib/ws/use-debate-room-socket";
 import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
 import type { DebaterState } from "./data";
 import { DebaterCard } from "./debater-card";
+import { TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
 import { VoteProgressPanel } from "./vote-progress-panel";
 
 interface DebateRoomViewProps {
   debateId: string;
 }
-
-// 대기방 문구에 나오는 "1인당 7분(입론+반론 6분 · 최종발언 1분)" 기준 — 찬성이
-// 먼저 말하고 반대가 그다음. 양쪽 예산을 다 쓰면 방장이 토론을 종료한다.
-// 서버가 밀어주는 타이머는 따로 없어서(WS_PROTOCOL.md에 턴/타이머 메시지 없음),
-// 각 클라이언트가 `status`가 `STARTED`로 바뀐 시점부터 스스로 같은 두 구간을
-// 계산한다.
-const TURN_SECONDS = 7 * 60;
 
 function formatClock(totalSeconds: number): string {
   const clamped = Math.max(0, Math.round(totalSeconds));
@@ -36,105 +26,82 @@ function formatClock(totalSeconds: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function turnState(elapsedSeconds: number, turnIndex: 0 | 1) {
-  const turnStart = turnIndex * TURN_SECONDS;
-  const turnEnd = turnStart + TURN_SECONDS;
-  const remainingSeconds = Math.max(
-    0,
-    Math.min(TURN_SECONDS, turnEnd - elapsedSeconds),
-  );
-  return {
-    remainingLabel: formatClock(remainingSeconds),
-    remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
-    speaking: elapsedSeconds >= turnStart && elapsedSeconds < turnEnd,
-  };
-}
-
 export function DebateRoomView({ debateId }: DebateRoomViewProps) {
   const router = useRouter();
   const numericId = Number(debateId);
-  const myUserId = useCurrentUserId();
 
   const { data, isLoading, isError } = useGetDebate(numericId, {
     query: { enabled: Number.isFinite(numericId) },
   });
 
-  // `useDebateRoomSocket` needs `onSignal` at call time, but the handler
-  // that should receive those messages only exists after `useDebateAudioCall`
-  // runs (which itself needs this hook's `sendSignal`) — a ref breaks the
-  // circularity without either hook needing to know about the other.
-  const audioCallRef = useRef<UseDebateAudioCallResult | null>(null);
-
   const {
-    connectionState,
-    room: liveRoom,
-    sendSignal,
-    leave,
-    end,
-    refreshStatus,
-  } = useDebateRoomSocket(debateId, {
-    onSignal: (message) => audioCallRef.current?.handleSignal(message),
-  });
-
-  // 이 화면은 방이 이미 STARTED된 다음에만 진입하지만(대기방에서 그 시점에
-  // 라우팅해줌), 여기서는 완전히 새로운 소켓 연결이라 최초 연결 시 자동으로
-  // join/refresh가 되지 않는다. 그래서 `participants`/`callerId`를 알기 위해
-  // 명시적으로 현재 상태를 요청한다.
-  const statusRequestedRef = useRef(false);
-  useEffect(() => {
-    if (statusRequestedRef.current || connectionState !== "connected") return;
-    statusRequestedRef.current = true;
-    refreshStatus();
-  }, [connectionState, refreshStatus]);
-
-  const peerUserId =
-    myUserId === null
-      ? null
-      : (liveRoom?.participants.find((p) => p.userId !== myUserId)?.userId ??
-        null);
-  const isCaller = myUserId !== null && liveRoom?.callerId === myUserId;
-
-  const audioCall = useDebateAudioCall({ peerUserId, isCaller, sendSignal });
-  audioCallRef.current = audioCall;
+    myAgreement,
+    startedAt,
+    callState,
+    error: callError,
+    remoteStream,
+    micOn,
+    toggleMic,
+    sendReaction,
+    incomingReaction,
+    sendControl,
+    incomingControl,
+    sendTurn,
+    incomingTurn,
+    disconnectCall,
+  } = useDebateCall();
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = audioCall.remoteStream;
+      remoteAudioRef.current.srcObject = remoteStream;
     }
-  }, [audioCall.remoteStream]);
+  }, [remoteStream]);
 
-  // 발언 타이머 — 소켓이 방이 실제로 STARTED임을 확인해줘야만 흐른다.
-  const started = liveRoom?.status === "STARTED";
-  const startedAtRef = useRef<number | null>(null);
-  const endCalledRef = useRef(false);
-  const [now, setNow] = useState(() => Date.now());
+  const endTriggeredRef = useRef(false);
+  const myTurnIndex: 0 | 1 | null =
+    myAgreement === "AGREE" ? 0 : myAgreement === "DISAGREE" ? 1 : null;
+
+  const {
+    countdown,
+    currentTurnIndex,
+    isMyTurnNow,
+    proRemainingSeconds,
+    conRemainingSeconds,
+    endTurn,
+  } = useDebateTurns({
+    myTurnIndex,
+    micOn,
+    toggleMic,
+    sendTurn,
+    incomingTurn,
+    // 마지막(반대) 턴이 끝났을 때 — 시간이 다 됐거나 발언 종료를 눌렀을 때.
+    onDebateEnd: () => {
+      if (endTriggeredRef.current) return;
+      endTriggeredRef.current = true;
+      sendControl({ type: "end" });
+      router.push(ROUTES.DEBATE_RESULT(debateId));
+    },
+  });
 
   useEffect(() => {
-    if (!started) return;
-    if (startedAtRef.current === null) startedAtRef.current = Date.now();
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [started]);
-
-  const elapsedSeconds = startedAtRef.current
-    ? (now - startedAtRef.current) / 1000
-    : 0;
-  const isHost = myUserId !== null && liveRoom?.callerId === myUserId;
-
-  useEffect(() => {
-    if (!started || !isHost || endCalledRef.current) return;
-    if (elapsedSeconds >= TURN_SECONDS * 2) {
-      endCalledRef.current = true;
-      end();
-    }
-  }, [started, isHost, elapsedSeconds, end]);
-
-  useEffect(() => {
-    if (liveRoom?.status === "CLOSED") {
+    if (incomingControl?.message.type === "end" && !endTriggeredRef.current) {
+      endTriggeredRef.current = true;
       router.push(ROUTES.DEBATE_RESULT(debateId));
     }
-  }, [liveRoom?.status, debateId, router]);
+  }, [incomingControl, router, debateId]);
+
+  const [leftMessage, setLeftMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (incomingControl?.message.type === "leave") {
+      setLeftMessage("상대방이 토론방을 나갔어요.");
+    }
+  }, [incomingControl]);
+  useEffect(() => {
+    if (!leftMessage) return;
+    const timer = setTimeout(() => router.push(ROUTES.DEBATES()), 1500);
+    return () => clearTimeout(timer);
+  }, [leftMessage, router]);
 
   if (!Number.isFinite(numericId) || isError) {
     notFound();
@@ -151,38 +118,66 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     );
   }
 
+  // 이 탭에서 대기방을 거치지 않고(새로고침 포함) 바로 이 URL로 들어온 경우
+  // `startedAt`이 null — P2P 연결이 대기방에서만 맺어지므로 복구할 방법이
+  // 없다. 빈 방을 그냥 보여주는 대신 대기방으로 돌아가게 안내한다.
+  if (startedAt === null) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-295 flex-col items-center justify-center gap-4 px-4 text-center">
+        <span className="text-sm font-bold text-(--text-2)">
+          이 페이지는 대기방을 통해서만 입장할 수 있어요.
+        </span>
+        <Link
+          href={ROUTES.DEBATE_WAITING(debateId)}
+          className="inline-flex items-center justify-center rounded-2xl bg-(--brand-yellow) px-6 py-3 text-sm font-extrabold text-(--brand-on-yellow) no-underline hover:brightness-[0.96]"
+        >
+          대기방으로 이동
+        </Link>
+      </div>
+    );
+  }
+
+  const { pro: proSeatInfo, con: conSeatInfo } = getSeatsFromDetail(room);
+
   const seatFor = (
-    agreement: Agreement,
+    seat: { name: string; sticker: string } | null,
     stance: string,
     turnIndex: 0 | 1,
+    remainingSeconds: number,
   ): DebaterState | null => {
-    const participant = liveRoom?.participants.find(
-      (p) => p.agreement === agreement,
-    );
-    if (!participant) return null;
+    if (!seat) return null;
+    // 카운트다운이 도는 동안은 둘 다 중립 상태로 두고, 끝나는 순간 발언자
+    // 쪽만 강조/반대쪽만 흐려지는 게 트랜지션으로 보이게 한다 — 카운트다운
+    // 오버레이가 사라지기 전에 이미 스타일이 결정돼 있으면 그 변화가 안
+    // 보이므로, `countdown === null`이 되고 나서야 갈린다.
+    const turnDecided = countdown === null;
     return {
-      name: participant.nickname,
-      sticker: agreement === "AGREE" ? "st-pro-basic" : "st-con-basic",
+      name: seat.name,
+      sticker: seat.sticker,
       statement: stance,
-      ...turnState(elapsedSeconds, turnIndex),
+      remainingLabel: formatClock(remainingSeconds),
+      remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
+      speaking: turnDecided && currentTurnIndex === turnIndex,
+      dimmed: turnDecided && currentTurnIndex !== turnIndex,
     };
   };
 
-  const pro = seatFor("AGREE", room.agreeLabel ?? "찬성", 0);
-  const con = seatFor("DISAGREE", room.disagreeLabel ?? "반대", 1);
-
-  const myAgreement = liveRoom?.participants.find(
-    (p) => p.userId === myUserId,
-  )?.agreement;
-  const myTurn =
-    myAgreement === "AGREE"
-      ? turnState(elapsedSeconds, 0).speaking
-      : myAgreement === "DISAGREE"
-        ? turnState(elapsedSeconds, 1).speaking
-        : false;
+  const pro = seatFor(
+    proSeatInfo,
+    room.agreeLabel ?? "찬성",
+    0,
+    proRemainingSeconds,
+  );
+  const con = seatFor(
+    conSeatInfo,
+    room.disagreeLabel ?? "반대",
+    1,
+    conRemainingSeconds,
+  );
 
   const leaveRoom = () => {
-    leave();
+    sendControl({ type: "leave" });
+    disconnectCall();
     router.push(ROUTES.DEBATES());
   };
 
@@ -190,6 +185,12 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     <div className="mx-auto max-w-295 px-4 pt-4 pb-8 sm:pt-5 sm:pb-10">
       {/* biome-ignore lint/a11y/useMediaCaption: opponent's live mic audio, nothing to caption */}
       <audio ref={remoteAudioRef} autoPlay className="hidden" />
+
+      {countdown !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55">
+          <span className="text-9xl font-black text-white">{countdown}</span>
+        </div>
+      )}
 
       <div className="relative flex min-h-13 flex-col items-start gap-3 sm:items-center sm:justify-center">
         <button
@@ -205,26 +206,40 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
         </h1>
       </div>
 
+      {leftMessage && (
+        <div className="mt-4 rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+          {leftMessage}
+        </div>
+      )}
+      {!leftMessage && callState === "failed" && (
+        <div className="mt-4 rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+          {callError ?? "상대방과의 연결이 끊어졌어요."}
+        </div>
+      )}
+
       {/* 채팅 로그, 관전자 투표, 득표수는 아직 토론 WS 프로토콜에 없는 기능이라
           — 연동되기 전까지 이 패널은 스텝 트래커만 보여준다. */}
       <VoteProgressPanel voteEnded={false} proVotes={0} conVotes={0} />
 
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
-        <DebaterCard side="pro" debater={pro} />
+        <DebaterCard side="pro" debater={pro} isMe={myTurnIndex === 0} />
         <div className="flex justify-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-(--border-1) bg-(--bg-card) text-lg font-extrabold sm:h-16 sm:w-16 sm:text-xl">
             VS
           </span>
         </div>
-        <DebaterCard side="con" debater={con} />
+        <DebaterCard side="con" debater={con} isMe={myTurnIndex === 1} />
       </div>
 
       <ChatLog messages={[]} />
 
       <ControlBar
-        myTurn={myTurn}
-        micOn={audioCall.micOn}
-        onToggleMic={audioCall.toggleMic}
+        myTurn={isMyTurnNow}
+        micOn={micOn}
+        onToggleMic={toggleMic}
+        onEndTurn={endTurn}
+        onReactionSend={sendReaction}
+        incomingReaction={incomingReaction}
       />
     </div>
   );
