@@ -161,6 +161,12 @@ export default defineConfig({
           path: "./src/api/orval-mutator.ts",
           name: "orvalApiClient",
         },
+        // Flattens object-shaped query params (e.g. `pageable`) to match
+        // how Spring actually binds them — see orval-params-serializer.ts.
+        paramsSerializer: {
+          path: "./src/api/orval-params-serializer.ts",
+          name: "orvalParamsSerializer",
+        },
         // `orvalApiClient` (src/api/orval-mutator.ts) resolves to parsed JSON
         // directly (ky's `.json<T>()`), never a `{ data, status, headers }`
         // envelope — match that so generated return types reflect what the

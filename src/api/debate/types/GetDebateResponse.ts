@@ -31,4 +31,6 @@ export type GetDebateResponse = CommonResponse<{
   opponentNickname?: string;
   /** 상대방 찬반 입장 (미참여 시 null) */
   opponentAgreement?: DebateDetailResponseOpponentAgreement;
+  /** 초대 코드 (UUID) */
+  inviteCode?: string;
 }>;

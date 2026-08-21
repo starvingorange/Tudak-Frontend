@@ -7,7 +7,7 @@ import type { GetViewRequest as ViewParams } from "../types/GetViewRequest";
 import type { GetViewResponse } from "../types/GetViewResponse";
 
 export const getViewQueryKey = (params?: ViewParams) =>
-  [`/api/polls`, ...(params ? [params] : [])] as const;
+  [`/api/notifications`, ...(params ? [params] : [])] as const;
 
 export const getViewQueryOptions = (
   params: ViewParams,

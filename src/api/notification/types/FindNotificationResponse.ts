@@ -4,6 +4,7 @@
  */
 export interface FindNotificationResponse {
   notificationId?: number;
+  isRead?: boolean;
   targetId?: number;
   message?: string;
   noticeDateTime?: number;

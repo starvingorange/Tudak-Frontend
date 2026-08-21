@@ -7,6 +7,11 @@ export interface DebaterState {
   remainingLabel: string;
   remainingPercent: number;
   speaking: boolean;
+  /** Card should render dimmed (opponent's turn, actively underway) —
+   * defaults to `!speaking` when omitted. Kept separate from `speaking` so a
+   * "neither side has started yet" moment (e.g. a pre-turn countdown) can
+   * show both cards neutral instead of one dimmed by default. */
+  dimmed?: boolean;
 }
 
 export interface TranscriptMessage {

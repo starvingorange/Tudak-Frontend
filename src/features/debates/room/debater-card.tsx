@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import type { DebaterState } from "./data";
 
 // Intrinsic dimensions of each pose image, so the responsive clamp()-sized
@@ -13,9 +14,12 @@ const POSE = {
 interface DebaterCardProps {
   side: "pro" | "con";
   debater: DebaterState | null;
+  /** Whether this seat is the local user's own — shows a small "나" badge
+   * next to the name. */
+  isMe?: boolean;
 }
 
-export function DebaterCard({ side, debater }: DebaterCardProps) {
+export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
   const isPro = side === "pro";
   const color = isPro ? "var(--vote-blue)" : "var(--vote-red)";
   const label = isPro ? "찬성" : "반대";
@@ -49,12 +53,15 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       height={POSE[pose].height}
       priority
       style={{ height: "auto" }}
-      className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]"
+      className={cn(
+        "mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]",
+        !isPro && "md:order-2",
+      )}
     />
   );
 
   const content = (
-    <div className="min-w-0 flex-1">
+    <div className={cn("min-w-0 flex-1", !isPro && "md:order-1")}>
       <div
         className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
       >
@@ -69,6 +76,14 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
         <span className="text-[17px] font-extrabold sm:text-[19px]">
           {debater.name}
         </span>
+        {isMe && (
+          <span
+            className="border text-[12px] font-bold px-2.25 py-0.5 rounded-(--radius-pill) whitespace-nowrap"
+            style={{ borderColor: color, color }}
+          >
+            나
+          </span>
+        )}
         {isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
@@ -97,10 +112,19 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
     </div>
   );
 
+  const dimmed = debater.dimmed ?? !debater.speaking;
+
   return (
     <section
-      className="relative flex flex-col items-center gap-4 rounded-2xl border bg-(--bg-card) p-5 text-left sm:gap-5.5 sm:p-6 md:flex-row"
-      style={{ borderColor: color }}
+      className={cn(
+        "relative flex flex-col items-center gap-4 rounded-2xl border-2 bg-(--bg-card) p-5 text-left transition-all duration-500 sm:gap-5.5 sm:p-6 md:flex-row",
+        debater.speaking && "scale-[1.02]",
+        dimmed && "opacity-70",
+      )}
+      style={{
+        borderColor: color,
+        boxShadow: debater.speaking ? `0 0 24px -4px ${color}` : undefined,
+      }}
     >
       <span
         className="absolute -top-px text-white text-sm font-extrabold px-4.5 py-2 rounded-b-[10px]"
@@ -108,17 +132,8 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       >
         {label}
       </span>
-      {isPro ? (
-        <>
-          {image}
-          {content}
-        </>
-      ) : (
-        <>
-          {image}
-          {content}
-        </>
-      )}
+      {image}
+      {content}
     </section>
   );
 }

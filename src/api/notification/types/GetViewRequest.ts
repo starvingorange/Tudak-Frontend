@@ -3,9 +3,7 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import type { Pageable } from "@/api/common/types/Pageable";
-import type { ViewCategoryType } from "./ViewCategoryType";
 
 export type GetViewRequest = {
   pageable: Pageable;
-  categoryType: ViewCategoryType;
 };

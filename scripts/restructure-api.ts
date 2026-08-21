@@ -578,6 +578,9 @@ for (const op of opMetas) {
 
   const apiImports = [
     'import { orvalApiClient } from "@/api/orval-mutator";',
+    op.urlFnText.includes("orvalParamsSerializer(")
+      ? 'import { orvalParamsSerializer } from "@/api/orval-params-serializer";'
+      : null,
     `import type { ${op.responseTypeName} } from "../types/${op.responseTypeName}";`,
     hasRequestType
       ? `import type { ${requestImportSpecifier} } from "../types/${requestTypeName}";`

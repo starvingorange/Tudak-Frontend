@@ -3,14 +3,14 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 import type { CommonResponse } from "@/api/common/types/CommonResponse";
-import type { FindNotificationResponse } from "./FindNotificationResponse";
+import type { FindPollResponse } from "./FindPollResponse";
 
 export type GetView1Response = CommonResponse<{
-  content?: FindNotificationResponse[];
+  content?: FindPollResponse[];
   pageNumber?: number;
   size?: number;
-  hasNext?: boolean;
-  hasPrevious?: boolean;
+  totalElements?: number;
+  totalPages?: number;
   isFirst?: boolean;
   isLast?: boolean;
 }>;
