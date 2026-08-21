@@ -19,8 +19,12 @@ interface ControlBarProps {
   myTurn: boolean;
   /** Whether the local mic track is currently unmuted and transmitting. */
   micOn: boolean;
-  /** Toggles it — first press starts transmitting, second press stops. */
+  /** Toggles it — first press starts transmitting, second press stops
+   * (pauses the turn timer, doesn't end the turn). */
   onToggleMic: () => void;
+  /** Ends my current turn early and hands it to the opponent — only
+   * meaningful while `myTurn` is true. */
+  onEndTurn: () => void;
   /** Sends the picked sticker to the opponent over the WebRTC data channel —
    * best-effort, doesn't block the local animation if it fails. */
   onReactionSend?: (sticker: string) => void;
@@ -33,6 +37,7 @@ export function ControlBar({
   myTurn,
   micOn,
   onToggleMic,
+  onEndTurn,
   onReactionSend,
   incomingReaction,
 }: ControlBarProps) {
@@ -92,31 +97,47 @@ export function ControlBar({
           {pickerOpen && <EmojiPicker onSend={react} />}
         </div>
 
-        <button
-          type="button"
-          disabled={!myTurn}
-          onClick={() => myTurn && onToggleMic()}
-          className={cn(
-            "inline-flex w-full items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:px-8.5",
-            !myTurn
-              ? "bg-[#efedea] text-[#a3a09a] cursor-not-allowed"
+        <div className="flex w-full items-center gap-2.5 sm:w-auto">
+          <button
+            type="button"
+            disabled={!myTurn}
+            onClick={() => myTurn && onToggleMic()}
+            className={cn(
+              "inline-flex flex-1 items-center justify-center gap-2.5 rounded-full border-none px-6 py-3.5 text-base font-extrabold transition-transform sm:w-auto sm:flex-none sm:px-8.5",
+              !myTurn
+                ? "bg-[#efedea] text-[#a3a09a] cursor-not-allowed"
+                : isTalking
+                  ? "bg-[#e93a3a] text-white cursor-pointer scale-105"
+                  : "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer",
+            )}
+          >
+            <Mic size={18} />
+            {!myTurn
+              ? "상대 발언 중"
               : isTalking
-                ? "bg-[#e93a3a] text-white cursor-pointer scale-105"
-                : "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer",
-          )}
-        >
-          <Mic size={18} />
-          {!myTurn
-            ? "상대 발언 중"
-            : isTalking
-              ? "말하는 중… (누르면 종료)"
-              : "눌러서 말하기"}
-        </button>
+                ? "말하는 중… (누르면 멈추기)"
+                : "눌러서 말하기"}
+          </button>
+
+          <button
+            type="button"
+            disabled={!myTurn}
+            onClick={() => myTurn && onEndTurn()}
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center rounded-full border-[1.5px] px-5 py-3.5 text-sm font-extrabold whitespace-nowrap",
+              !myTurn
+                ? "cursor-not-allowed border-(--border-1) text-[#a3a09a]"
+                : "cursor-pointer border-(--vote-red) text-(--vote-red) hover:bg-[#fdecec]",
+            )}
+          >
+            발언 종료
+          </button>
+        </div>
 
         <div className="w-full max-w-[320px] text-center text-[13px] text-[#909090] sm:w-55 sm:text-left">
           {!myTurn
             ? "내 차례가 되면 버튼이 활성화돼요. 이모티콘으로 의사를 표현해 보세요!"
-            : "버튼을 누르면 말하기가 시작되고, 다시 누르면 끝나요."}
+            : "버튼을 누르면 말하기가 시작/일시정지돼요. 다 말했으면 발언 종료를 눌러주세요."}
         </div>
 
         {reactions.map((r) => (

@@ -5,7 +5,15 @@ const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 export type DebateControlMessage =
   | { type: "reaction"; sticker: string }
   | { type: "end" }
-  | { type: "leave" };
+  | { type: "leave" }
+  // 턴 타이머는 눌러서 말하기(마이크 on/off)로만 흐른다 — "말하기 시작"/"말하기
+  // 멈춤(그때까지 쓴 시간)"을 상대에게 이벤트로 알려주면, 상대는 자기 로컬
+  // 시계로 같은 카운트다운을 그대로 재현한다(초 단위로 계속 핑퐁하지 않음).
+  | { type: "speak-start" }
+  | { type: "speak-pause"; usedSeconds: number }
+  // 발언자가 "발언 종료"를 누르거나 시간을 다 썼을 때, 다음 사람(찬성→반대)
+  // 으로 턴을 넘긴다는 뜻 — 마지막 턴(반대) 종료는 기존 "end"를 그대로 씀.
+  | { type: "turn-pass" };
 
 export interface DebatePeerConnectionHandlers {
   onIceCandidate?: (candidate: RTCIceCandidateInit) => void;
@@ -22,7 +30,18 @@ function parseControlMessage(data: string): DebateControlMessage | null {
     if (parsed?.type === "reaction" && typeof parsed.sticker === "string") {
       return parsed;
     }
-    if (parsed?.type === "end" || parsed?.type === "leave") {
+    if (
+      parsed?.type === "speak-pause" &&
+      typeof parsed.usedSeconds === "number"
+    ) {
+      return parsed;
+    }
+    if (
+      parsed?.type === "end" ||
+      parsed?.type === "leave" ||
+      parsed?.type === "speak-start" ||
+      parsed?.type === "turn-pass"
+    ) {
       return parsed;
     }
     return null;

@@ -12,37 +12,18 @@ import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
 import type { DebaterState } from "./data";
 import { DebaterCard } from "./debater-card";
+import { TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
 import { VoteProgressPanel } from "./vote-progress-panel";
 
 interface DebateRoomViewProps {
   debateId: string;
 }
 
-// 대기방 문구에 나오는 "1인당 7분(입론+반론 6분 · 최종발언 1분)" 기준 — 찬성이
-// 먼저 말하고 반대가 그다음. 양쪽 예산을 다 쓰면 방장이 토론을 종료한다.
-// 서버가 밀어주는 타이머는 따로 없어서, 각 클라이언트가 `startedAt`(대기방에서
-// STARTED를 관측한 시각)부터 스스로 같은 두 구간을 계산한다.
-const TURN_SECONDS = 7 * 60;
-
 function formatClock(totalSeconds: number): string {
   const clamped = Math.max(0, Math.round(totalSeconds));
   const minutes = Math.floor(clamped / 60);
   const seconds = clamped % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-function turnState(elapsedSeconds: number, turnIndex: 0 | 1) {
-  const turnStart = turnIndex * TURN_SECONDS;
-  const turnEnd = turnStart + TURN_SECONDS;
-  const remainingSeconds = Math.max(
-    0,
-    Math.min(TURN_SECONDS, turnEnd - elapsedSeconds),
-  );
-  return {
-    remainingLabel: formatClock(remainingSeconds),
-    remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
-    speaking: elapsedSeconds >= turnStart && elapsedSeconds < turnEnd,
-  };
 }
 
 export function DebateRoomView({ debateId }: DebateRoomViewProps) {
@@ -55,7 +36,6 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
   const {
     myAgreement,
-    isHost,
     startedAt,
     callState,
     error: callError,
@@ -66,6 +46,8 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     incomingReaction,
     sendControl,
     incomingControl,
+    sendTurn,
+    incomingTurn,
     disconnectCall,
   } = useDebateCall();
 
@@ -76,28 +58,31 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     }
   }, [remoteStream]);
 
-  // 발언 타이머 — 대기방에서 P2P가 붙은 시점(`startedAt`)부터 흐른다.
   const endTriggeredRef = useRef(false);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (startedAt === null) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [startedAt]);
+  const myTurnIndex: 0 | 1 | null =
+    myAgreement === "AGREE" ? 0 : myAgreement === "DISAGREE" ? 1 : null;
 
-  const elapsedSeconds = startedAt ? (now - startedAt) / 1000 : 0;
-
-  // 종료: 호스트 쪽 타이머가 다 되면 상대에게 P2P로 알리고 결과 페이지로
-  // 이동한다. 메시지가 유실돼도 상대는 자기 타이머로 결국 같은 결론에
-  // 도달하므로(elapsedSeconds도 두 클라이언트 모두 계산 중), 이 effect
-  // 자체가 fallback을 겸한다.
-  useEffect(() => {
-    if (startedAt === null || endTriggeredRef.current) return;
-    if (elapsedSeconds < TURN_SECONDS * 2) return;
-    endTriggeredRef.current = true;
-    if (isHost) sendControl({ type: "end" });
-    router.push(ROUTES.DEBATE_RESULT(debateId));
-  }, [startedAt, elapsedSeconds, isHost, sendControl, router, debateId]);
+  const {
+    countdown,
+    currentTurnIndex,
+    isMyTurnNow,
+    proRemainingSeconds,
+    conRemainingSeconds,
+    endTurn,
+  } = useDebateTurns({
+    myTurnIndex,
+    micOn,
+    toggleMic,
+    sendTurn,
+    incomingTurn,
+    // 마지막(반대) 턴이 끝났을 때 — 시간이 다 됐거나 발언 종료를 눌렀을 때.
+    onDebateEnd: () => {
+      if (endTriggeredRef.current) return;
+      endTriggeredRef.current = true;
+      sendControl({ type: "end" });
+      router.push(ROUTES.DEBATE_RESULT(debateId));
+    },
+  });
 
   useEffect(() => {
     if (incomingControl?.message.type === "end" && !endTriggeredRef.current) {
@@ -158,25 +143,31 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     seat: { name: string; sticker: string } | null,
     stance: string,
     turnIndex: 0 | 1,
+    remainingSeconds: number,
   ): DebaterState | null => {
     if (!seat) return null;
     return {
       name: seat.name,
       sticker: seat.sticker,
       statement: stance,
-      ...turnState(elapsedSeconds, turnIndex),
+      remainingLabel: formatClock(remainingSeconds),
+      remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
+      speaking: currentTurnIndex === turnIndex,
     };
   };
 
-  const pro = seatFor(proSeatInfo, room.agreeLabel ?? "찬성", 0);
-  const con = seatFor(conSeatInfo, room.disagreeLabel ?? "반대", 1);
-
-  const myTurn =
-    myAgreement === "AGREE"
-      ? turnState(elapsedSeconds, 0).speaking
-      : myAgreement === "DISAGREE"
-        ? turnState(elapsedSeconds, 1).speaking
-        : false;
+  const pro = seatFor(
+    proSeatInfo,
+    room.agreeLabel ?? "찬성",
+    0,
+    proRemainingSeconds,
+  );
+  const con = seatFor(
+    conSeatInfo,
+    room.disagreeLabel ?? "반대",
+    1,
+    conRemainingSeconds,
+  );
 
   const leaveRoom = () => {
     sendControl({ type: "leave" });
@@ -188,6 +179,12 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     <div className="mx-auto max-w-295 px-4 pt-4 pb-8 sm:pt-5 sm:pb-10">
       {/* biome-ignore lint/a11y/useMediaCaption: opponent's live mic audio, nothing to caption */}
       <audio ref={remoteAudioRef} autoPlay className="hidden" />
+
+      {countdown !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55">
+          <span className="text-9xl font-black text-white">{countdown}</span>
+        </div>
+      )}
 
       <div className="relative flex min-h-13 flex-col items-start gap-3 sm:items-center sm:justify-center">
         <button
@@ -231,9 +228,10 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
       <ChatLog messages={[]} />
 
       <ControlBar
-        myTurn={myTurn}
+        myTurn={isMyTurnNow}
         micOn={micOn}
         onToggleMic={toggleMic}
+        onEndTurn={endTurn}
         onReactionSend={sendReaction}
         incomingReaction={incomingReaction}
       />

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import type { DebaterState } from "./data";
 
 // Intrinsic dimensions of each pose image, so the responsive clamp()-sized
@@ -99,8 +100,14 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
 
   return (
     <section
-      className="relative flex flex-col items-center gap-4 rounded-2xl border bg-(--bg-card) p-5 text-left sm:gap-5.5 sm:p-6 md:flex-row"
-      style={{ borderColor: color }}
+      className={cn(
+        "relative flex flex-col items-center gap-4 rounded-2xl border-2 bg-(--bg-card) p-5 text-left transition-all sm:gap-5.5 sm:p-6 md:flex-row",
+        debater.speaking ? "scale-[1.02]" : "opacity-70",
+      )}
+      style={{
+        borderColor: color,
+        boxShadow: debater.speaking ? `0 0 24px -4px ${color}` : undefined,
+      }}
     >
       <span
         className="absolute -top-px text-white text-sm font-extrabold px-4.5 py-2 rounded-b-[10px]"

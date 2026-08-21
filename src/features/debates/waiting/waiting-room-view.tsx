@@ -149,6 +149,29 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     return () => clearTimeout(timer);
   }, [kickedMessage, router]);
 
+  // 초대링크로 들어온 게스트는 URL에 `agreement`가 없다 — 아직 참가자가
+  // 아니므로 status 조회(위 effect)가 D006(참가자 아님)으로 거부되는데, 이걸
+  // 입장 선택 UI 대신 "남은 자리로 자동 참여"로 처리한다. `liveRoom`은 이
+  // 시점엔 아직 null(실패한 refreshStatus에서 온 게 아니라 join 성공 후에만
+  // 채워짐)이라 REST 스냅샷(`data`)에서 직접 빈 자리를 판단해야 한다.
+  const autoJoinRef = useRef(false);
+  useEffect(() => {
+    if (autoJoinRef.current || agreement) return;
+    if (wsError?.error !== "D006") return;
+    const detail = data?.data;
+    if (!detail) return;
+    const { pro: p, con: c } = getSeatsFromDetail(detail);
+    const openAgreement: Agreement | null =
+      p === null && c !== null
+        ? "AGREE"
+        : c === null && p !== null
+          ? "DISAGREE"
+          : null;
+    if (!openAgreement) return;
+    autoJoinRef.current = true;
+    join(openAgreement);
+  }, [agreement, wsError, data, join]);
+
   // 방이 STARTED되면 (아직 살아있는 이 소켓으로) WebRTC 시그널링을 시작한다 —
   // P2P가 실제로 붙기 전까진 토론방으로 넘어가지 않는다(토론방은 소켓이 아예
   // 없어서, 여기서 다 맺어놓고 넘겨줘야 함).
@@ -202,11 +225,13 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     null;
   const isHost = myAgreement !== null && myAgreement === room.hostAgreement;
 
-  // 초대링크로 들어온 게스트는 URL에 `agreement`가 없다 — 아직 참가자가
-  // 아니므로 status 조회(위 effect)가 D006(참가자 아님)으로 거부되는데,
-  // 이걸 원래 있던 "오래된 북마크" 에러 배너 대신 입장 선택 UI로 보여준다.
+  // 초대링크로 들어온 게스트가 아직 참가자가 아니라 D006을 받은 상태 —
+  // 위 effect가 자동으로 남은 자리에 join을 시도 중이거나(양쪽 다 안 찼으면),
+  // 이미 두 자리 다 찼으면 자동 참여가 불가능하다. "오래된 북마크" 에러
+  // 배너 대신 이 상태 전용 메시지를 보여준다.
   const needsStancePick =
     !agreement && myAgreement === null && wsError?.error === "D006";
+  const autoJoinFailed = needsStancePick && bothSeated;
 
   const copyInvite = async () => {
     try {
@@ -259,46 +284,23 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
             {kickedMessage}
           </div>
         )}
-        {!kickedMessage && wsError && !needsStancePick && (
+        {/* D006(참가자 아님)은 항상 아래 "자동 참여 중.../정원 찼음" 전용
+            메시지로만 보여준다 — 참여가 성공한 뒤에도 실패했던 예전 시도의
+            에러가 wsError에 그대로 남아있어서, 코드로 걸러주지 않으면 참여
+            완료 후에도 이 배너가 계속 떠 있게 된다. */}
+        {!kickedMessage && wsError && wsError.error !== "D006" && (
           <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
             {wsError.message}
           </div>
         )}
-        {needsStancePick && (
-          <div className="flex flex-col gap-3 rounded-2xl border border-(--border-1) bg-(--bg-card) p-4 sm:p-5">
-            <div className="text-sm font-bold text-(--text-1)">
-              아직 이 토론방에 참여하지 않았어요. 입장을 선택하고 참여하세요.
-            </div>
-            <div className="flex flex-col gap-2.5 sm:flex-row">
-              <button
-                type="button"
-                disabled={pro !== null}
-                onClick={() => join("AGREE")}
-                className="flex-1 rounded-2xl border-[1.5px] py-3.25 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
-                style={{
-                  borderColor: "var(--vote-blue)",
-                  color: "var(--vote-blue)",
-                }}
-              >
-                {pro !== null
-                  ? "찬성 좌석이 이미 찼어요"
-                  : `${room.agreeLabel ?? "찬성"}으로 참여하기`}
-              </button>
-              <button
-                type="button"
-                disabled={con !== null}
-                onClick={() => join("DISAGREE")}
-                className="flex-1 rounded-2xl border-[1.5px] py-3.25 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
-                style={{
-                  borderColor: "var(--vote-red)",
-                  color: "var(--vote-red)",
-                }}
-              >
-                {con !== null
-                  ? "반대 좌석이 이미 찼어요"
-                  : `${room.disagreeLabel ?? "반대"}로 참여하기`}
-              </button>
-            </div>
+        {needsStancePick && autoJoinFailed && (
+          <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+            이미 정원이 찼어요.
+          </div>
+        )}
+        {needsStancePick && !autoJoinFailed && (
+          <div className="rounded-xl border border-(--border-1) bg-(--bg-card) text-center text-sm font-bold text-(--text-2) py-3.5 px-4.5">
+            남은 자리로 참여하는 중...
           </div>
         )}
 

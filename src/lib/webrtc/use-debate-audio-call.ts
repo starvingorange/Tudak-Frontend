@@ -37,6 +37,11 @@ export interface IncomingControlMessage {
   message: DebateEndOrLeaveMessage;
 }
 
+export type DebateTurnMessage =
+  | { type: "speak-start" }
+  | { type: "speak-pause"; usedSeconds: number }
+  | { type: "turn-pass" };
+
 export interface UseDebateAudioCallResult {
   remoteStream: MediaStream | null;
   micOn: boolean;
@@ -58,6 +63,12 @@ export interface UseDebateAudioCallResult {
   sendControl: (message: DebateEndOrLeaveMessage) => boolean;
   /** Latest "end"/"leave" the opponent sent, or `null` before the first one. */
   incomingControl: IncomingControlMessage | null;
+  /** Sends a turn-timer event (speak-start/speak-pause/turn-pass) — see
+   * `use-debate-turns.ts`, which owns the actual turn state machine. */
+  sendTurn: (message: DebateTurnMessage) => boolean;
+  /** Latest turn-timer event the opponent sent — a new object identity on
+   * every message, even repeats. */
+  incomingTurn: DebateTurnMessage | null;
 }
 
 /** Establishes (and tears down) a single 1:1 audio-only WebRTC call with the
@@ -76,6 +87,9 @@ export function useDebateAudioCall({
     useState<IncomingReaction | null>(null);
   const [incomingControl, setIncomingControl] =
     useState<IncomingControlMessage | null>(null);
+  const [incomingTurn, setIncomingTurn] = useState<DebateTurnMessage | null>(
+    null,
+  );
 
   const peerRef = useRef<DebatePeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -166,8 +180,10 @@ export function useDebateAudioCall({
                 id: Date.now() + Math.random(),
                 sticker: message.sticker,
               });
-            } else {
+            } else if (message.type === "end" || message.type === "leave") {
               setIncomingControl({ id: Date.now() + Math.random(), message });
+            } else {
+              setIncomingTurn(message);
             }
           },
         });
@@ -216,6 +232,7 @@ export function useDebateAudioCall({
       setCallState("idle");
       setIncomingReaction(null);
       setIncomingControl(null);
+      setIncomingTurn(null);
     };
   }, [peerUserId, isCaller, applySignal]);
 
@@ -228,6 +245,12 @@ export function useDebateAudioCall({
 
   const sendControl = useCallback(
     (message: DebateEndOrLeaveMessage) =>
+      peerRef.current?.sendControlMessage(message) ?? false,
+    [],
+  );
+
+  const sendTurn = useCallback(
+    (message: DebateTurnMessage) =>
       peerRef.current?.sendControlMessage(message) ?? false,
     [],
   );
@@ -266,5 +289,7 @@ export function useDebateAudioCall({
     incomingReaction,
     sendControl,
     incomingControl,
+    sendTurn,
+    incomingTurn,
   };
 }
