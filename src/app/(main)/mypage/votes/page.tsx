@@ -24,7 +24,7 @@ export default function MyVotesPage() {
           </div>
         </div>
         <Image
-          src="/assets/stickers/st-com-read.png"
+          src="/assets-characters/com-read.webp"
           alt="투닭 캐릭터"
           width={175}
           height={148}

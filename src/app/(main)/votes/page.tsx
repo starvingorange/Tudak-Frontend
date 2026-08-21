@@ -4,7 +4,7 @@ import { VoteList } from "@/features/votes/vote-list";
 export default function VotesPage() {
   return (
     <div className="mx-auto max-w-295 px-3 pt-3 pb-10 sm:px-4 sm:pt-2">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-row items-start justify-between gap-2">
         <div className="py-5 sm:py-9">
           <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.5px] sm:text-[32px]">
             투표 목록
@@ -14,7 +14,7 @@ export default function VotesPage() {
           </div>
         </div>
         <Image
-          src="/assets/stickers/st-com-idea.png"
+          src="/assets-characters/com-idea.webp"
           alt="투닭 캐릭터"
           width={150}
           height={150}

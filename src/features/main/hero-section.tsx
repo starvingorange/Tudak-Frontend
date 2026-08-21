@@ -5,41 +5,25 @@ import { ROUTES } from "@/lib/routes";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-(--radius-hero) bg-(--bg-hero) min-h-[25rem] sm:h-82.5 sm:min-h-0">
+    <section className="relative overflow-hidden rounded-(--radius-hero) bg-(--bg-hero) sm:h-82.5">
       <Image
-        src="/assets/hero-light.png"
+        src="/assets/hero-light.webp"
         alt="투닭 캐릭터"
         width={526}
         height={330}
         priority
-        sizes="(max-width: 639px) 200px, 526px"
+        sizes="526px"
         style={{ width: "auto" }}
-        className="absolute right-[-1.5rem] bottom-0 h-[11.5rem] w-auto block dark:hidden sm:right-0 sm:h-full"
+        className="hidden sm:absolute sm:right-0 sm:bottom-0 sm:block sm:h-full sm:w-auto"
       />
-      <Image
-        src="/assets/hero-dark.png"
-        alt="투닭 캐릭터"
-        width={526}
-        height={330}
-        sizes="(max-width: 639px) 200px, 526px"
-        style={{ width: "auto" }}
-        className="absolute right-[-1.5rem] bottom-0 h-[11.5rem] w-auto hidden dark:block sm:right-0 sm:h-full"
-      />
-      <div className="relative z-1 flex min-h-[25rem] max-w-[17rem] flex-col px-5 pt-6 pb-40 sm:block sm:min-h-0 sm:max-w-105 sm:pt-9.5 sm:pl-17 sm:pr-0 sm:pb-0">
+      <div className="relative z-1 flex max-w-[17rem] flex-col px-5 py-6 sm:block sm:max-w-105 sm:pt-9.5 sm:pl-17 sm:pr-0 sm:pb-0">
         <div className="relative h-11 w-42 sm:h-13 sm:w-54">
           <Image
-            src="/assets/logo-hero-light.png"
+            src="/assets/logo/logo-light.svg"
             alt="투닭"
             fill
             sizes="(max-width: 639px) 168px, 216px"
-            className="object-contain object-left dark:hidden"
-          />
-          <Image
-            src="/assets/logo-hero-dark.png"
-            alt="투닭"
-            fill
-            sizes="(max-width: 639px) 168px, 216px"
-            className="object-contain object-left hidden dark:block"
+            className="object-contain object-left"
           />
         </div>
         <div className="mt-3 text-[1.75rem] leading-tight font-extrabold tracking-[-0.3px] text-(--text-1) sm:mt-3.5 sm:text-2xl">

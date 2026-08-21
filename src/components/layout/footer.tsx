@@ -8,38 +8,31 @@ const SERVICE_LINKS = ["이용약관", "개인정보처리방침", "신고하기
 export function Footer() {
   return (
     <footer className="mt-14 px-3 sm:mt-20 sm:px-2">
-      <div className="mx-auto grid max-w-241 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[150px_1fr_200px_200px_140px] sm:gap-6 items-start">
-        <div className="relative h-24 w-24 sm:h-32.5 sm:w-32.5">
+      <div className="mx-auto grid max-w-241 grid-cols-2 gap-6 sm:gap-6 lg:grid-cols-[150px_1fr_200px_200px_140px] items-start">
+        <div className="relative hidden h-24 w-24 sm:block sm:h-32.5 sm:w-32.5">
           <Image
-            src="/assets/footer-chick-light.png"
+            src="/assets/footer-chick-light.webp"
             alt="투닭 캐릭터"
             fill
-            sizes="(max-width: 639px) 96px, 130px"
+            sizes="130px"
             className="object-contain dark:hidden"
           />
           <Image
-            src="/assets/footer-chick-dark.png"
+            src="/assets/footer-chick-dark.webp"
             alt="투닭 캐릭터"
             fill
-            sizes="(max-width: 639px) 96px, 130px"
+            sizes="130px"
             className="object-contain hidden dark:block"
           />
         </div>
-        <div>
+        <div className="hidden sm:block">
           <div className="relative h-9 w-18">
             <Image
-              src="/assets/logo-footer-light2.png"
+              src="/assets/logo/logo-light.svg"
               alt="투닭"
               fill
               sizes="72px"
-              className="object-contain object-left dark:hidden"
-            />
-            <Image
-              src="/assets/logo-footer-dark2.png"
-              alt="투닭"
-              fill
-              sizes="72px"
-              className="object-contain object-left hidden dark:block"
+              className="object-contain object-left"
             />
           </div>
           <div className="mt-3 max-w-sm text-[13.5px] leading-relaxed text-(--text-2)">
@@ -50,7 +43,7 @@ export function Footer() {
         </div>
         <div>
           <div className="text-sm font-extrabold mb-3.5">서비스</div>
-          <div className="flex flex-col gap-2.75 text-[13.5px]">
+          <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-[13.5px] sm:flex-col sm:gap-2.75">
             {SERVICE_LINKS.map((label) => (
               <Link key={label} href="#" className="text-(--text-2)">
                 {label}
@@ -58,7 +51,7 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <div>
+        <div className="hidden sm:block">
           <div className="text-sm font-extrabold mb-3.5">카테고리</div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2.75 text-[13.5px]">
             {CATEGORY_FILTERS.map((label) => (

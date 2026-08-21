@@ -67,7 +67,7 @@ export function SpectatorVote({
           {...optionClass("pro")}
         >
           <Image
-            src="/assets/stickers/st-pro-basic.png"
+            src="/assets-characters/pro-basic.webp"
             alt="찬성"
             width={190}
             height={165}
@@ -95,7 +95,7 @@ export function SpectatorVote({
           {...optionClass("con")}
         >
           <Image
-            src="/assets/stickers/st-con-basic.png"
+            src="/assets-characters/con-basic.webp"
             alt="반대"
             width={200}
             height={158}

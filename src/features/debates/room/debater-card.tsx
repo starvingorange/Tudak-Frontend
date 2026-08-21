@@ -2,12 +2,12 @@ import Image from "next/image";
 import type { DebaterState } from "./data";
 
 // Intrinsic dimensions of each pose image, so the responsive clamp()-sized
-// render doesn't distort — see public/assets/{side}-{pose}.png.
-const POSE_SIZE = {
-  "pro-confident": { width: 168, height: 158 },
-  "pro-speaking": { width: 195, height: 165 },
-  "con-confident": { width: 163, height: 158 },
-  "con-speaking": { width: 200, height: 190 },
+// render doesn't distort — see public/assets-characters/{file}.webp below.
+const POSE = {
+  "pro-confident": { file: "pro-conf", width: 416, height: 461 },
+  "pro-speaking": { file: "pro-speak", width: 472, height: 491 },
+  "con-confident": { file: "con-conf", width: 339, height: 370 },
+  "con-speaking": { file: "con-speak", width: 407, height: 352 },
 } as const;
 
 interface DebaterCardProps {
@@ -43,10 +43,10 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
     `${side}-${debater.speaking ? "speaking" : "confident"}` as const;
   const image = (
     <Image
-      src={`/assets/${pose}.png`}
+      src={`/assets-characters/${POSE[pose].file}.webp`}
       alt={`${debater.name} 캐릭터`}
-      width={POSE_SIZE[pose].width}
-      height={POSE_SIZE[pose].height}
+      width={POSE[pose].width}
+      height={POSE[pose].height}
       priority
       style={{ height: "auto" }}
       className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]"

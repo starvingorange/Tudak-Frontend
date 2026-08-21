@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/stores/auth-store";
 import type { DebateRoom, DebateSeat } from "./data";
@@ -46,7 +47,7 @@ function Seat({
         style={{ background: tint, borderColor: color }}
       >
         <Image
-          src={`/assets/stickers/${seat.sticker}.png`}
+          src={getStickerSrc(seat.sticker)}
           alt={label}
           fill
           sizes="(max-width: 639px) 60px, 72px"

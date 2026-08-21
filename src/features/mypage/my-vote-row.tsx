@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import Image from "next/image";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import type { CategorySlug } from "@/features/shared/categories";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 
 interface MyVoteRowProps {
   category: CategorySlug;
@@ -27,7 +28,7 @@ export function MyVoteRow({
       <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
         <span className="relative mt-0.5 inline-block h-10 w-10 shrink-0 sm:mt-0 sm:h-11.5 sm:w-11.5">
           <Image
-            src={`/assets/stickers/${sticker}.png`}
+            src={getStickerSrc(sticker)}
             alt="캐릭터"
             fill
             sizes="(max-width: 639px) 40px, 46px"

@@ -3,6 +3,7 @@
 import { Mic } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { getStickerSrc } from "@/features/shared/sticker-src";
 import { useDismissableOpen } from "@/lib/use-dismissable-open";
 import { cn } from "@/lib/utils";
 import { EmojiPicker } from "./emoji-picker";
@@ -57,7 +58,7 @@ export function ControlBar({ myTurn, micOn, onToggleMic }: ControlBarProps) {
             )}
           >
             <Image
-              src="/assets/stickers/st-pro-happy.png"
+              src="/assets-characters/pro-happy.webp"
               alt="이모티콘"
               width={175}
               height={172}
@@ -103,7 +104,7 @@ export function ControlBar({ myTurn, micOn, onToggleMic }: ControlBarProps) {
             style={{ left: r.left }}
           >
             <Image
-              src={`/assets/stickers/${r.sticker}.png`}
+              src={getStickerSrc(r.sticker)}
               alt="반응"
               fill
               sizes="88px"

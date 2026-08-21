@@ -65,7 +65,7 @@ export function MyPageView() {
           </div>
         </div>
         <Image
-          src="/assets/stickers/st-pro-happy.png"
+          src="/assets-characters/pro-happy.webp"
           alt="투닭 캐릭터"
           width={175}
           height={172}
@@ -77,7 +77,7 @@ export function MyPageView() {
       <section className="bg-(--bg-surface) border border-(--border-1) rounded-(--radius-section) overflow-hidden">
         <div className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-[26px_28px]">
           <Image
-            src={photo ?? "/assets/avatar.png"}
+            src={photo ?? "/assets/avatar.webp"}
             alt="프로필"
             width={88}
             height={88}

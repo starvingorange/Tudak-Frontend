@@ -222,18 +222,11 @@ export function ProfileSetupView({
       <div className="flex flex-col items-center gap-3.5">
         <div className="relative w-35 h-13">
           <Image
-            src="/assets/logo-hero-light.png"
+            src="/assets/logo/logo-light.svg"
             alt="투닭"
             fill
             sizes="140px"
-            className="object-contain dark:hidden"
-          />
-          <Image
-            src="/assets/logo-hero-dark.png"
-            alt="투닭"
-            fill
-            sizes="140px"
-            className="object-contain hidden dark:block"
+            className="object-contain"
           />
         </div>
         <h1 className="text-[26px] font-black tracking-[-0.5px] m-0">
@@ -248,7 +241,7 @@ export function ProfileSetupView({
         <div className="relative w-35 h-35">
           <div className="w-35 h-35 rounded-full overflow-hidden border-[3px] border-(--brand-yellow) box-border bg-[v ar(--bg-hero)]">
             <Image
-              src={photo ?? "/assets/profile-placeholder.png"}
+              src={photo ?? "/assets/profile-placeholder.webp"}
               alt="프로필 사진"
               width={140}
               height={140}
