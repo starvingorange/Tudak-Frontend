@@ -2,7 +2,7 @@
 
 import { ArrowLeft, MessageCircle, X } from "lucide-react";
 import Image from "next/image";
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -14,6 +14,7 @@ import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
 import { getStickerSrc } from "@/features/shared/sticker-src";
 import { useCurrentUserId } from "@/lib/auth/jwt";
+import { takePendingAgreement } from "@/lib/pending-debate-agreement";
 import { ROUTES } from "@/lib/routes";
 import type {
   Agreement,
@@ -34,10 +35,6 @@ const SEAT_STICKER = { pro: "st-pro-basic", con: "st-con-basic" } as const;
 
 interface WaitingRoomViewProps {
   debateId: string;
-}
-
-function isAgreement(value: string | null): value is Agreement {
-  return value === "AGREE" || value === "DISAGREE";
 }
 
 function seatFromParticipants(
@@ -86,7 +83,6 @@ function buildCallArgs(
 
 export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const numericId = Number(debateId);
   const myUserId = useCurrentUserId();
   const [copyLabel, setCopyLabel] = useState("복사하기");
@@ -99,11 +95,22 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   }, []);
   const inviteLink = `${origin}${ROUTES.DEBATE_WAITING(debateId)}`;
 
-  // 방 생성 플로우(방장) 또는 참여 모달(게스트)에서 설정됨 — 이 클라이언트가
-  // 차지할 좌석을 나타냄. 두 플로우 중 어느 쪽도 거치지 않고 바로 들어온
-  // 경우(예: 오래된 북마크)에만 값이 없음.
-  const agreementParam = searchParams.get("agreement");
-  const agreement = isAgreement(agreementParam) ? agreementParam : undefined;
+  // 방 생성 플로우(방장) 또는 참여 모달(게스트)이 setPendingAgreement로
+  // sessionStorage에 심어둔 값을 읽는다 — 이 클라이언트가 차지할 좌석, URL엔
+  // 안 실림. `undefined`는 "아직 안 읽음", `null`은 "두 플로우 중 어느 쪽도
+  // 거치지 않고 바로 들어옴(예: 오래된 북마크)"을 뜻한다.
+  const [agreement, setAgreement] = useState<Agreement | null | undefined>(
+    undefined,
+  );
+  // Strict Mode가 마운트 effect를 두 번 실행하는데, takePendingAgreement는
+  // 읽으면서 sessionStorage 항목을 지우는 부수효과가 있어 두 번째 호출이
+  // 항상 undefined를 본다 — ref로 실제 읽기를 한 번만 수행하도록 막는다.
+  const agreementReadRef = useRef(false);
+  useEffect(() => {
+    if (agreementReadRef.current) return;
+    agreementReadRef.current = true;
+    setAgreement(takePendingAgreement(debateId) ?? null);
+  }, [debateId]);
 
   const { data, isLoading, isError } = useGetDebate(numericId, {
     query: { enabled: Number.isFinite(numericId) },
@@ -128,15 +135,17 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     sendSignal,
     refreshStatus,
   } = useDebateRoomSocket(debateId, {
-    agreement,
+    agreement: agreement ?? undefined,
     onKicked: (message) => setKickedMessage(message.message),
     onSignal: handleSignal,
   });
 
-  // `agreement`가 없으면(오래된 링크) 훅이 join을 보내지 않았다는 뜻 —
-  // 연결되면 대신 읽기 전용 상태 스냅샷만 조회한다.
+  // `agreement`가 null이면(오래된 링크 등) 훅이 join을 보내지 않았다는 뜻 —
+  // 연결되면 대신 읽기 전용 상태 스냅샷만 조회한다. `undefined`인 동안(아직
+  // sessionStorage를 못 읽음)은 판단을 미룬다.
   const statusRequestedRef = useRef(false);
   useEffect(() => {
+    if (agreement === undefined) return;
     if (agreement || statusRequestedRef.current) return;
     if (connectionState !== "connected") return;
     statusRequestedRef.current = true;
@@ -178,7 +187,12 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const callRequestedRef = useRef(false);
   useEffect(() => {
     if (callRequestedRef.current) return;
-    const args = buildCallArgs(liveRoom, agreement, myUserId, sendSignal);
+    const args = buildCallArgs(
+      liveRoom,
+      agreement ?? undefined,
+      myUserId,
+      sendSignal,
+    );
     if (!args) return;
     callRequestedRef.current = true;
     connectCall(args);
@@ -248,7 +262,12 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   };
 
   const retryCall = () => {
-    const args = buildCallArgs(liveRoom, agreement, myUserId, sendSignal);
+    const args = buildCallArgs(
+      liveRoom,
+      agreement ?? undefined,
+      myUserId,
+      sendSignal,
+    );
     if (args) connectCall(args);
   };
 

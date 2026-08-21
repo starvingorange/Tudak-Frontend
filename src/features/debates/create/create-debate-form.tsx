@@ -10,6 +10,7 @@ import {
   CATEGORY_TO_BACKEND,
   type CategorySlug,
 } from "@/features/shared/categories";
+import { setPendingAgreement } from "@/lib/pending-debate-agreement";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +61,8 @@ export function CreateDebateForm() {
               side === "left"
                 ? CreateDebateRequestAgreement.AGREE
                 : CreateDebateRequestAgreement.DISAGREE;
-            router.push(ROUTES.DEBATE_WAITING(debateId, agreement));
+            setPendingAgreement(debateId, agreement);
+            router.push(ROUTES.DEBATE_WAITING(debateId));
           }
         },
       },
