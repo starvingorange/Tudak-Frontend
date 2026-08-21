@@ -226,12 +226,10 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const isHost = myAgreement !== null && myAgreement === room.hostAgreement;
 
   // 초대링크로 들어온 게스트가 아직 참가자가 아니라 D006을 받은 상태 —
-  // 위 effect가 자동으로 남은 자리에 join을 시도 중이거나(양쪽 다 안 찼으면),
-  // 이미 두 자리 다 찼으면 자동 참여가 불가능하다. "오래된 북마크" 에러
-  // 배너 대신 이 상태 전용 메시지를 보여준다.
+  // 위 effect가 자동으로 남은 자리에 join을 시도 중이다. "오래된 북마크"
+  // 에러 배너 대신 이 상태 전용 메시지를 보여준다.
   const needsStancePick =
     !agreement && myAgreement === null && wsError?.error === "D006";
-  const autoJoinFailed = needsStancePick && bothSeated;
 
   const copyInvite = async () => {
     try {
@@ -293,12 +291,7 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
             {wsError.message}
           </div>
         )}
-        {needsStancePick && autoJoinFailed && (
-          <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
-            이미 정원이 찼어요.
-          </div>
-        )}
-        {needsStancePick && !autoJoinFailed && (
+        {needsStancePick && (
           <div className="rounded-xl border border-(--border-1) bg-(--bg-card) text-center text-sm font-bold text-(--text-2) py-3.5 px-4.5">
             남은 자리로 참여하는 중...
           </div>

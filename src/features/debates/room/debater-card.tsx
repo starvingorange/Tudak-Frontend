@@ -14,9 +14,12 @@ const POSE = {
 interface DebaterCardProps {
   side: "pro" | "con";
   debater: DebaterState | null;
+  /** Whether this seat is the local user's own — shows a small "나" badge
+   * next to the name. */
+  isMe?: boolean;
 }
 
-export function DebaterCard({ side, debater }: DebaterCardProps) {
+export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
   const isPro = side === "pro";
   const color = isPro ? "var(--vote-blue)" : "var(--vote-red)";
   const label = isPro ? "찬성" : "반대";
@@ -73,6 +76,14 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
         <span className="text-[17px] font-extrabold sm:text-[19px]">
           {debater.name}
         </span>
+        {isMe && (
+          <span
+            className="border text-[12px] font-bold px-2.25 py-0.5 rounded-(--radius-pill) whitespace-nowrap"
+            style={{ borderColor: color, color }}
+          >
+            나
+          </span>
+        )}
         {isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
@@ -101,11 +112,14 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
     </div>
   );
 
+  const dimmed = debater.dimmed ?? !debater.speaking;
+
   return (
     <section
       className={cn(
-        "relative flex flex-col items-center gap-4 rounded-2xl border-2 bg-(--bg-card) p-5 text-left transition-all sm:gap-5.5 sm:p-6 md:flex-row",
-        debater.speaking ? "scale-[1.02]" : "opacity-70",
+        "relative flex flex-col items-center gap-4 rounded-2xl border-2 bg-(--bg-card) p-5 text-left transition-all duration-500 sm:gap-5.5 sm:p-6 md:flex-row",
+        debater.speaking && "scale-[1.02]",
+        dimmed && "opacity-70",
       )}
       style={{
         borderColor: color,

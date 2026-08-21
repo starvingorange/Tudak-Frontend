@@ -146,13 +146,19 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     remainingSeconds: number,
   ): DebaterState | null => {
     if (!seat) return null;
+    // 카운트다운이 도는 동안은 둘 다 중립 상태로 두고, 끝나는 순간 발언자
+    // 쪽만 강조/반대쪽만 흐려지는 게 트랜지션으로 보이게 한다 — 카운트다운
+    // 오버레이가 사라지기 전에 이미 스타일이 결정돼 있으면 그 변화가 안
+    // 보이므로, `countdown === null`이 되고 나서야 갈린다.
+    const turnDecided = countdown === null;
     return {
       name: seat.name,
       sticker: seat.sticker,
       statement: stance,
       remainingLabel: formatClock(remainingSeconds),
       remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
-      speaking: currentTurnIndex === turnIndex,
+      speaking: turnDecided && currentTurnIndex === turnIndex,
+      dimmed: turnDecided && currentTurnIndex !== turnIndex,
     };
   };
 
@@ -216,13 +222,13 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
       <VoteProgressPanel voteEnded={false} proVotes={0} conVotes={0} />
 
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
-        <DebaterCard side="pro" debater={pro} />
+        <DebaterCard side="pro" debater={pro} isMe={myTurnIndex === 0} />
         <div className="flex justify-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-(--border-1) bg-(--bg-card) text-lg font-extrabold sm:h-16 sm:w-16 sm:text-xl">
             VS
           </span>
         </div>
-        <DebaterCard side="con" debater={con} />
+        <DebaterCard side="con" debater={con} isMe={myTurnIndex === 1} />
       </div>
 
       <ChatLog messages={[]} />

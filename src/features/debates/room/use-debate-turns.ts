@@ -57,6 +57,16 @@ export function useDebateTurns({
     return () => clearInterval(interval);
   }, []);
 
+  // 턴이 바뀔 때마다(0→1) 카운트다운을 3부터 다시 돌린다 — 처음 시작할 때와
+  // 똑같은 연출로, 마이크는 카운트다운이 끝나야 눌릴 수 있다(아래
+  // `isMyTurnNow`가 이걸 막아줌).
+  const prevTurnIndexRef = useRef<0 | 1>(0);
+  useEffect(() => {
+    if (currentTurnIndex === prevTurnIndexRef.current) return;
+    prevTurnIndexRef.current = currentTurnIndex;
+    setCountdown(3);
+  }, [currentTurnIndex]);
+
   useEffect(() => {
     if (countdown === null) return;
     if (countdown === 0) {
