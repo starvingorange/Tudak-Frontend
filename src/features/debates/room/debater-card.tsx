@@ -50,12 +50,15 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       height={POSE[pose].height}
       priority
       style={{ height: "auto" }}
-      className="mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]"
+      className={cn(
+        "mt-2 w-[clamp(104px,26vw,190px)] sm:mt-6.5 sm:w-[clamp(120px,14vw,190px)]",
+        !isPro && "md:order-2",
+      )}
     />
   );
 
   const content = (
-    <div className="min-w-0 flex-1">
+    <div className={cn("min-w-0 flex-1", !isPro && "md:order-1")}>
       <div
         className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
       >
@@ -115,17 +118,8 @@ export function DebaterCard({ side, debater }: DebaterCardProps) {
       >
         {label}
       </span>
-      {isPro ? (
-        <>
-          {image}
-          {content}
-        </>
-      ) : (
-        <>
-          {image}
-          {content}
-        </>
-      )}
+      {image}
+      {content}
     </section>
   );
 }
