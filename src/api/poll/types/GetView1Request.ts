@@ -7,5 +7,5 @@ import type { View1CategoryType } from "./View1CategoryType";
 
 export type GetView1Request = {
   pageable: Pageable;
-  categoryType: View1CategoryType;
+  categoryType?: View1CategoryType;
 };
