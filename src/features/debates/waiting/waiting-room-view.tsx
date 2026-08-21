@@ -6,11 +6,21 @@ import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import {
+  type ConnectCallArgs,
+  useDebateCall,
+} from "@/features/debates/shared/debate-call-provider";
+import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
 import { getStickerSrc } from "@/features/shared/sticker-src";
 import { useCurrentUserId } from "@/lib/auth/jwt";
 import { ROUTES } from "@/lib/routes";
-import type { Agreement, RoomParticipant } from "@/lib/ws/types";
+import type {
+  Agreement,
+  OutgoingSignalMessage,
+  RoomParticipant,
+  RoomStatusMessage,
+} from "@/lib/ws/types";
 import { useDebateRoomSocket } from "@/lib/ws/use-debate-room-socket";
 
 interface Seat {
@@ -43,6 +53,37 @@ function seatFromParticipants(
     : null;
 }
 
+/** Builds the args for `connectCall` once the room is STARTED — shared by
+ * the auto-trigger effect and the "다시 시도" retry button, both of which
+ * only have the raw `liveRoom` snapshot to work from (the effect runs before
+ * `myAgreement` is computed further down, since hooks can't sit after the
+ * loading early-return). */
+function buildCallArgs(
+  liveRoom: RoomStatusMessage | null,
+  agreement: Agreement | undefined,
+  myUserId: number | null,
+  sendSignal: (signal: OutgoingSignalMessage) => boolean,
+): ConnectCallArgs | null {
+  if (liveRoom?.status !== "STARTED" || liveRoom.callerId === null) {
+    return null;
+  }
+  const resolvedAgreement =
+    agreement ??
+    liveRoom.participants.find((p) => p.userId === myUserId)?.agreement ??
+    null;
+  const peer = liveRoom.participants.find((p) => p.userId !== myUserId);
+  if (!resolvedAgreement || !peer) return null;
+
+  return {
+    peerUserId: peer.userId,
+    isCaller: liveRoom.callerId === myUserId,
+    myAgreement: resolvedAgreement,
+    isHost: liveRoom.callerId === myUserId,
+    startedAt: Date.now(),
+    sendSignal,
+  };
+}
+
 export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -50,7 +91,13 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   const myUserId = useCurrentUserId();
   const [copyLabel, setCopyLabel] = useState("복사하기");
   const [kickedMessage, setKickedMessage] = useState<string | null>(null);
-  const inviteLink = `tudak.app/join/${debateId}`;
+  // 서버에서는 origin을 알 수 없으니 빈 문자열로 시작해 하이드레이션
+  // 불일치를 피하고, 마운트 후에 현재 도메인으로 채운다.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+  const inviteLink = `${origin}${ROUTES.DEBATE_WAITING(debateId)}`;
 
   // 방 생성 플로우(방장) 또는 참여 모달(게스트)에서 설정됨 — 이 클라이언트가
   // 차지할 좌석을 나타냄. 두 플로우 중 어느 쪽도 거치지 않고 바로 들어온
@@ -63,16 +110,27 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   });
 
   const {
+    connectCall,
+    disconnectCall,
+    handleSignal,
+    callState,
+    error: callError,
+  } = useDebateCall();
+
+  const {
     connectionState,
     room: liveRoom,
     error: wsError,
+    join,
     kick,
     start,
     leave,
+    sendSignal,
     refreshStatus,
   } = useDebateRoomSocket(debateId, {
     agreement,
     onKicked: (message) => setKickedMessage(message.message),
+    onSignal: handleSignal,
   });
 
   // `agreement`가 없으면(오래된 링크) 훅이 join을 보내지 않았다는 뜻 —
@@ -91,11 +149,23 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     return () => clearTimeout(timer);
   }, [kickedMessage, router]);
 
+  // 방이 STARTED되면 (아직 살아있는 이 소켓으로) WebRTC 시그널링을 시작한다 —
+  // P2P가 실제로 붙기 전까진 토론방으로 넘어가지 않는다(토론방은 소켓이 아예
+  // 없어서, 여기서 다 맺어놓고 넘겨줘야 함).
+  const callRequestedRef = useRef(false);
   useEffect(() => {
-    if (liveRoom?.status === "STARTED") {
+    if (callRequestedRef.current) return;
+    const args = buildCallArgs(liveRoom, agreement, myUserId, sendSignal);
+    if (!args) return;
+    callRequestedRef.current = true;
+    connectCall(args);
+  }, [liveRoom, agreement, myUserId, sendSignal, connectCall]);
+
+  useEffect(() => {
+    if (callState === "connected") {
       router.push(ROUTES.DEBATE_DETAIL(debateId));
     }
-  }, [liveRoom?.status, debateId, router]);
+  }, [callState, debateId, router]);
 
   if (!Number.isFinite(numericId) || isError) {
     notFound();
@@ -115,18 +185,7 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   // 최초 렌더링용 REST 스냅샷일 뿐이고, 소켓이 실시간 `RoomStatusMessage`를
   // 전달하기 시작하면(join/leave/kick 각각 모든 참가자의 개인 큐로 하나씩
   // push함) 그때부턴 그게 좌석 정보의 기준이 된다.
-  const restPro: Seat | null =
-    room.hostAgreement === "AGREE" && room.hostNickname
-      ? { name: room.hostNickname, sticker: SEAT_STICKER.pro }
-      : room.opponentAgreement === "AGREE" && room.opponentNickname
-        ? { name: room.opponentNickname, sticker: SEAT_STICKER.pro }
-        : null;
-  const restCon: Seat | null =
-    room.hostAgreement === "DISAGREE" && room.hostNickname
-      ? { name: room.hostNickname, sticker: SEAT_STICKER.con }
-      : room.opponentAgreement === "DISAGREE" && room.opponentNickname
-        ? { name: room.opponentNickname, sticker: SEAT_STICKER.con }
-        : null;
+  const { pro: restPro, con: restCon } = getSeatsFromDetail(room);
 
   const pro = liveRoom
     ? seatFromParticipants(liveRoom.participants, "AGREE")
@@ -143,6 +202,12 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
     null;
   const isHost = myAgreement !== null && myAgreement === room.hostAgreement;
 
+  // 초대링크로 들어온 게스트는 URL에 `agreement`가 없다 — 아직 참가자가
+  // 아니므로 status 조회(위 effect)가 D006(참가자 아님)으로 거부되는데,
+  // 이걸 원래 있던 "오래된 북마크" 에러 배너 대신 입장 선택 UI로 보여준다.
+  const needsStancePick =
+    !agreement && myAgreement === null && wsError?.error === "D006";
+
   const copyInvite = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink);
@@ -154,9 +219,18 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
   };
 
   const leaveRoom = () => {
+    disconnectCall();
     leave();
     router.push(ROUTES.DEBATES());
   };
+
+  const retryCall = () => {
+    const args = buildCallArgs(liveRoom, agreement, myUserId, sendSignal);
+    if (args) connectCall(args);
+  };
+
+  const started = liveRoom?.status === "STARTED";
+  const connectingCall = started && callState !== "connected";
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-240 flex-col justify-between gap-6 px-4 py-6 sm:py-8">
@@ -185,9 +259,46 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
             {kickedMessage}
           </div>
         )}
-        {!kickedMessage && wsError && (
+        {!kickedMessage && wsError && !needsStancePick && (
           <div className="rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
             {wsError.message}
+          </div>
+        )}
+        {needsStancePick && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-(--border-1) bg-(--bg-card) p-4 sm:p-5">
+            <div className="text-sm font-bold text-(--text-1)">
+              아직 이 토론방에 참여하지 않았어요. 입장을 선택하고 참여하세요.
+            </div>
+            <div className="flex flex-col gap-2.5 sm:flex-row">
+              <button
+                type="button"
+                disabled={pro !== null}
+                onClick={() => join("AGREE")}
+                className="flex-1 rounded-2xl border-[1.5px] py-3.25 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  borderColor: "var(--vote-blue)",
+                  color: "var(--vote-blue)",
+                }}
+              >
+                {pro !== null
+                  ? "찬성 좌석이 이미 찼어요"
+                  : `${room.agreeLabel ?? "찬성"}으로 참여하기`}
+              </button>
+              <button
+                type="button"
+                disabled={con !== null}
+                onClick={() => join("DISAGREE")}
+                className="flex-1 rounded-2xl border-[1.5px] py-3.25 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  borderColor: "var(--vote-red)",
+                  color: "var(--vote-red)",
+                }}
+              >
+                {con !== null
+                  ? "반대 좌석이 이미 찼어요"
+                  : `${room.disagreeLabel ?? "반대"}로 참여하기`}
+              </button>
+            </div>
           </div>
         )}
 
@@ -273,19 +384,40 @@ export function WaitingRoomView({ debateId }: WaitingRoomViewProps) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => isHost && start()}
-          disabled={!isHost || !bothSeated}
-          className="h-14 rounded-2xl border-none bg-(--brand-yellow) text-(--brand-on-yellow) text-base font-black font-sans flex items-center justify-center gap-2.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:brightness-[0.96]"
-        >
-          <MessageCircle size={18} strokeWidth={2.2} />
-          {!bothSeated
-            ? "상대방을 기다리는 중..."
-            : isHost
-              ? "토론 시작하기"
-              : "호스트가 곧 시작해요..."}
-        </button>
+        {connectingCall ? (
+          callState === "failed" ? (
+            <div className="flex h-14 items-center justify-center gap-3 rounded-2xl border border-(--vote-red) bg-(--bg-card) px-4 text-sm font-bold">
+              <span className="text-(--vote-red)">
+                {callError ?? "상대방과 연결하지 못했어요."}
+              </span>
+              <button
+                type="button"
+                onClick={retryCall}
+                className="rounded-full border border-(--vote-red) px-3.5 py-1.5 text-(--vote-red) cursor-pointer hover:bg-[#fdecec]"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : (
+            <div className="flex h-14 items-center justify-center gap-2.5 rounded-2xl border border-(--border-1) bg-(--bg-card) text-base font-bold text-(--text-2)">
+              상대와 연결 중...
+            </div>
+          )
+        ) : (
+          <button
+            type="button"
+            onClick={() => isHost && start()}
+            disabled={!isHost || !bothSeated}
+            className="h-14 rounded-2xl border-none bg-(--brand-yellow) text-(--brand-on-yellow) text-base font-black font-sans flex items-center justify-center gap-2.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:brightness-[0.96]"
+          >
+            <MessageCircle size={18} strokeWidth={2.2} />
+            {!bothSeated
+              ? "상대방을 기다리는 중..."
+              : isHost
+                ? "토론 시작하기"
+                : "호스트가 곧 시작해요..."}
+          </button>
+        )}
       </div>
     </div>
   );

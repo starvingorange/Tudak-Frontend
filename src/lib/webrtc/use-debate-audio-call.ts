@@ -14,6 +14,8 @@ export type DebateCallState =
   | "failed"
   | "closed";
 
+const CALL_CONNECT_TIMEOUT_MS = 20_000;
+
 export interface UseDebateAudioCallOptions {
   /** The other debater's userId — `null` until the room has both seats
    * filled, which also gates the whole call from starting. */
@@ -21,6 +23,18 @@ export interface UseDebateAudioCallOptions {
   /** The host always initiates the offer; the other side answers. */
   isCaller: boolean;
   sendSignal: (signal: OutgoingSignalMessage) => boolean;
+}
+
+export interface IncomingReaction {
+  id: number;
+  sticker: string;
+}
+
+export type DebateEndOrLeaveMessage = { type: "end" } | { type: "leave" };
+
+export interface IncomingControlMessage {
+  id: number;
+  message: DebateEndOrLeaveMessage;
 }
 
 export interface UseDebateAudioCallResult {
@@ -32,6 +46,18 @@ export interface UseDebateAudioCallResult {
   /** Feed every message from `useDebateRoomSocket`'s `onSignal` option into
    * this — messages for other peers are ignored internally. */
   handleSignal: (message: IncomingSignalMessage) => void;
+  /** Sends a sticker straight to the opponent over the P2P data channel —
+   * only works once `callState` is `"connected"`; see `DebatePeerConnection.sendControlMessage`. */
+  sendReaction: (sticker: string) => boolean;
+  /** Latest reaction the opponent sent, or `null` before the first one —
+   * changes identity on every message, even repeats of the same sticker. */
+  incomingReaction: IncomingReaction | null;
+  /** Sends an "end"/"leave" control message straight to the opponent over
+   * the same P2P data channel used for reactions — replaces the old WS
+   * `end`/`leave` publishes now that the debate room has no socket. */
+  sendControl: (message: DebateEndOrLeaveMessage) => boolean;
+  /** Latest "end"/"leave" the opponent sent, or `null` before the first one. */
+  incomingControl: IncomingControlMessage | null;
 }
 
 /** Establishes (and tears down) a single 1:1 audio-only WebRTC call with the
@@ -46,6 +72,10 @@ export function useDebateAudioCall({
   const [micOn, setMicOn] = useState(false);
   const [callState, setCallState] = useState<DebateCallState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [incomingReaction, setIncomingReaction] =
+    useState<IncomingReaction | null>(null);
+  const [incomingControl, setIncomingControl] =
+    useState<IncomingControlMessage | null>(null);
 
   const peerRef = useRef<DebatePeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -97,6 +127,14 @@ export function useDebateAudioCall({
     setCallState("connecting");
     setError(null);
 
+    // No TURN server (see debate-peer-connection.ts) means ICE negotiation
+    // can hang forever for peers behind restrictive NATs — bound it with a
+    // real failure state instead of leaving the caller on an infinite spinner.
+    const connectTimeoutId = setTimeout(() => {
+      setCallState((state) => (state === "connected" ? state : "failed"));
+      setError((prev) => prev ?? "상대방과 연결하지 못했어요.");
+    }, CALL_CONNECT_TIMEOUT_MS);
+
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
@@ -107,7 +145,7 @@ export function useDebateAudioCall({
         for (const track of stream.getTracks()) track.enabled = false;
         localStreamRef.current = stream;
 
-        const peer = new DebatePeerConnection(stream, {
+        const peer = new DebatePeerConnection(stream, isCaller, {
           onIceCandidate: (candidate) => {
             sendSignalRef.current({
               type: "ice-candidate",
@@ -121,6 +159,16 @@ export function useDebateAudioCall({
             else if (state === "failed" || state === "disconnected")
               setCallState("failed");
             else if (state === "closed") setCallState("closed");
+          },
+          onControlMessage: (message) => {
+            if (message.type === "reaction") {
+              setIncomingReaction({
+                id: Date.now() + Math.random(),
+                sticker: message.sticker,
+              });
+            } else {
+              setIncomingControl({ id: Date.now() + Math.random(), message });
+            }
           },
         });
         peerRef.current = peer;
@@ -155,6 +203,7 @@ export function useDebateAudioCall({
 
     return () => {
       cancelled = true;
+      clearTimeout(connectTimeoutId);
       peerRef.current?.close();
       peerRef.current = null;
       for (const track of localStreamRef.current?.getTracks() ?? []) {
@@ -165,8 +214,23 @@ export function useDebateAudioCall({
       setRemoteStream(null);
       setMicOn(false);
       setCallState("idle");
+      setIncomingReaction(null);
+      setIncomingControl(null);
     };
   }, [peerUserId, isCaller, applySignal]);
+
+  const sendReaction = useCallback(
+    (sticker: string) =>
+      peerRef.current?.sendControlMessage({ type: "reaction", sticker }) ??
+      false,
+    [],
+  );
+
+  const sendControl = useCallback(
+    (message: DebateEndOrLeaveMessage) =>
+      peerRef.current?.sendControlMessage(message) ?? false,
+    [],
+  );
 
   const handleSignal = useCallback(
     (message: IncomingSignalMessage) => {
@@ -191,5 +255,16 @@ export function useDebateAudioCall({
     setMicOn(next);
   }, [micOn]);
 
-  return { remoteStream, micOn, toggleMic, callState, error, handleSignal };
+  return {
+    remoteStream,
+    micOn,
+    toggleMic,
+    callState,
+    error,
+    handleSignal,
+    sendReaction,
+    incomingReaction,
+    sendControl,
+    incomingControl,
+  };
 }

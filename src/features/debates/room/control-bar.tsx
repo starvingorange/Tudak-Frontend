@@ -2,10 +2,11 @@
 
 import { Mic } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getStickerSrc } from "@/features/shared/sticker-src";
 import { useDismissableOpen } from "@/lib/use-dismissable-open";
 import { cn } from "@/lib/utils";
+import type { IncomingReaction } from "@/lib/webrtc/use-debate-audio-call";
 import { EmojiPicker } from "./emoji-picker";
 
 interface Reaction {
@@ -20,9 +21,21 @@ interface ControlBarProps {
   micOn: boolean;
   /** Toggles it — first press starts transmitting, second press stops. */
   onToggleMic: () => void;
+  /** Sends the picked sticker to the opponent over the WebRTC data channel —
+   * best-effort, doesn't block the local animation if it fails. */
+  onReactionSend?: (sticker: string) => void;
+  /** Latest sticker the opponent sent — a new identity (even for a repeat
+   * sticker) re-triggers the floating animation. */
+  incomingReaction?: IncomingReaction | null;
 }
 
-export function ControlBar({ myTurn, micOn, onToggleMic }: ControlBarProps) {
+export function ControlBar({
+  myTurn,
+  micOn,
+  onToggleMic,
+  onReactionSend,
+  incomingReaction,
+}: ControlBarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const pickerRef = useDismissableOpen<HTMLDivElement>(
@@ -30,15 +43,24 @@ export function ControlBar({ myTurn, micOn, onToggleMic }: ControlBarProps) {
     setPickerOpen,
   );
 
-  const react = (sticker: string) => {
+  const popReaction = useCallback((sticker: string) => {
     const id = Date.now() + Math.random();
     const left = `${44 + Math.random() * 12}%`;
     setReactions((prev) => [...prev, { id, sticker, left }]);
-    setPickerOpen(false);
     setTimeout(() => {
       setReactions((prev) => prev.filter((r) => r.id !== id));
     }, 1600);
+  }, []);
+
+  const react = (sticker: string) => {
+    popReaction(sticker);
+    setPickerOpen(false);
+    onReactionSend?.(sticker);
   };
+
+  useEffect(() => {
+    if (incomingReaction) popReaction(incomingReaction.sticker);
+  }, [incomingReaction, popReaction]);
 
   const isTalking = micOn && myTurn;
 
