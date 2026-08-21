@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { usePostLogout } from "@/api/refresh-token/hooks/usePostLogout";
 import { getPreUpload1 } from "@/api/user/api/getPreUpload1";
 import { getMyPageQueryKey, useGetMyPage } from "@/api/user/hooks/useGetMyPage";
 import { usePatchModifyProfile } from "@/api/user/hooks/usePatchModifyProfile";
@@ -52,6 +53,17 @@ export function MyPageView() {
 
   const profileLoadErrorMessage =
     error instanceof Error ? error.message : "프로필 정보를 불러오지 못했어요.";
+
+  // 서버 호출이 실패해도(네트워크 문제 등) 로컬 로그아웃은 막지 않는다 —
+  // onSettled로 성공/실패 상관없이 토큰을 지우고 홈으로 보낸다.
+  const { mutate: logout } = usePostLogout({
+    mutation: {
+      onSettled: () => {
+        clearAccessToken();
+        router.push(ROUTES.HOME());
+      },
+    },
+  });
 
   return (
     <div className="mx-auto max-w-241 px-4 pt-2 pb-10">
@@ -273,13 +285,7 @@ export function MyPageView() {
       )}
 
       {loggingOut && (
-        <LogoutModal
-          onClose={() => setLoggingOut(false)}
-          onConfirm={() => {
-            clearAccessToken();
-            router.push(ROUTES.HOME());
-          }}
-        />
+        <LogoutModal onClose={() => setLoggingOut(false)} onConfirm={logout} />
       )}
     </div>
   );

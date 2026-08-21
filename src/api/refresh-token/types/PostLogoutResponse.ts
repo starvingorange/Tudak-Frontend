@@ -4,7 +4,4 @@
  */
 import type { CommonResponse } from "@/api/common/types/CommonResponse";
 
-export type PostCreateDebateResponse = CommonResponse<{
-  /** 토론 ID */
-  debateId?: number;
-}>;
+export type PostLogoutResponse = CommonResponse<unknown>;

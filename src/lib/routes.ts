@@ -1,5 +1,3 @@
-import type { Agreement } from "@/lib/ws/types";
-
 /** Every navigable path in the app, in one place — mirrors src/app's route
  * tree 1:1. Add a new page, add its builder here. */
 export const ROUTES = {
@@ -9,10 +7,9 @@ export const ROUTES = {
   CREATE_DEBATE: () => "/debates/new",
   DEBATE_DETAIL: (debateId: string | number) => `/debates/${debateId}`,
   DEBATE_RESULT: (debateId: string | number) => `/debates/${debateId}/result`,
-  DEBATE_WAITING: (debateId: string | number, agreement?: Agreement) =>
-    agreement
-      ? `/debates/${debateId}/waiting?agreement=${agreement}`
-      : `/debates/${debateId}/waiting`,
+  // The seat a client claims travels via setPendingAgreement (sessionStorage),
+  // not a URL param — see src/lib/pending-debate-agreement.ts.
+  DEBATE_WAITING: (debateId: string | number) => `/debates/${debateId}/waiting`,
   MY_PAGE: () => "/mypage",
   MY_PAGE_DEBATES: () => "/mypage/debates",
   MY_PAGE_VOTES: () => "/mypage/votes",
