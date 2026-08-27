@@ -44,6 +44,10 @@ export type DebateTurnMessage =
 
 export interface UseDebateAudioCallResult {
   remoteStream: MediaStream | null;
+  /** 내 로컬 마이크 스트림 — 상대에게 보내는 트랙과 동일한 인스턴스라
+   * `track.enabled`(마이크 on/off)가 그대로 반영된다. `use-debate-recording.ts`가
+   * 이 스트림을 그대로 녹음한다. */
+  localStream: MediaStream | null;
   micOn: boolean;
   toggleMic: () => void;
   callState: DebateCallState;
@@ -80,6 +84,7 @@ export function useDebateAudioCall({
   sendSignal,
 }: UseDebateAudioCallOptions): UseDebateAudioCallResult {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [micOn, setMicOn] = useState(false);
   const [callState, setCallState] = useState<DebateCallState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +163,7 @@ export function useDebateAudioCall({
         }
         for (const track of stream.getTracks()) track.enabled = false;
         localStreamRef.current = stream;
+        setLocalStream(stream);
 
         const peer = new DebatePeerConnection(stream, isCaller, {
           onIceCandidate: (candidate) => {
@@ -228,6 +234,7 @@ export function useDebateAudioCall({
       localStreamRef.current = null;
       pendingSignalsRef.current = [];
       setRemoteStream(null);
+      setLocalStream(null);
       setMicOn(false);
       setCallState("idle");
       setIncomingReaction(null);
@@ -280,6 +287,7 @@ export function useDebateAudioCall({
 
   return {
     remoteStream,
+    localStream,
     micOn,
     toggleMic,
     callState,

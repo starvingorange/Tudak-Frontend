@@ -8,11 +8,12 @@ import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { useDebateCall } from "@/features/debates/shared/debate-call-provider";
 import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { ROUTES } from "@/lib/routes";
+import { useDebateRecording } from "@/lib/webrtc/use-debate-recording";
 import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
 import type { DebaterState } from "./data";
 import { DebaterCard } from "./debater-card";
-import { TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
+import { useDebateTurns } from "./use-debate-turns";
 import { VoteProgressPanel } from "./vote-progress-panel";
 
 interface DebateRoomViewProps {
@@ -40,6 +41,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     callState,
     error: callError,
     remoteStream,
+    localStream,
     micOn,
     toggleMic,
     sendReaction,
@@ -64,10 +66,12 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
   const {
     countdown,
-    currentTurnIndex,
+    currentSlot,
     isMyTurnNow,
     proRemainingSeconds,
+    proRemainingPercent,
     conRemainingSeconds,
+    conRemainingPercent,
     endTurn,
   } = useDebateTurns({
     myTurnIndex,
@@ -75,7 +79,8 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     toggleMic,
     sendTurn,
     incomingTurn,
-    // 마지막(반대) 턴이 끝났을 때 — 시간이 다 됐거나 발언 종료를 눌렀을 때.
+    // 마지막 서브턴(반대 최종변론)이 끝났을 때 — 시간이 다 됐거나 발언
+    // 종료를 눌렀을 때.
     onDebateEnd: () => {
       if (endTriggeredRef.current) return;
       endTriggeredRef.current = true;
@@ -83,6 +88,10 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
       router.push(ROUTES.DEBATE_RESULT(debateId));
     },
   });
+
+  // 서버 업로드 포맷이 아직 확정되지 않아, 지금은 서브턴에 맞춰 녹음이 되는
+  // 파이프라인만 검증한다 — presigned url 업로드는 스펙이 정해진 뒤 연결.
+  useDebateRecording({ localStream, isMyTurnNow, currentSlot });
 
   useEffect(() => {
     if (incomingControl?.message.type === "end" && !endTriggeredRef.current) {
@@ -144,6 +153,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     stance: string,
     turnIndex: 0 | 1,
     remainingSeconds: number,
+    remainingPercent: number,
   ): DebaterState | null => {
     if (!seat) return null;
     // 카운트다운이 도는 동안은 둘 다 중립 상태로 두고, 끝나는 순간 발언자
@@ -156,9 +166,9 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
       sticker: seat.sticker,
       statement: stance,
       remainingLabel: formatClock(remainingSeconds),
-      remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
-      speaking: turnDecided && currentTurnIndex === turnIndex,
-      dimmed: turnDecided && currentTurnIndex !== turnIndex,
+      remainingPercent,
+      speaking: turnDecided && currentSlot.side === turnIndex,
+      dimmed: turnDecided && currentSlot.side !== turnIndex,
     };
   };
 
@@ -167,12 +177,14 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     room.agreeLabel ?? "찬성",
     0,
     proRemainingSeconds,
+    proRemainingPercent,
   );
   const con = seatFor(
     conSeatInfo,
     room.disagreeLabel ?? "반대",
     1,
     conRemainingSeconds,
+    conRemainingPercent,
   );
 
   const leaveRoom = () => {

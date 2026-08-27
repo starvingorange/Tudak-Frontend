@@ -11,8 +11,8 @@ export type DebateControlMessage =
   // 시계로 같은 카운트다운을 그대로 재현한다(초 단위로 계속 핑퐁하지 않음).
   | { type: "speak-start" }
   | { type: "speak-pause"; usedSeconds: number }
-  // 발언자가 "발언 종료"를 누르거나 시간을 다 썼을 때, 다음 사람(찬성→반대)
-  // 으로 턴을 넘긴다는 뜻 — 마지막 턴(반대) 종료는 기존 "end"를 그대로 씀.
+  // 발언자가 "발언 종료"를 누르거나 시간을 다 썼을 때, 다음 사람으로 턴을
+  // 넘긴다는 뜻 — 마지막 턴(반대 최종변론) 종료는 기존 "end"를 그대로 씀.
   | { type: "turn-pass" };
 
 export interface DebatePeerConnectionHandlers {
