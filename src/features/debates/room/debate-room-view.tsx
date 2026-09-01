@@ -5,9 +5,11 @@ import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
+import { usePostFinishDebate } from "@/api/debate/hooks/usePostFinishDebate";
 import { useDebateCall } from "@/features/debates/shared/debate-call-provider";
 import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { ROUTES } from "@/lib/routes";
+import { mergeArgumentKeys } from "@/lib/webrtc/debate-argument-order";
 import { useDebateRecording } from "@/lib/webrtc/use-debate-recording";
 import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
@@ -37,6 +39,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
   const {
     myAgreement,
+    isHost,
     startedAt,
     callState,
     error: callError,
@@ -50,8 +53,12 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     incomingControl,
     sendTurn,
     incomingTurn,
+    sendArgumentKeys,
+    incomingArgumentKeys,
     disconnectCall,
   } = useDebateCall();
+
+  const { mutate: finishDebate } = usePostFinishDebate();
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
@@ -80,25 +87,74 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     sendTurn,
     incomingTurn,
     // 마지막 서브턴(반대 최종변론)이 끝났을 때 — 시간이 다 됐거나 발언
-    // 종료를 눌렀을 때.
+    // 종료를 눌렀을 때. "end" 전파는 누가 마지막 턴을 끝냈든 항상 즉시
+    // 보낸다(상대가 이걸 받아야 자기도 나갈 수 있음) — 다만 방장은 자기 3개
+    // 키 + 상대 3개 키가 다 모여서 `postFinishDebate`가 끝난 뒤에야 이동한다
+    // (아래 finish effect 참고).
     onDebateEnd: () => {
       if (endTriggeredRef.current) return;
       endTriggeredRef.current = true;
       sendControl({ type: "end" });
-      router.push(ROUTES.DEBATE_RESULT(debateId));
+      if (!isHost) router.push(ROUTES.DEBATE_RESULT(debateId));
     },
   });
 
-  // 서버 업로드 포맷이 아직 확정되지 않아, 지금은 서브턴에 맞춰 녹음이 되는
-  // 파이프라인만 검증한다 — presigned url 업로드는 스펙이 정해진 뒤 연결.
-  useDebateRecording({ localStream, isMyTurnNow, currentSlot });
+  const { myKeys, uploadError } = useDebateRecording({
+    localStream,
+    isMyTurnNow,
+    currentSlot,
+    mySide: myTurnIndex,
+  });
+
+  // 방장이 아닌 쪽 — 내 3개 키가 다 모이면(토론이 실제로 끝났는지와 무관하게,
+  // 내 발언 3개가 다 끝나면 자연히 이 시점) 방장에게 한 번만 전달한다.
+  const keysSentRef = useRef(false);
+  useEffect(() => {
+    if (isHost || keysSentRef.current || !myKeys) return;
+    keysSentRef.current = true;
+    sendArgumentKeys(myKeys);
+  }, [isHost, myKeys, sendArgumentKeys]);
+
+  // 방장 — 내 3개 키와 상대가 보낸 3개 키가 모두 모이면 합쳐서
+  // `postFinishDebate`를 한 번만 호출한 뒤에 결과 페이지로 이동한다.
+  const finishTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (!isHost || finishTriggeredRef.current) return;
+    if (!myKeys || !incomingArgumentKeys || myTurnIndex === null) return;
+    finishTriggeredRef.current = true;
+    const s3ObjectKeyList = mergeArgumentKeys(
+      myTurnIndex,
+      myKeys,
+      incomingArgumentKeys,
+    );
+    finishDebate(
+      { debateId: numericId, data: { debateId: numericId, s3ObjectKeyList } },
+      {
+        onError: (err) => {
+          console.error("[debate] postFinishDebate 실패", err);
+        },
+        onSettled: () => {
+          router.push(ROUTES.DEBATE_RESULT(debateId));
+        },
+      },
+    );
+  }, [
+    isHost,
+    myKeys,
+    incomingArgumentKeys,
+    myTurnIndex,
+    numericId,
+    finishDebate,
+    router,
+    debateId,
+  ]);
 
   useEffect(() => {
     if (incomingControl?.message.type === "end" && !endTriggeredRef.current) {
       endTriggeredRef.current = true;
-      router.push(ROUTES.DEBATE_RESULT(debateId));
+      if (!isHost) router.push(ROUTES.DEBATE_RESULT(debateId));
     }
-  }, [incomingControl, router, debateId]);
+  }, [incomingControl, isHost, router, debateId]);
 
   const [leftMessage, setLeftMessage] = useState<string | null>(null);
   useEffect(() => {
@@ -226,6 +282,11 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
       {!leftMessage && callState === "failed" && (
         <div className="mt-4 rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
           {callError ?? "상대방과의 연결이 끊어졌어요."}
+        </div>
+      )}
+      {uploadError && (
+        <div className="mt-4 rounded-xl bg-[#fdecec] text-(--vote-red) text-center text-sm font-bold py-3.5 px-4.5">
+          {uploadError}
         </div>
       )}
 

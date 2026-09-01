@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { type ArgumentSlot, argumentSlotKey } from "./debate-argument-order";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePostPreUpload } from "@/api/file/hooks/usePostPreUpload";
+import type { ArgumentDetailsArgumentType } from "@/api/poll/types/ArgumentDetailsArgumentType";
+import { ARGUMENT_ORDER, type ArgumentSlot } from "./debate-argument-order";
 
 // Safari는 audio/webm을 못 만든다 — 지원하는 첫 타입을 세션 내내 고정해서
 // 쓴다(중간에 바뀌면 서브턴마다 다른 컨테이너로 녹음됨).
@@ -19,12 +21,6 @@ function pickSupportedMimeType(): string | null {
   );
 }
 
-export interface DebateArgumentRecording {
-  slot: ArgumentSlot;
-  blob: Blob;
-  mimeType: string;
-}
-
 export interface UseDebateRecordingOptions {
   /** `useDebateAudioCall().localStream` — 그대로 녹음한다. 마이크 mute
    * 구간(`track.enabled === false`)은 무음으로 남을 뿐 녹음 자체는 끊기지
@@ -32,37 +28,76 @@ export interface UseDebateRecordingOptions {
   localStream: MediaStream | null;
   isMyTurnNow: boolean;
   currentSlot: ArgumentSlot;
+  /** 내가 찬성이면 0, 반대면 1, 아직 모르면 null — 내 서브턴 3개(입론→반론→
+   * 최종변론)의 순서를 정하는 데 쓴다. */
+  mySide: 0 | 1 | null;
 }
 
 export interface UseDebateRecordingResult {
-  /** 서브턴별 녹음 결과 — 아직 업로드 API 포맷이 정해지지 않아 지금은
-   * 로컬에만 쌓아둔다(S3 presigned url 업로드/STT 연동은 백엔드 스펙이
-   * 확정된 뒤 별도로 붙인다). key는 `argumentSlotKey`. */
-  recordings: Record<string, DebateArgumentRecording>;
-  recordingError: string | null;
+  /** 내 서브턴 3개가 (입론→반론→최종변론 순으로) 전부 업로드되면 그 S3 키
+   * 3개, 하나라도 아직이면 `null`. */
+  myKeys: string[] | null;
+  uploadError: string | null;
 }
 
-/** 내 서브턴이 시작/종료되는 시점에 맞춰 `localStream`을 녹음한다 —
- * 실제 서버 업로드는 아직 붙이지 않은, 녹음 파이프라인만 검증하기 위한
- * 단계. */
+/** 내 서브턴이 끝날 때마다 그 구간을 녹음해서 곧바로 presigned url로 S3에
+ * 업로드한다 — 서브턴 끝나고 바로바로 하나씩 올리므로 프론트가 오디오
+ * 파일 자체를 오래 들고 있을 일이 없다(들고 있는 건 다 올라간 S3 키
+ * 문자열 3개뿐). 최종적으로 방장이 아닌 쪽이 이 3개 키를 방장에게 P2P로
+ * 전달하고, 방장이 자기 3개와 합쳐 `postFinishDebate`를 한 번만 호출한다. */
 export function useDebateRecording({
   localStream,
   isMyTurnNow,
   currentSlot,
+  mySide,
 }: UseDebateRecordingOptions): UseDebateRecordingResult {
-  const [recordings, setRecordings] = useState<
-    Record<string, DebateArgumentRecording>
+  const { mutateAsync: preUpload } = usePostPreUpload();
+  const [uploadedKeys, setUploadedKeys] = useState<
+    Partial<Record<ArgumentDetailsArgumentType, string>>
   >({});
-  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const mimeTypeRef = useRef<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const wasMyTurnRef = useRef(false);
-  // 정지 시점엔 턴이 이미 다음으로 넘어가 있을 수 있어서, 녹음을 시작할
+  // 업로드 시점엔 턴이 이미 다음으로 넘어가 있을 수 있어서, 녹음을 시작할
   // 때의 슬롯을 따로 기억해둔다.
   const recordingSlotRef = useRef<ArgumentSlot | null>(null);
 
+  const uploadRecording = useCallback(
+    async (blob: Blob, slot: ArgumentSlot, contentType: string) => {
+      try {
+        const preUploadResponse = await preUpload({ data: { contentType } });
+        const { presignedUrl, s3objectKey } = preUploadResponse.data ?? {};
+        if (!presignedUrl || !s3objectKey) {
+          throw new Error("녹음 업로드 URL 발급에 실패했어요.");
+        }
+
+        const putResult = await fetch(presignedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": contentType },
+          body: blob,
+        });
+        if (!putResult.ok) {
+          throw new Error(`녹음 업로드에 실패했어요 (${putResult.status}).`);
+        }
+
+        setUploadedKeys((prev) => ({
+          ...prev,
+          [slot.argumentType]: s3objectKey,
+        }));
+      } catch (err) {
+        setUploadError(
+          err instanceof Error ? err.message : "녹음 업로드에 실패했어요.",
+        );
+      }
+    },
+    [preUpload],
+  );
+
+  // 내 서브턴이 시작되면 녹음을 시작하고, 끝나면(다음 서브턴으로 넘어가거나
+  // 토론이 끝나면) 멈추고 그 구간 오디오를 곧바로 업로드한다.
   useEffect(() => {
     if (isMyTurnNow && !wasMyTurnRef.current) {
       wasMyTurnRef.current = true;
@@ -73,7 +108,7 @@ export function useDebateRecording({
       }
       const mimeType = mimeTypeRef.current;
       if (!mimeType) {
-        setRecordingError("이 브라우저는 녹음을 지원하지 않아요.");
+        setUploadError("이 브라우저는 녹음을 지원하지 않아요.");
         return;
       }
 
@@ -85,12 +120,12 @@ export function useDebateRecording({
           if (event.data.size > 0) chunksRef.current.push(event.data);
         };
         recorder.onerror = () => {
-          setRecordingError("녹음 중 오류가 발생했어요.");
+          setUploadError("녹음 중 오류가 발생했어요.");
         };
         recorder.start();
         recorderRef.current = recorder;
       } catch (err) {
-        setRecordingError(
+        setUploadError(
           err instanceof Error ? err.message : "녹음을 시작하지 못했어요.",
         );
       }
@@ -106,17 +141,14 @@ export function useDebateRecording({
         recorder.onstop = () => {
           const blob = new Blob(chunksRef.current, { type: mimeType });
           chunksRef.current = [];
-          setRecordings((prev) => ({
-            ...prev,
-            [argumentSlotKey(slot)]: { slot, blob, mimeType },
-          }));
+          void uploadRecording(blob, slot, mimeType.split(";")[0]);
         };
         if (recorder.state !== "inactive") recorder.stop();
       }
     }
-  }, [isMyTurnNow, localStream, currentSlot]);
+  }, [isMyTurnNow, localStream, currentSlot, uploadRecording]);
 
-  // 컴포넌트가 언마운트될 때(통화 종료 등) 진행 중이던 녹음은 버린다.
+  // 컴포넌트가 언마운트될 때(통화 종료 등) 남은 녹음은 업로드하지 않고 버린다.
   useEffect(() => {
     return () => {
       const recorder = recorderRef.current;
@@ -128,5 +160,17 @@ export function useDebateRecording({
     };
   }, []);
 
-  return { recordings, recordingError };
+  const myKeys = (() => {
+    if (mySide === null) return null;
+    const ordered: string[] = [];
+    for (const slot of ARGUMENT_ORDER) {
+      if (slot.side !== mySide) continue;
+      const key = uploadedKeys[slot.argumentType];
+      if (!key) return null;
+      ordered.push(key);
+    }
+    return ordered;
+  })();
+
+  return { myKeys, uploadError };
 }

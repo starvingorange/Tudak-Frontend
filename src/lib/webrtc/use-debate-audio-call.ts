@@ -73,6 +73,12 @@ export interface UseDebateAudioCallResult {
   /** Latest turn-timer event the opponent sent — a new object identity on
    * every message, even repeats. */
   incomingTurn: DebateTurnMessage | null;
+  /** Sends my 3 finished argument-recording S3 keys once, after they're all
+   * uploaded — see `use-debate-recording.ts`. Only the non-host side ever
+   * calls this; the host merges this with its own 3 keys. */
+  sendArgumentKeys: (keys: string[]) => boolean;
+  /** The opponent's 3 keys, once they've sent them — `null` until then. */
+  incomingArgumentKeys: string[] | null;
 }
 
 /** Establishes (and tears down) a single 1:1 audio-only WebRTC call with the
@@ -95,6 +101,9 @@ export function useDebateAudioCall({
   const [incomingTurn, setIncomingTurn] = useState<DebateTurnMessage | null>(
     null,
   );
+  const [incomingArgumentKeys, setIncomingArgumentKeys] = useState<
+    string[] | null
+  >(null);
 
   const peerRef = useRef<DebatePeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -188,6 +197,8 @@ export function useDebateAudioCall({
               });
             } else if (message.type === "end" || message.type === "leave") {
               setIncomingControl({ id: Date.now() + Math.random(), message });
+            } else if (message.type === "argument-keys") {
+              setIncomingArgumentKeys(message.keys);
             } else {
               setIncomingTurn(message);
             }
@@ -240,6 +251,7 @@ export function useDebateAudioCall({
       setIncomingReaction(null);
       setIncomingControl(null);
       setIncomingTurn(null);
+      setIncomingArgumentKeys(null);
     };
   }, [peerUserId, isCaller, applySignal]);
 
@@ -259,6 +271,13 @@ export function useDebateAudioCall({
   const sendTurn = useCallback(
     (message: DebateTurnMessage) =>
       peerRef.current?.sendControlMessage(message) ?? false,
+    [],
+  );
+
+  const sendArgumentKeys = useCallback(
+    (keys: string[]) =>
+      peerRef.current?.sendControlMessage({ type: "argument-keys", keys }) ??
+      false,
     [],
   );
 
@@ -299,5 +318,7 @@ export function useDebateAudioCall({
     incomingControl,
     sendTurn,
     incomingTurn,
+    sendArgumentKeys,
+    incomingArgumentKeys,
   };
 }

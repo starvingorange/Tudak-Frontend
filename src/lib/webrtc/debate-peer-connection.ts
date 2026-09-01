@@ -13,7 +13,12 @@ export type DebateControlMessage =
   | { type: "speak-pause"; usedSeconds: number }
   // 발언자가 "발언 종료"를 누르거나 시간을 다 썼을 때, 다음 사람으로 턴을
   // 넘긴다는 뜻 — 마지막 턴(반대 최종변론) 종료는 기존 "end"를 그대로 씀.
-  | { type: "turn-pass" };
+  | { type: "turn-pass" }
+  // 내 서브턴 3개(입론/반론/최종변론) 업로드가 다 끝나면 한 번만 보낸다 —
+  // 방장이 아닌 쪽만 보내고, 방장은 이걸 자기 3개와 합쳐 `postFinishDebate`를
+  // 한 번만 호출한다(`debate-room-view.tsx`, `debate-argument-order.ts`의
+  // `mergeArgumentKeys` 참고).
+  | { type: "argument-keys"; keys: string[] };
 
 export interface DebatePeerConnectionHandlers {
   onIceCandidate?: (candidate: RTCIceCandidateInit) => void;
@@ -41,6 +46,13 @@ function parseControlMessage(data: string): DebateControlMessage | null {
       parsed?.type === "leave" ||
       parsed?.type === "speak-start" ||
       parsed?.type === "turn-pass"
+    ) {
+      return parsed;
+    }
+    if (
+      parsed?.type === "argument-keys" &&
+      Array.isArray(parsed.keys) &&
+      parsed.keys.every((key: unknown) => typeof key === "string")
     ) {
       return parsed;
     }

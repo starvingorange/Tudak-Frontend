@@ -6,9 +6,8 @@ export interface ArgumentSlot {
 }
 
 // 찬성(0)과 반대(1)가 번갈아 가며 입론 → 반론 → 최종변론 순서로 진행 —
-// `use-debate-turns.ts`가 이 순서 그대로 6개 서브턴을 돌린다. 녹음 업로드
-// API(`postFinishDebate`의 `s3ObjectKeyList` 등)와의 매핑 규칙은 백엔드
-// 스펙이 확정되면 별도로 정한다 — 아직은 연결하지 않음.
+// `use-debate-turns.ts`가 이 순서 그대로 6개 서브턴을 돌리고, `postFinishDebate`에
+// 보내는 `s3ObjectKeyList`도 이 순서를 그대로 따른다(`mergeArgumentKeys` 참고).
 export const ARGUMENT_ORDER: readonly ArgumentSlot[] = [
   { side: 0, argumentType: ArgumentDetailsArgumentType.OPENING },
   { side: 1, argumentType: ArgumentDetailsArgumentType.OPENING },
@@ -29,6 +28,17 @@ export const ARGUMENT_TYPE_SECONDS: Record<
   [ArgumentDetailsArgumentType.CONCLUSION]: 1 * 60,
 };
 
-export function argumentSlotKey(slot: ArgumentSlot): string {
-  return `${slot.side}-${slot.argumentType}`;
+/** 내 3개(입론→반론→최종변론)와 상대에게서 P2P로 받은 3개를 `ARGUMENT_ORDER`
+ * 순서 그대로 하나의 6개짜리 리스트로 합친다 — `postFinishDebate`의
+ * `s3ObjectKeyList`에 그대로 넘기면 된다. 방장 클라이언트만 이걸 호출한다. */
+export function mergeArgumentKeys(
+  mySide: 0 | 1,
+  myKeys: readonly string[],
+  theirKeys: readonly string[],
+): string[] {
+  let myIndex = 0;
+  let theirIndex = 0;
+  return ARGUMENT_ORDER.map((slot) =>
+    slot.side === mySide ? myKeys[myIndex++] : theirKeys[theirIndex++],
+  );
 }
