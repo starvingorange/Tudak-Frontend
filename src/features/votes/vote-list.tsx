@@ -73,7 +73,7 @@ export function VoteList() {
           </span>
         </div>
       ) : isLoading ? null : rows.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-1.5 py-16 text-center sm:mt-5">
+        <div className="mt-4 flex flex-col items-center gap-1.5 py-32 text-center sm:mt-5 sm:py-40">
           <span className="text-[15px] font-bold text-(--text-2)">
             아직 진행 중인 투표가 없어요
           </span>

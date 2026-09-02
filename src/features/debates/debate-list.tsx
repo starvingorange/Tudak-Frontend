@@ -102,7 +102,7 @@ export function DebateList() {
         <CategoryTabBar active={tab} onChange={handleTabChange} />
       </div>
       {isLoading ? null : rooms.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-1.5 py-16 text-center sm:mt-5">
+        <div className="mt-4 flex flex-col items-center gap-1.5 py-32 text-center sm:mt-5 sm:py-40">
           <span className="text-[15px] font-bold text-(--text-2)">
             아직 대기 중인 토론방이 없어요
           </span>
