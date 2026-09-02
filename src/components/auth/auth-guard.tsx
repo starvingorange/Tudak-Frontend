@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { isAuthenticated as checkIsAuthenticated } from "@/api/api-client";
+import { ROUTES } from "@/lib/routes";
 import { useAuthHydrated } from "@/stores/auth-store";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -27,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (ok) {
         setAuthenticated(true);
       } else {
-        router.replace("/login");
+        router.replace(ROUTES.LOGIN());
       }
     }
 
