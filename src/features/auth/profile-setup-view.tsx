@@ -12,6 +12,20 @@ import { useAuthStore } from "@/stores/auth-store";
 
 const MIN_NICKNAME_LENGTH = 2;
 const MAX_NICKNAME_LENGTH = 12;
+// 프로필 사진을 안 고르고 가입해도 되게, 그때는 이 기본 이미지를 같은
+// 업로드 경로(preUpload → S3 PUT)로 올려서 백엔드가 요구하는 s3ObjectKey를
+// 채운다.
+const DEFAULT_PROFILE_IMAGE_PATH = "/assets/profile-placeholder.webp";
+
+async function resolveProfileFile(photoFile: File | null): Promise<File> {
+  if (photoFile) return photoFile;
+
+  const response = await fetch(DEFAULT_PROFILE_IMAGE_PATH);
+  const blob = await response.blob();
+  return new File([blob], "default-profile.webp", {
+    type: blob.type || "image/webp",
+  });
+}
 
 type ProfileSetupViewProps = {
   initialSignupToken?: string;
@@ -32,6 +46,7 @@ export function ProfileSetupView({
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const clearSignupToken = useAuthStore((s) => s.clearSignupToken);
   const [submitting, setSubmitting] = useState(false);
+  const [signupSucceeded, setSignupSucceeded] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [debugMessage, setDebugMessage] = useState("");
 
@@ -69,7 +84,7 @@ export function ProfileSetupView({
   };
 
   const submit = async () => {
-    if (!valid || !photoFile || !signupToken || submitting) return;
+    if (!valid || !signupToken || submitting) return;
 
     setSubmitting(true);
     setErrorMessage("");
@@ -77,7 +92,8 @@ export function ProfileSetupView({
     let nextDebugMessage = "";
 
     try {
-      const contentType = photoFile.type || "image/jpeg";
+      const uploadFile = await resolveProfileFile(photoFile);
+      const contentType = uploadFile.type || "image/jpeg";
       const preUploadResponse = await getPreUpload({
         signupToken,
         contentType,
@@ -113,7 +129,7 @@ export function ProfileSetupView({
         headers: {
           "Content-Type": contentType,
         },
-        body: photoFile,
+        body: uploadFile,
       });
 
       if (!uploadResult.ok) {
@@ -153,6 +169,7 @@ export function ProfileSetupView({
         );
       }
 
+      setSignupSucceeded(true);
       setAccessToken(accessToken);
       clearSignupToken();
       router.replace(ROUTES.HOME());
@@ -295,7 +312,7 @@ export function ProfileSetupView({
           >
             {hint}
           </div>
-          {!signupToken && (
+          {!signupToken && !signupSucceeded && (
             <div className="text-[13px] text-[#FF6B6B]">
               로그인 세션이 없어요. 카카오 로그인부터 다시 진행해주세요.
             </div>
@@ -311,10 +328,10 @@ export function ProfileSetupView({
         <button
           type="button"
           onClick={() => void submit()}
-          disabled={!valid || !photoFile || !signupToken || submitting}
+          disabled={!valid || !signupToken || submitting}
           className={cn(
             "w-full h-14 rounded-2xl text-base font-black font-sans",
-            valid && photoFile && signupToken && !submitting
+            valid && signupToken && !submitting
               ? "bg-(--brand-yellow) text-(--brand-on-yellow) cursor-pointer hover:brightness-[0.97]"
               : "bg-(--border-1) text-(--text-3) cursor-not-allowed",
           )}
