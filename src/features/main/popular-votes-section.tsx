@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
+import { formatDateLabel } from "@/lib/utils";
 
 export function PopularVotesSection() {
   // GET /api/users/home is meant to be public (visible to logged-out
@@ -45,7 +46,7 @@ export function PopularVotesSection() {
               <div className="mt-3 text-[13px] leading-relaxed text-(--text-2) sm:mt-3.5">
                 투표수 {(vote.voteCount ?? 0).toLocaleString()}
                 &nbsp;&nbsp;|&nbsp;&nbsp;
-                {vote.dDay}
+                {vote.dDay ? formatDateLabel(vote.dDay) : ""}
               </div>
             </Card>
           ))}
