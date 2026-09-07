@@ -1,19 +1,21 @@
 import { Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { getStickerSrc } from "@/features/shared/sticker-src";
+import { ROUTES } from "@/lib/routes";
 import type { VoteRow as VoteRowData } from "./data";
 
 interface VoteRowProps {
   vote: VoteRowData;
 }
 
-// TODO: 투표 상세 페이지가 아직 없어서 클릭해도 이동하지 않음 — 상세
-// 페이지가 생기면 이 div를 다시 Link(href=ROUTES.VOTE_DETAIL(vote.id))로
-// 바꿀 것.
 export function VoteRow({ vote }: VoteRowProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-(--radius-card) border border-(--border-1) px-3.5 py-3.5 sm:px-6.5 sm:py-5 sm:gap-4 lg:flex-row lg:items-center lg:gap-5">
+    <Link
+      href={ROUTES.VOTE_DETAIL(vote.id)}
+      className="flex flex-col gap-3 rounded-(--radius-card) border border-(--border-1) px-3.5 py-3.5 transition-colors hover:border-(--brand-yellow) sm:px-6.5 sm:py-5 sm:gap-4 lg:flex-row lg:items-center lg:gap-5"
+    >
       <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
         <span className="relative mt-0.5 inline-block h-10 w-10 shrink-0 sm:mt-0 sm:h-11.5 sm:w-11.5">
           <Image
@@ -63,6 +65,6 @@ export function VoteRow({ vote }: VoteRowProps) {
           </span>
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
