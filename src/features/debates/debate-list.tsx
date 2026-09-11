@@ -70,7 +70,12 @@ export function DebateList() {
         .map((item) => {
           const detail =
             detailQueries[debateIds.indexOf(item.debateId)]?.data?.data;
-          if (detail) return debateRoomFromDetail(item.debateId, detail);
+          if (detail) {
+            return debateRoomFromDetail(item.debateId, detail, {
+              agreeImageUrl: item.agreeImageUrl,
+              disagreeImageUrl: item.disagreeImageUrl,
+            });
+          }
           return {
             id: String(item.debateId),
             category: item.category

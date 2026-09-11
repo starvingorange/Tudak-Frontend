@@ -1,4 +1,5 @@
-const STEPS = ["입론", "반론", "재반론", "최종결론"];
+// use-debate-turns.ts의 DebatePhase(0 입론 / 1 반론 / 2 결론)와 1:1 매칭.
+const STEPS = ["입론", "반론", "결론"];
 
 function VoteResultBanner({
   proVotes,
@@ -48,11 +49,13 @@ function VoteResultBanner({
   );
 }
 
-function Stepper() {
+function Stepper({ currentPhase }: { currentPhase: 0 | 1 | 2 }) {
   return (
     <div className="mt-5 flex justify-center">
       <div className="grid w-full max-w-180 grid-cols-2 gap-3 rounded-xl border border-(--border-1) bg-(--bg-card) p-4 sm:flex sm:w-auto sm:max-w-none sm:items-center sm:gap-3.5 sm:p-[14px_28px]">
         {STEPS.map((step, i) => {
+          const active = i === currentPhase;
+          const done = i < currentPhase;
           return (
             <div key={step} className="flex items-center gap-2.5 sm:gap-3.5">
               {i > 0 && (
@@ -64,7 +67,7 @@ function Stepper() {
                 <span
                   className="w-6.5 h-6.5 rounded-full text-[13px] font-extrabold inline-flex items-center justify-center"
                   style={
-                    i === 0
+                    active || done
                       ? { background: "var(--vote-blue)", color: "#fff" }
                       : { background: "#efedea", color: "#8b8b8b" }
                   }
@@ -72,7 +75,7 @@ function Stepper() {
                   {i + 1}
                 </span>
                 <span
-                  className={`text-[15px] ${i === 0 ? "font-extrabold text-(--vote-blue)" : "font-semibold text-[#8b8b8b]"}`}
+                  className={`text-[15px] ${active ? "font-extrabold text-(--vote-blue)" : "font-semibold text-[#8b8b8b]"}`}
                 >
                   {step}
                 </span>
@@ -87,18 +90,20 @@ function Stepper() {
 
 interface VoteProgressPanelProps {
   voteEnded: boolean;
+  currentPhase: 0 | 1 | 2;
   proVotes: number;
   conVotes: number;
 }
 
 export function VoteProgressPanel({
   voteEnded,
+  currentPhase,
   proVotes,
   conVotes,
 }: VoteProgressPanelProps) {
   return voteEnded ? (
     <VoteResultBanner proVotes={proVotes} conVotes={conVotes} />
   ) : (
-    <Stepper />
+    <Stepper currentPhase={currentPhase} />
   );
 }

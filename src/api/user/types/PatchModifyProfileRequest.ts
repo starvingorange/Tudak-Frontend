@@ -3,5 +3,7 @@
  * Do not edit manually — re-run `pnpm api:generate`.
  */
 export type PatchModifyProfileRequest = {
-  nickname?: string;
+  /** @minLength 1 */
+  nickname: string;
+  s3ObjectKey?: string;
 };

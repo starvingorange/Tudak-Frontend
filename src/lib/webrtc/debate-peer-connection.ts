@@ -2,18 +2,32 @@
 // (e.g. some corporate networks) may fail to connect. Known limitation.
 const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 
+/** 녹음된 한 턴의 업로드 결과 — `step`은 use-debate-turns.ts의 0..5 턴
+ * 인덱스와 동일해서, 방장이 양쪽 키를 받은 뒤 그대로 정렬해 합칠 수 있다. */
+export interface RecordingKeyEntry {
+  step: number;
+  s3ObjectKey: string;
+}
+
 export type DebateControlMessage =
   | { type: "reaction"; sticker: string }
   | { type: "end" }
   | { type: "leave" }
-  // 턴 타이머는 눌러서 말하기(마이크 on/off)로만 흐른다 — "말하기 시작"/"말하기
-  // 멈춤(그때까지 쓴 시간)"을 상대에게 이벤트로 알려주면, 상대는 자기 로컬
-  // 시계로 같은 카운트다운을 그대로 재현한다(초 단위로 계속 핑퐁하지 않음).
-  | { type: "speak-start" }
-  | { type: "speak-pause"; usedSeconds: number }
   // 발언자가 "발언 종료"를 누르거나 시간을 다 썼을 때, 다음 사람(찬성→반대)
   // 으로 턴을 넘긴다는 뜻 — 마지막 턴(반대) 종료는 기존 "end"를 그대로 씀.
-  | { type: "turn-pass" };
+  // usedSeconds는 방금 끝난 발언자가 그 턴까지 실제로 쓴 누적 시간 — 상대는
+  // 자기 로컬 시계로 카운트다운을 재현하므로, 이 값 없이는 상대 쪽 화면의
+  // "내(발언자) 남은 시간"이 다음 내 턴부터 어긋난다. turn-pass 하나에
+  // 실어 보내는 이유는 두 메시지로 나누면(예: 별도 speak-pause) 리액트가
+  // 연달아 온 두 setState를 한 배치로 묶어 앞 메시지를 통째로 씹을 수
+  // 있어서다.
+  | { type: "turn-pass"; usedSeconds: number }
+  // 게스트가 토론 종료 후 자기 몫(3턴)의 s3ObjectKey를 방장에게 한 번에
+  // 보낼 때 씀 — 방장은 이걸 받아 자기 몫과 합쳐 finishDebate를 호출한다.
+  | { type: "recording-keys"; keys: RecordingKeyEntry[] }
+  // finishDebate는 방장만 호출하므로 pollId도 방장만 안다 — 게스트도 결과
+  // 페이지에서 같은 poll을 보게 하려고 방장이 이걸로 한 번 전달한다.
+  | { type: "poll-ready"; pollId: number };
 
 export interface DebatePeerConnectionHandlers {
   onIceCandidate?: (candidate: RTCIceCandidateInit) => void;
@@ -31,17 +45,26 @@ function parseControlMessage(data: string): DebateControlMessage | null {
       return parsed;
     }
     if (
-      parsed?.type === "speak-pause" &&
+      parsed?.type === "turn-pass" &&
       typeof parsed.usedSeconds === "number"
     ) {
       return parsed;
     }
+    if (parsed?.type === "end" || parsed?.type === "leave") {
+      return parsed;
+    }
     if (
-      parsed?.type === "end" ||
-      parsed?.type === "leave" ||
-      parsed?.type === "speak-start" ||
-      parsed?.type === "turn-pass"
+      parsed?.type === "recording-keys" &&
+      Array.isArray(parsed.keys) &&
+      parsed.keys.every(
+        (entry: unknown) =>
+          typeof (entry as RecordingKeyEntry)?.step === "number" &&
+          typeof (entry as RecordingKeyEntry)?.s3ObjectKey === "string",
+      )
     ) {
+      return parsed;
+    }
+    if (parsed?.type === "poll-ready" && typeof parsed.pollId === "number") {
       return parsed;
     }
     return null;

@@ -45,7 +45,19 @@ export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
 
   const pose =
     `${side}-${debater.speaking ? "speaking" : "confident"}` as const;
-  const image = (
+  const image = debater.imageUrl ? (
+    <Image
+      src={debater.imageUrl}
+      alt={`${debater.name} 프로필`}
+      width={190}
+      height={190}
+      unoptimized
+      className={cn(
+        "mt-2 h-[clamp(104px,26vw,190px)] w-[clamp(104px,26vw,190px)] rounded-full border border-(--border-1) object-cover sm:mt-6.5 sm:h-[clamp(120px,14vw,190px)] sm:w-[clamp(120px,14vw,190px)]",
+        !isPro && "md:order-2",
+      )}
+    />
+  ) : (
     <Image
       src={`/assets-characters/${POSE[pose].file}.webp`}
       alt={`${debater.name} 캐릭터`}
@@ -67,8 +79,8 @@ export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
       >
         {!isPro && (
           <span
-            className="border text-[12px] font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
-            style={{ borderColor: "#d8d5cf", color: "var(--text-2)" }}
+            className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
+            style={{ background: color }}
           >
             {debater.speaking ? "발언 중" : "대기 중"}
           </span>

@@ -10,6 +10,10 @@ const getModifyProfileUrl = () => {
   return `/api/users/my/profile`;
 };
 
+/**
+ * 프로필 이미지 변경하지 않았으면 s3ObjectKey 공백으로 값 채울 것
+ * @summary 프로필 수정
+ */
 export const patchModifyProfile = async (
   updateProfileRequest: UpdateProfileRequest,
   options?: Parameters<typeof orvalApiClient>[1],

@@ -9,7 +9,7 @@ import {
 } from "@/features/shared/categories";
 import { CategoryTabBar } from "@/features/shared/category-tab-bar";
 import { useIsLoggedIn } from "@/stores/auth-store";
-import { VOTE_SORT_OPTIONS } from "./data";
+import { VOTE_SORT_OPTIONS, VOTE_SORT_TO_BACKEND } from "./data";
 import { VoteRow } from "./vote-row";
 import { voteRowFromPoll } from "./vote-row-from-poll";
 import { VoteSortDropdown } from "./vote-sort-dropdown";
@@ -33,6 +33,7 @@ export function VoteList() {
   const { data, isLoading } = useGetView1(
     {
       categoryType: tab === "전체" ? undefined : CATEGORY_TO_BACKEND[tab],
+      sortType: VOTE_SORT_TO_BACKEND[sort],
       pageable: { page, size: PAGE_SIZE },
     },
     { query: { ...QUERY_OPTIONS, enabled: loggedIn } },
@@ -42,6 +43,11 @@ export function VoteList() {
 
   const handleTabChange = (value: ListFilter) => {
     setTab(value);
+    setPage(0);
+  };
+
+  const handleSortChange = (value: (typeof VOTE_SORT_OPTIONS)[number]) => {
+    setSort(value);
     setPage(0);
   };
 
@@ -55,7 +61,7 @@ export function VoteList() {
         </div>
         <div className="w-full lg:w-55">
           <div className="mt-0 lg:mt-2.5">
-            <VoteSortDropdown value={sort} onChange={setSort} />
+            <VoteSortDropdown value={sort} onChange={handleSortChange} />
           </div>
         </div>
       </div>
