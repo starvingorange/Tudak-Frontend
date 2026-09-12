@@ -5,7 +5,10 @@ import type {
   IncomingSignalMessage,
   OutgoingSignalMessage,
 } from "@/lib/ws/types";
-import { DebatePeerConnection } from "./debate-peer-connection";
+import {
+  DebatePeerConnection,
+  type RecordingKeyEntry,
+} from "./debate-peer-connection";
 
 export type DebateCallState =
   | "idle"
@@ -37,13 +40,24 @@ export interface IncomingControlMessage {
   message: DebateEndOrLeaveMessage;
 }
 
-export type DebateTurnMessage =
-  | { type: "speak-start" }
-  | { type: "speak-pause"; usedSeconds: number }
-  | { type: "turn-pass" };
+export type DebateTurnMessage = { type: "turn-pass"; usedSeconds: number };
+
+export interface IncomingRecordingKeys {
+  id: number;
+  keys: RecordingKeyEntry[];
+}
+
+export interface IncomingPollReady {
+  id: number;
+  pollId: number;
+}
 
 export interface UseDebateAudioCallResult {
   remoteStream: MediaStream | null;
+  /** My own outgoing mic stream — same object for the call's lifetime, tracks
+   * mute state via `track.enabled` rather than being replaced. Used by
+   * `use-debate-recording.ts` to record my own turns locally. */
+  localStream: MediaStream | null;
   micOn: boolean;
   toggleMic: () => void;
   callState: DebateCallState;
@@ -63,12 +77,25 @@ export interface UseDebateAudioCallResult {
   sendControl: (message: DebateEndOrLeaveMessage) => boolean;
   /** Latest "end"/"leave" the opponent sent, or `null` before the first one. */
   incomingControl: IncomingControlMessage | null;
-  /** Sends a turn-timer event (speak-start/speak-pause/turn-pass) — see
-   * `use-debate-turns.ts`, which owns the actual turn state machine. */
+  /** Sends a turn-pass event — see `use-debate-turns.ts`, which owns the
+   * actual turn state machine. */
   sendTurn: (message: DebateTurnMessage) => boolean;
   /** Latest turn-timer event the opponent sent — a new object identity on
    * every message, even repeats. */
   incomingTurn: DebateTurnMessage | null;
+  /** Sends my recorded turns' s3ObjectKeys straight to the opponent — see
+   * `use-debate-recording.ts` and `debate-call-provider.tsx`, which own the
+   * actual recording/upload and the merge-then-`finishDebate` step. */
+  sendRecordingKeys: (keys: RecordingKeyEntry[]) => boolean;
+  /** The opponent's recorded-keys message, or `null` before it arrives —
+   * only ever sent once, by whichever side isn't the host. */
+  incomingRecordingKeys: IncomingRecordingKeys | null;
+  /** Sends the just-created pollId straight to the opponent — only the host
+   * ever calls this (only the host calls `finishDebate`). */
+  sendPollReady: (pollId: number) => boolean;
+  /** The host's pollId message, or `null` before it arrives — only ever sent
+   * once, by the host. */
+  incomingPollReady: IncomingPollReady | null;
 }
 
 /** Establishes (and tears down) a single 1:1 audio-only WebRTC call with the
@@ -80,6 +107,7 @@ export function useDebateAudioCall({
   sendSignal,
 }: UseDebateAudioCallOptions): UseDebateAudioCallResult {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [micOn, setMicOn] = useState(false);
   const [callState, setCallState] = useState<DebateCallState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +118,10 @@ export function useDebateAudioCall({
   const [incomingTurn, setIncomingTurn] = useState<DebateTurnMessage | null>(
     null,
   );
+  const [incomingRecordingKeys, setIncomingRecordingKeys] =
+    useState<IncomingRecordingKeys | null>(null);
+  const [incomingPollReady, setIncomingPollReady] =
+    useState<IncomingPollReady | null>(null);
 
   const peerRef = useRef<DebatePeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -158,6 +190,7 @@ export function useDebateAudioCall({
         }
         for (const track of stream.getTracks()) track.enabled = false;
         localStreamRef.current = stream;
+        setLocalStream(stream);
 
         const peer = new DebatePeerConnection(stream, isCaller, {
           onIceCandidate: (candidate) => {
@@ -182,6 +215,16 @@ export function useDebateAudioCall({
               });
             } else if (message.type === "end" || message.type === "leave") {
               setIncomingControl({ id: Date.now() + Math.random(), message });
+            } else if (message.type === "recording-keys") {
+              setIncomingRecordingKeys({
+                id: Date.now() + Math.random(),
+                keys: message.keys,
+              });
+            } else if (message.type === "poll-ready") {
+              setIncomingPollReady({
+                id: Date.now() + Math.random(),
+                pollId: message.pollId,
+              });
             } else {
               setIncomingTurn(message);
             }
@@ -228,11 +271,14 @@ export function useDebateAudioCall({
       localStreamRef.current = null;
       pendingSignalsRef.current = [];
       setRemoteStream(null);
+      setLocalStream(null);
       setMicOn(false);
       setCallState("idle");
       setIncomingReaction(null);
       setIncomingControl(null);
       setIncomingTurn(null);
+      setIncomingRecordingKeys(null);
+      setIncomingPollReady(null);
     };
   }, [peerUserId, isCaller, applySignal]);
 
@@ -252,6 +298,20 @@ export function useDebateAudioCall({
   const sendTurn = useCallback(
     (message: DebateTurnMessage) =>
       peerRef.current?.sendControlMessage(message) ?? false,
+    [],
+  );
+
+  const sendRecordingKeys = useCallback(
+    (keys: RecordingKeyEntry[]) =>
+      peerRef.current?.sendControlMessage({ type: "recording-keys", keys }) ??
+      false,
+    [],
+  );
+
+  const sendPollReady = useCallback(
+    (pollId: number) =>
+      peerRef.current?.sendControlMessage({ type: "poll-ready", pollId }) ??
+      false,
     [],
   );
 
@@ -280,6 +340,7 @@ export function useDebateAudioCall({
 
   return {
     remoteStream,
+    localStream,
     micOn,
     toggleMic,
     callState,
@@ -291,5 +352,9 @@ export function useDebateAudioCall({
     incomingControl,
     sendTurn,
     incomingTurn,
+    sendRecordingKeys,
+    incomingRecordingKeys,
+    sendPollReady,
+    incomingPollReady,
   };
 }

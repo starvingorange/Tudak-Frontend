@@ -14,4 +14,8 @@ export interface DebateListResponse {
   category?: DebateListResponseCategory;
   /** 토론 상태 */
   status?: DebateListResponseStatus;
+  /** 찬성 프로필 이미지 */
+  agreeImageUrl?: string;
+  /** 반대 프로필 이미지 */
+  disagreeImageUrl?: string;
 }

@@ -46,13 +46,24 @@ function Seat({
         className="relative inline-flex h-15 w-15 items-center justify-center overflow-hidden rounded-full border-2 sm:h-18 sm:w-18"
         style={{ background: tint, borderColor: color }}
       >
-        <Image
-          src={getStickerSrc(seat.sticker)}
-          alt={label}
-          fill
-          sizes="(max-width: 639px) 60px, 72px"
-          className="object-contain p-2"
-        />
+        {seat.imageUrl ? (
+          <Image
+            src={seat.imageUrl}
+            alt={label}
+            fill
+            sizes="(max-width: 639px) 60px, 72px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <Image
+            src={getStickerSrc(seat.sticker)}
+            alt={label}
+            fill
+            sizes="(max-width: 639px) 60px, 72px"
+            className="object-contain p-2"
+          />
+        )}
       </span>
       <span
         className="rounded-(--radius-pill) px-2.5 py-0.75 text-[11px] font-bold text-white sm:px-2.75"

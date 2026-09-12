@@ -4,8 +4,12 @@
  */
 import type { Pageable } from "@/api/common/types/Pageable";
 import type { View1CategoryType } from "./View1CategoryType";
+import type { View1SortType } from "./View1SortType";
+import type { View1StatusType } from "./View1StatusType";
 
 export type GetView1Request = {
   pageable: Pageable;
   categoryType?: View1CategoryType;
+  sortType?: View1SortType;
+  statusType?: View1StatusType;
 };

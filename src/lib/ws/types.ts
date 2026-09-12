@@ -14,6 +14,9 @@ export interface RoomParticipant {
   userId: number;
   nickname: string;
   agreement: Agreement | null;
+  /** Profile photo, presigned S3 URL — same shape as e.g.
+   * `FindMyPageResponse.presignedUrl`. */
+  presignedUrl?: string | null;
 }
 
 /**

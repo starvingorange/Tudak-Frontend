@@ -27,6 +27,7 @@ import { useDebateRoomSocket } from "@/lib/ws/use-debate-room-socket";
 interface Seat {
   name: string;
   sticker: string;
+  imageUrl?: string;
 }
 
 // The debate-detail API doesn't return a chosen sticker per seat — these are
@@ -46,6 +47,7 @@ function seatFromParticipants(
     ? {
         name: participant.nickname,
         sticker: wanted === "AGREE" ? SEAT_STICKER.pro : SEAT_STICKER.con,
+        imageUrl: participant.presignedUrl ?? undefined,
       }
     : null;
 }
@@ -68,6 +70,7 @@ function buildCallArgs(
     agreement ??
     liveRoom.participants.find((p) => p.userId === myUserId)?.agreement ??
     null;
+  const me = liveRoom.participants.find((p) => p.userId === myUserId);
   const peer = liveRoom.participants.find((p) => p.userId !== myUserId);
   if (!resolvedAgreement || !peer) return null;
 
@@ -78,6 +81,8 @@ function buildCallArgs(
     isHost: liveRoom.callerId === myUserId,
     startedAt: Date.now(),
     sendSignal,
+    myProfileImageUrl: me?.presignedUrl ?? null,
+    opponentProfileImageUrl: peer.presignedUrl ?? null,
   };
 }
 
@@ -476,13 +481,24 @@ function WaitingSeat({
       </div>
       {seat ? (
         <>
-          <Image
-            src={getStickerSrc(seat.sticker)}
-            alt={seat.name}
-            width={120}
-            height={120}
-            className="h-24 w-24 rounded-full border border-(--border-1) bg-(--bg-hero) object-contain sm:h-30 sm:w-30"
-          />
+          {seat.imageUrl ? (
+            <Image
+              src={seat.imageUrl}
+              alt={seat.name}
+              width={120}
+              height={120}
+              className="h-24 w-24 rounded-full border border-(--border-1) object-cover sm:h-30 sm:w-30"
+              unoptimized
+            />
+          ) : (
+            <Image
+              src={getStickerSrc(seat.sticker)}
+              alt={seat.name}
+              width={120}
+              height={120}
+              className="h-24 w-24 rounded-full border border-(--border-1) bg-(--bg-hero) object-contain sm:h-30 sm:w-30"
+            />
+          )}
           <div className="text-center text-lg font-black sm:text-xl">
             {seat.name}
           </div>

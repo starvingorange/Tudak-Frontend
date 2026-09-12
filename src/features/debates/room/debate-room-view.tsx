@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { useDebateCall } from "@/features/debates/shared/debate-call-provider";
 import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
@@ -49,6 +49,10 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     sendTurn,
     incomingTurn,
     disconnectCall,
+    startRecordingTurn,
+    stopRecordingTurn,
+    myProfileImageUrl,
+    opponentProfileImageUrl,
   } = useDebateCall();
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
@@ -62,9 +66,21 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
   const myTurnIndex: 0 | 1 | null =
     myAgreement === "AGREE" ? 0 : myAgreement === "DISAGREE" ? 1 : null;
 
+  // 마지막(반대) 턴이 끝났을 때 — 시간이 다 됐거나 발언 종료를 눌렀을 때.
+  // useCallback으로 고정해두면 이걸 deps로 삼는 useDebateTurns의 endTurn도
+  // 안정된 참조를 유지한다 — 인라인 함수였다면 매 렌더마다 새로 만들어져
+  // endTurn과 그걸 구독하는 자동종료 effect가 불필요하게 재생성됐다.
+  const onDebateEnd = useCallback(() => {
+    if (endTriggeredRef.current) return;
+    endTriggeredRef.current = true;
+    sendControl({ type: "end" });
+    router.push(ROUTES.DEBATE_RESULT(debateId));
+  }, [sendControl, router, debateId]);
+
   const {
     countdown,
     currentTurnIndex,
+    currentPhase,
     isMyTurnNow,
     proRemainingSeconds,
     conRemainingSeconds,
@@ -75,13 +91,9 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     toggleMic,
     sendTurn,
     incomingTurn,
-    // 마지막(반대) 턴이 끝났을 때 — 시간이 다 됐거나 발언 종료를 눌렀을 때.
-    onDebateEnd: () => {
-      if (endTriggeredRef.current) return;
-      endTriggeredRef.current = true;
-      sendControl({ type: "end" });
-      router.push(ROUTES.DEBATE_RESULT(debateId));
-    },
+    onTurnStart: startRecordingTurn,
+    onTurnEnd: stopRecordingTurn,
+    onDebateEnd,
   });
 
   useEffect(() => {
@@ -144,6 +156,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     stance: string,
     turnIndex: 0 | 1,
     remainingSeconds: number,
+    imageUrl: string | null,
   ): DebaterState | null => {
     if (!seat) return null;
     // 카운트다운이 도는 동안은 둘 다 중립 상태로 두고, 끝나는 순간 발언자
@@ -154,6 +167,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     return {
       name: seat.name,
       sticker: seat.sticker,
+      imageUrl,
       statement: stance,
       remainingLabel: formatClock(remainingSeconds),
       remainingPercent: (remainingSeconds / TURN_SECONDS) * 100,
@@ -162,17 +176,24 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     };
   };
 
+  const proImageUrl =
+    myTurnIndex === 0 ? myProfileImageUrl : opponentProfileImageUrl;
+  const conImageUrl =
+    myTurnIndex === 1 ? myProfileImageUrl : opponentProfileImageUrl;
+
   const pro = seatFor(
     proSeatInfo,
     room.agreeLabel ?? "찬성",
     0,
     proRemainingSeconds,
+    proImageUrl,
   );
   const con = seatFor(
     conSeatInfo,
     room.disagreeLabel ?? "반대",
     1,
     conRemainingSeconds,
+    conImageUrl,
   );
 
   const leaveRoom = () => {
@@ -219,7 +240,12 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
 
       {/* 채팅 로그, 관전자 투표, 득표수는 아직 토론 WS 프로토콜에 없는 기능이라
           — 연동되기 전까지 이 패널은 스텝 트래커만 보여준다. */}
-      <VoteProgressPanel voteEnded={false} proVotes={0} conVotes={0} />
+      <VoteProgressPanel
+        voteEnded={false}
+        currentPhase={currentPhase}
+        proVotes={0}
+        conVotes={0}
+      />
 
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
         <DebaterCard side="pro" debater={pro} isMe={myTurnIndex === 0} />

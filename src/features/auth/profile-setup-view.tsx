@@ -275,7 +275,7 @@ export function ProfileSetupView({
               maxLength={MAX_NICKNAME_LENGTH}
               placeholder="닉네임을 입력해주세요"
               className={cn(
-                "w-full h-13.5 rounded-2xl border-[1.5px] pr-19 pl- [18px] text-[15px] font-bold box-border bg-(--bg-card) outline-none",
+                "w-full h-13.5 rounded-2xl border-[1.5px] pr-19 pl-4.5 text-[15px] font-bold box-border bg-(--bg-card) outline-none",
                 !valid && nickname.length > 0
                   ? "border-[#FF6B6B]"
                   : "border-(--border-1)",

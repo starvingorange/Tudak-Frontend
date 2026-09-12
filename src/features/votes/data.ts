@@ -1,3 +1,4 @@
+import { View1SortType } from "@/api/poll/types/View1SortType";
 import type { CategorySlug } from "@/features/shared/categories";
 
 export interface VoteRow {
@@ -10,7 +11,13 @@ export interface VoteRow {
   sticker: string;
 }
 
-// Sort isn't backed by the poll list API yet (GetView1Request only takes
-// pageable + categoryType, no sort key) — this stays UI-only until the
-// backend adds one.
 export const VOTE_SORT_OPTIONS = ["최신순", "인기순", "마감임박순"] as const;
+
+export const VOTE_SORT_TO_BACKEND: Record<
+  (typeof VOTE_SORT_OPTIONS)[number],
+  View1SortType
+> = {
+  최신순: View1SortType.LATEST,
+  인기순: View1SortType.POPULAR,
+  마감임박순: View1SortType.DEADLINE,
+};

@@ -67,11 +67,12 @@ export function JoinModal({ room, onClose }: JoinModalProps) {
         {taken && host && (
           <span className="inline-flex items-center gap-1.75 text-[12px] font-bold text-[#909090] sm:text-[12.5px]">
             <Image
-              src={getStickerSrc(host.sticker)}
+              src={host.imageUrl ?? getStickerSrc(host.sticker)}
               alt="방장"
               width={26}
               height={26}
-              className="h-6.5 w-auto"
+              className="h-6.5 w-6.5 rounded-full object-cover"
+              unoptimized={!!host.imageUrl}
             />
             {host.name} (방장)
           </span>
