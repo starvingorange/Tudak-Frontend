@@ -6,6 +6,7 @@ import type { ArgumentDetails } from "./ArgumentDetails";
 
 export interface DebateUser {
   agreeNickname?: string;
+  label?: string;
   imagePresignedUrl?: string;
   arguments?: ArgumentDetails[];
 }
