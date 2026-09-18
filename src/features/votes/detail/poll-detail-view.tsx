@@ -3,22 +3,51 @@
 import { ArrowLeft, SquareCheckBig } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useGetViewDetails } from "@/api/poll/hooks/useGetViewDetails";
 import { ChatLog } from "@/features/debates/room/chat-log";
 import { DebaterCard } from "@/features/debates/room/debater-card";
 import { VoteProgressPanel } from "@/features/debates/room/vote-progress-panel";
 import { ROUTES } from "@/lib/routes";
-import type { PollDetail } from "./data";
+import { getPollDetailFallback } from "./data";
+import { pollDetailFromView } from "./poll-detail-from-view";
+import { RecordingList } from "./recording-list";
 import { VoteModal } from "./vote-modal";
 
 type Vote = "pro" | "con" | null;
 
 interface PollDetailViewProps {
-  poll: PollDetail;
+  pollId: string;
 }
 
-export function PollDetailView({ poll }: PollDetailViewProps) {
+export function PollDetailView({ pollId }: PollDetailViewProps) {
+  const numericId = Number(pollId);
+  const hasNumericId = Number.isFinite(numericId);
+
+  const { data, isLoading, isError } = useGetViewDetails(numericId, {
+    query: { enabled: hasNumericId },
+  });
+
   const [voteOpen, setVoteOpen] = useState(false);
   const [myVote, setMyVote] = useState<Vote>(null);
+
+  if (hasNumericId && isLoading) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100dvh-var(--nav-height))] max-w-295 items-center justify-center px-4">
+        <span className="text-sm font-bold text-(--text-2)">
+          불러오는 중...
+        </span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    console.warn("[poll-detail] 투표 상세 조회 실패 — 목업으로 대체합니다.");
+  }
+
+  const view = data?.data;
+  const fallback = getPollDetailFallback(pollId);
+  const poll = view ? pollDetailFromView(pollId, view, fallback) : fallback;
+  const live = view != null;
 
   return (
     <div className="mx-auto max-w-295 px-4 pt-4 sm:pt-5">
@@ -47,7 +76,15 @@ export function PollDetailView({ poll }: PollDetailViewProps) {
         <DebaterCard side="con" debater={poll.con} />
       </div>
 
-      <ChatLog messages={poll.transcript} />
+      {poll.recordings.length > 0 ? (
+        <RecordingList
+          recordings={poll.recordings}
+          proName={poll.proName}
+          conName={poll.conName}
+        />
+      ) : (
+        <ChatLog messages={poll.transcript} />
+      )}
 
       <div className="sticky bottom-0 z-20 -mx-4 mt-6 flex justify-center border-t border-(--border-1) bg-(--bg-surface) px-4 py-3.5">
         <button
@@ -62,6 +99,8 @@ export function PollDetailView({ poll }: PollDetailViewProps) {
 
       {voteOpen && (
         <VoteModal
+          pollId={hasNumericId ? numericId : null}
+          live={live}
           poll={poll}
           myVote={myVote}
           onVote={setMyVote}

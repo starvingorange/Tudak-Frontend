@@ -1,4 +1,3 @@
-import { getPollDetail } from "@/features/votes/detail/data";
 import { PollDetailView } from "@/features/votes/detail/poll-detail-view";
 
 export default async function PollDetailPage({
@@ -7,7 +6,6 @@ export default async function PollDetailPage({
   params: Promise<{ pollId: string }>;
 }) {
   const { pollId } = await params;
-  const poll = getPollDetail(pollId);
 
-  return <PollDetailView poll={poll} />;
+  return <PollDetailView pollId={pollId} />;
 }

@@ -1,28 +1,81 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { SquareCheckBig } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { getViewDetailsQueryKey } from "@/api/poll/hooks/useGetViewDetails";
+import { usePostVote } from "@/api/user-poll/hooks/usePostVote";
+import { CreateUserPollRequestAgreement } from "@/api/user-poll/types/CreateUserPollRequestAgreement";
 import { cn } from "@/lib/utils";
 import type { PollDetail } from "./data";
 
 type Side = "pro" | "con";
 
 interface VoteModalProps {
+  /** Numeric poll id, or null when the id isn't a real poll (mock demo). */
+  pollId: number | null;
+  /** True once `GET /api/polls/{id}` has returned — gates the real vote POST. */
+  live: boolean;
   poll: PollDetail;
   myVote: Side | null;
   onVote: (side: Side) => void;
   onClose: () => void;
 }
 
-export function VoteModal({ poll, myVote, onVote, onClose }: VoteModalProps) {
+export function VoteModal({
+  pollId,
+  live,
+  poll,
+  myVote,
+  onVote,
+  onClose,
+}: VoteModalProps) {
   const [picked, setPicked] = useState<Side | null>(myVote);
+  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = usePostVote();
   const voted = myVote !== null;
 
   const total = poll.proVotes + poll.conVotes;
   const proPercent =
     total === 0 ? 50 : Math.round((poll.proVotes / total) * 100);
   const conPercent = 100 - proPercent;
+
+  const submit = () => {
+    if (!picked || isPending) return;
+    setError(null);
+
+    if (!live || pollId === null) {
+      onVote(picked);
+      return;
+    }
+
+    mutate(
+      {
+        data: {
+          pollId,
+          agreement:
+            picked === "pro"
+              ? CreateUserPollRequestAgreement.AGREE
+              : CreateUserPollRequestAgreement.DISAGREE,
+        },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: getViewDetailsQueryKey(pollId),
+          });
+          onVote(picked);
+        },
+        onError: () => {
+          setError(
+            "투표에 실패했어요. 이미 투표했거나 잠시 후 다시 시도해주세요.",
+          );
+        },
+      },
+    );
+  };
 
   const option = (side: Side) => {
     const isPro = side === "pro";
@@ -31,7 +84,7 @@ export function VoteModal({ poll, myVote, onVote, onClose }: VoteModalProps) {
     return (
       <button
         type="button"
-        disabled={voted}
+        disabled={voted || isPending}
         onClick={() => setPicked(side)}
         className={cn(
           "flex items-center gap-4 rounded-xl p-[16px_18px] text-left transition-all",
@@ -146,28 +199,39 @@ export function VoteModal({ poll, myVote, onVote, onClose }: VoteModalProps) {
             </button>
           </>
         ) : (
-          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-(--radius-button) border border-(--border-1) bg-(--bg-card) py-3.25 text-sm font-bold hover:border-[#c9c5bd]"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              disabled={picked === null}
-              onClick={() => picked && onVote(picked)}
-              className={cn(
-                "inline-flex flex-1 items-center justify-center rounded-(--radius-button) py-3.25 text-sm font-extrabold sm:flex-[1.4]",
-                picked
-                  ? "bg-(--brand-yellow) text-(--brand-on-yellow) hover:brightness-105"
-                  : "bg-[#efedea] text-[#a3a09a]",
-              )}
-            >
-              {picked ? "투표하기" : "입장을 선택하세요"}
-            </button>
-          </div>
+          <>
+            {error && (
+              <div className="mt-3.5 rounded-xl bg-[#fdecec] px-4 py-3 text-center text-[13px] font-bold text-(--vote-red)">
+                {error}
+              </div>
+            )}
+            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-(--radius-button) border border-(--border-1) bg-(--bg-card) py-3.25 text-sm font-bold hover:border-[#c9c5bd]"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                disabled={picked === null || isPending}
+                onClick={submit}
+                className={cn(
+                  "inline-flex flex-1 items-center justify-center rounded-(--radius-button) py-3.25 text-sm font-extrabold sm:flex-[1.4]",
+                  picked && !isPending
+                    ? "bg-(--brand-yellow) text-(--brand-on-yellow) hover:brightness-105"
+                    : "bg-[#efedea] text-[#a3a09a]",
+                )}
+              >
+                {isPending
+                  ? "투표 중…"
+                  : picked
+                    ? "투표하기"
+                    : "입장을 선택하세요"}
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
