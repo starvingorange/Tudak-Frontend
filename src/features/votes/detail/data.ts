@@ -1,7 +1,16 @@
+import type { ArgumentDetailsArgumentType } from "@/api/poll/types/ArgumentDetailsArgumentType";
 import type {
   DebaterState,
   TranscriptMessage,
 } from "@/features/debates/room/data";
+
+/** One voice recording from the debate — `GET /api/polls/{id}` returns these
+ * per side as `agree.arguments[]` / `disagree.arguments[]`. */
+export interface PollRecording {
+  side: "pro" | "con";
+  phase: ArgumentDetailsArgumentType;
+  audioUrl: string;
+}
 
 export interface PollDetail {
   id: string;
@@ -13,14 +22,18 @@ export interface PollDetail {
   conTagline: string;
   pro: DebaterState;
   con: DebaterState;
+  /** Text transcript — no API source (the poll API only returns voice URLs),
+   * so this stays mock and is only shown when `recordings` is empty. */
   transcript: TranscriptMessage[];
+  /** Real debate recordings from the API; empty in the mock. */
+  recordings: PollRecording[];
   proVotes: number;
   conVotes: number;
   deadlineLabel: string;
 }
 
-// The one fully-authored example — mirrors features/debates/room/data.ts's
-// MINT_CHOCO so the replay reads identically on both sides.
+// 폴백용 예시 데이터. 찬/반 카드의 `statement`는 실제 발언 요약이 아니라
+// (poll API에 그런 필드가 없다) 그냥 "찬성"/"반대" 라벨로 둔다.
 const MINT_CHOCO: PollDetail = {
   id: "mint-choco",
   topic: "민트초코는 디저트인가?",
@@ -31,7 +44,7 @@ const MINT_CHOCO: PollDetail = {
   pro: {
     name: "민초러버",
     sticker: "st-pro-basic",
-    statement: "단맛이고 식후에\n먹으니까 디저트 맞음!",
+    statement: "찬성",
     remainingLabel: "04:12",
     remainingPercent: 52,
     speaking: true,
@@ -39,7 +52,7 @@ const MINT_CHOCO: PollDetail = {
   con: {
     name: "치킨왕",
     sticker: "st-con-basic",
-    statement: "음료·토핑으로도 쓰이니\n디저트로 한정 못함!",
+    statement: "반대",
     remainingLabel: "04:45",
     remainingPercent: 45,
     speaking: false,
@@ -71,13 +84,15 @@ const MINT_CHOCO: PollDetail = {
       text: "디저트의 정의는 주관적이라,\n모두에게 해당된다고 보기 어려워요.",
     },
   ],
+  recordings: [],
   proVotes: 155,
   conVotes: 121,
   deadlineLabel: "D-3",
 };
 
-// 투표 상세 API(useGetViewDetails)를 아직 붙이지 않아서 — 어떤 pollId로
-// 들어오든 이 목업 하나를 돌려준다. 연동 시 pollId로 조회하도록 교체.
-export function getPollDetail(_pollId: string): PollDetail {
+// `useGetViewDetails`가 데이터를 주기 전(로딩·에러)이나 스펙에 없는 필드
+// (대사 텍스트·타이머·마감일 등)의 폴백. 실제 값은 poll-detail-from-view.ts가
+// 이 위에 덮어씌운다.
+export function getPollDetailFallback(_pollId: string): PollDetail {
   return MINT_CHOCO;
 }
