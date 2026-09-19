@@ -3,15 +3,8 @@
 import { Pause, Play } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import type { ArgumentDetailsArgumentType } from "@/api/poll/types/ArgumentDetailsArgumentType";
 import { cn } from "@/lib/utils";
 import type { PollRecording } from "./data";
-
-const PHASE_LABEL: Record<ArgumentDetailsArgumentType, string> = {
-  OPENING: "입론",
-  REBUTTAL: "반론",
-  CONCLUSION: "최종결론",
-};
 
 interface RecordingListProps {
   recordings: PollRecording[];
@@ -162,7 +155,8 @@ function RecordingRow({
       alt={name}
       width={52}
       height={52}
-      className="h-10 w-10 shrink-0 rounded-full border border-(--border-1) bg-(--bg-hero) sm:h-13 sm:w-13"
+      unoptimized={imageUrl != null}
+      className="h-10 w-10 shrink-0 rounded-full border border-(--border-1) bg-(--bg-hero) object-cover sm:h-13 sm:w-13"
     />
   );
 
@@ -188,9 +182,6 @@ function RecordingRow({
             style={{ background: color }}
           >
             {isPro ? "찬성" : "반대"}
-          </span>
-          <span className="text-[12px] text-[#909090] sm:text-[12.5px]">
-            {PHASE_LABEL[rec.phase]}
           </span>
         </div>
         <button

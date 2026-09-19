@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useGetViewDetails } from "@/api/poll/hooks/useGetViewDetails";
 import { ChatLog } from "@/features/debates/room/chat-log";
 import { DebaterCard } from "@/features/debates/room/debater-card";
-import { VoteProgressPanel } from "@/features/debates/room/vote-progress-panel";
 import { ROUTES } from "@/lib/routes";
 import { getPollDetailFallback } from "./data";
 import { pollDetailFromView } from "./poll-detail-from-view";
@@ -64,16 +63,14 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
         </h1>
       </div>
 
-      <VoteProgressPanel voteEnded={false} proVotes={0} conVotes={0} />
-
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
-        <DebaterCard side="pro" debater={poll.pro} />
+        <DebaterCard side="pro" debater={poll.pro} hideRemainingTime />
         <div className="flex justify-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-(--border-1) bg-(--bg-card) text-lg font-extrabold sm:h-16 sm:w-16 sm:text-xl">
             VS
           </span>
         </div>
-        <DebaterCard side="con" debater={poll.con} />
+        <DebaterCard side="con" debater={poll.con} hideRemainingTime />
       </div>
 
       {poll.recordings.length > 0 ? (
