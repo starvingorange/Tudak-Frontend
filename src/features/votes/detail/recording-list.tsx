@@ -17,12 +17,16 @@ interface RecordingListProps {
   recordings: PollRecording[];
   proName: string;
   conName: string;
+  proImageUrl: string | null;
+  conImageUrl: string | null;
 }
 
 export function RecordingList({
   recordings,
   proName,
   conName,
+  proImageUrl,
+  conImageUrl,
 }: RecordingListProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -100,6 +104,7 @@ export function RecordingList({
             <RecordingRow
               rec={rec}
               name={rec.side === "pro" ? proName : conName}
+              imageUrl={rec.side === "pro" ? proImageUrl : conImageUrl}
               active={activeIndex === i}
               playing={activeIndex === i && isPlaying}
               dimmed={activeIndex != null && activeIndex !== i}
@@ -126,6 +131,7 @@ export function RecordingList({
 interface RecordingRowProps {
   rec: PollRecording;
   name: string;
+  imageUrl: string | null;
   active: boolean;
   playing: boolean;
   dimmed: boolean;
@@ -135,6 +141,7 @@ interface RecordingRowProps {
 function RecordingRow({
   rec,
   name,
+  imageUrl,
   active,
   playing,
   dimmed,
@@ -147,9 +154,10 @@ function RecordingRow({
   const avatar = (
     <Image
       src={
-        isPro
+        imageUrl ??
+        (isPro
           ? "/assets-characters/pro-conf.webp"
-          : "/assets-characters/con-conf.webp"
+          : "/assets-characters/con-conf.webp")
       }
       alt={name}
       width={52}

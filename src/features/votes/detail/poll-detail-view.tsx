@@ -81,6 +81,8 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
           recordings={poll.recordings}
           proName={poll.proName}
           conName={poll.conName}
+          proImageUrl={poll.pro.imageUrl}
+          conImageUrl={poll.con.imageUrl}
         />
       ) : (
         <ChatLog messages={poll.transcript} />

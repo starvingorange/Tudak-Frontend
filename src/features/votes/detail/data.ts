@@ -17,6 +17,11 @@ export interface PollDetail {
   topic: string;
   proName: string;
   conName: string;
+  /** Shown in the statement bubble under each debater's name — from
+   * `agree.label` / `disagree.label`, falling back to "찬성"/"반대" when the
+   * API omits it. */
+  proLabel: string;
+  conLabel: string;
   /** Short one-liner shown under each option in the vote modal. */
   proTagline: string;
   conTagline: string;
@@ -33,17 +38,21 @@ export interface PollDetail {
 }
 
 // 폴백용 예시 데이터. 찬/반 카드의 `statement`는 실제 발언 요약이 아니라
-// (poll API에 그런 필드가 없다) 그냥 "찬성"/"반대" 라벨로 둔다.
+// (poll API에 그런 필드가 없다) `proLabel`/`conLabel`과 같은 값으로 둔다 —
+// 실 데이터에서는 pollDetailFromView가 이 자리를 API의 label로 덮어쓴다.
 const MINT_CHOCO: PollDetail = {
   id: "mint-choco",
   topic: "민트초코는 디저트인가?",
   proName: "민초러버",
   conName: "치킨왕",
+  proLabel: "찬성",
+  conLabel: "반대",
   proTagline: "디저트 맞음!",
   conTagline: "디저트로 한정 못함!",
   pro: {
     name: "민초러버",
     sticker: "st-pro-basic",
+    imageUrl: null,
     statement: "찬성",
     remainingLabel: "04:12",
     remainingPercent: 52,
@@ -52,6 +61,7 @@ const MINT_CHOCO: PollDetail = {
   con: {
     name: "치킨왕",
     sticker: "st-con-basic",
+    imageUrl: null,
     statement: "반대",
     remainingLabel: "04:45",
     remainingPercent: 45,

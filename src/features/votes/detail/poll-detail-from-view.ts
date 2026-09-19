@@ -20,6 +20,8 @@ export function pollDetailFromView(
 ): PollDetail {
   const proName = view.agree?.agreeNickname ?? fallback.proName;
   const conName = view.disagree?.agreeNickname ?? fallback.conName;
+  const proLabel = view.agree?.label ?? fallback.proLabel;
+  const conLabel = view.disagree?.label ?? fallback.conLabel;
 
   const recordings: PollRecording[] = [];
   for (const phase of PHASE_ORDER) {
@@ -39,8 +41,20 @@ export function pollDetailFromView(
     topic: view.title ?? fallback.topic,
     proName,
     conName,
-    pro: { ...fallback.pro, name: proName },
-    con: { ...fallback.con, name: conName },
+    proLabel,
+    conLabel,
+    pro: {
+      ...fallback.pro,
+      name: proName,
+      statement: proLabel,
+      imageUrl: view.agree?.imagePresignedUrl ?? null,
+    },
+    con: {
+      ...fallback.con,
+      name: conName,
+      statement: conLabel,
+      imageUrl: view.disagree?.imagePresignedUrl ?? null,
+    },
     recordings,
     proVotes: view.agreeVoteCount ?? fallback.proVotes,
     conVotes: view.disagreeVoteCount ?? fallback.conVotes,
