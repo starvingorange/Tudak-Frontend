@@ -34,6 +34,7 @@ export interface PollDetail {
   recordings: PollRecording[];
   proVotes: number;
   conVotes: number;
+  /** 모달 헤더에 그대로 출력되는 문구 — 예: "투표 마감 D-3". */
   deadlineLabel: string;
 }
 
@@ -97,7 +98,7 @@ const MINT_CHOCO: PollDetail = {
   recordings: [],
   proVotes: 155,
   conVotes: 121,
-  deadlineLabel: "D-3",
+  deadlineLabel: "투표 마감 D-3",
 };
 
 // `useGetViewDetails`가 데이터를 주기 전(로딩·에러)이나 스펙에 없는 필드

@@ -147,7 +147,7 @@ export function VoteModal({
             어느 입장에 공감하시나요?
           </span>
           <span className="text-[13px] text-[#909090]">
-            투표 마감 {poll.deadlineLabel}
+            {poll.deadlineLabel}
           </span>
         </div>
         <div className="mt-2 text-[13.5px] text-(--text-2)">

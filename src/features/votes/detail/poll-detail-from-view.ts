@@ -1,5 +1,6 @@
 import { ArgumentDetailsArgumentType } from "@/api/poll/types/ArgumentDetailsArgumentType";
 import type { GetViewDetailsResponse } from "@/api/poll/types/GetViewDetailsResponse";
+import { formatDDay } from "@/lib/utils";
 import type { PollDetail, PollRecording } from "./data";
 
 type ViewData = GetViewDetailsResponse["data"];
@@ -22,6 +23,7 @@ export function pollDetailFromView(
   const conName = view.disagree?.agreeNickname ?? fallback.conName;
   const proLabel = view.agree?.label ?? fallback.proLabel;
   const conLabel = view.disagree?.label ?? fallback.conLabel;
+  const dDay = view.expiredAt ? formatDDay(view.expiredAt) : null;
 
   const recordings: PollRecording[] = [];
   for (const phase of PHASE_ORDER) {
@@ -43,6 +45,14 @@ export function pollDetailFromView(
     conName,
     proLabel,
     conLabel,
+    proTagline: view.agree?.label ?? fallback.proTagline,
+    conTagline: view.disagree?.label ?? fallback.conTagline,
+    deadlineLabel:
+      dDay == null
+        ? fallback.deadlineLabel
+        : dDay === "마감"
+          ? "투표가 마감되었어요"
+          : `투표 마감 ${dDay}`,
     pro: {
       ...fallback.pro,
       name: proName,

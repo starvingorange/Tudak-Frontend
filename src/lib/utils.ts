@@ -17,3 +17,18 @@ export function formatDateLabel(value: string): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}.${month}.${day}`;
 }
+
+// 마감 시각까지 남은 "날짜" 수를 D-N으로 표시한다 — 시각이 아니라 달력상
+// 날짜 차이라서 마감 당일은 몇 시간이 남았든 "D-Day"다.
+export function formatDDay(value: string): string | null {
+  const target = new Date(value);
+  if (Number.isNaN(target.getTime())) return null;
+
+  const startOfDay = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const days = Math.round(
+    (startOfDay(target) - startOfDay(new Date())) / 86_400_000,
+  );
+  if (days < 0) return "마감";
+  return days === 0 ? "D-Day" : `D-${days}`;
+}
