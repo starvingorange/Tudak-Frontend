@@ -11,6 +11,13 @@ import type { DebateTurnMessage } from "@/lib/webrtc/use-debate-audio-call";
 export const TURN_SECONDS = 7 * 60;
 export const TOTAL_STEPS = 6;
 
+export function formatClock(totalSeconds: number): string {
+  const clamped = Math.max(0, Math.round(totalSeconds));
+  const minutes = Math.floor(clamped / 60);
+  const seconds = clamped % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export type DebatePhase = 0 | 1 | 2; // 입론 / 반론 / 결론
 
 export interface UseDebateTurnsOptions {

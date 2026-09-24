@@ -12,18 +12,11 @@ import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
 import type { DebaterState } from "./data";
 import { DebaterCard } from "./debater-card";
-import { TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
+import { formatClock, TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
 import { VoteProgressPanel } from "./vote-progress-panel";
 
 interface DebateRoomViewProps {
   debateId: string;
-}
-
-function formatClock(totalSeconds: number): string {
-  const clamped = Math.max(0, Math.round(totalSeconds));
-  const minutes = Math.floor(clamped / 60);
-  const seconds = clamped % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 export function DebateRoomView({ debateId }: DebateRoomViewProps) {

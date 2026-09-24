@@ -17,16 +17,19 @@ interface DebaterCardProps {
   /** Whether this seat is the local user's own — shows a small "나" badge
    * next to the name. */
   isMe?: boolean;
-  /** Hides the remaining-time readout — the poll detail replay has no live
-   * timer to show. */
-  hideRemainingTime?: boolean;
+  /** Poll detail replay — drops the live-debate "발언 중/대기 중" badge and
+   * dimming; `debater.speaking` still drives the highlight border/scale. */
+  replay?: boolean;
+  /** Marks the seat the local user voted for. */
+  myChoice?: boolean;
 }
 
 export function DebaterCard({
   side,
   debater,
   isMe,
-  hideRemainingTime,
+  replay,
+  myChoice,
 }: DebaterCardProps) {
   const isPro = side === "pro";
   const color = isPro ? "var(--vote-blue)" : "var(--vote-red)";
@@ -47,59 +50,6 @@ export function DebaterCard({
         <span className="text-[15px] font-semibold text-(--text-2)">
           상대를 기다리는 중…
         </span>
-      </section>
-    );
-  }
-
-  if (hideRemainingTime) {
-    return (
-      <section
-        className={cn(
-          "relative flex items-center gap-3.5 rounded-2xl border-2 bg-(--bg-card) p-4 pt-11 sm:gap-4",
-          !isPro && "md:flex-row-reverse md:text-right",
-        )}
-        style={{ borderColor: color }}
-      >
-        <span
-          className="absolute -top-px rounded-b-[10px] px-3.5 py-1.5 text-[13px] font-extrabold text-white"
-          style={{ background: color, [isPro ? "left" : "right"]: "16px" }}
-        >
-          {label}
-        </span>
-        {debater.imageUrl ? (
-          <Image
-            src={debater.imageUrl}
-            alt={`${debater.name} 프로필`}
-            width={80}
-            height={80}
-            unoptimized
-            className="h-16 w-16 shrink-0 rounded-full border border-(--border-1) object-cover sm:h-20 sm:w-20"
-          />
-        ) : (
-          <Image
-            src={`/assets-characters/${POSE[`${side}-confident`].file}.webp`}
-            alt={`${debater.name} 캐릭터`}
-            width={POSE[`${side}-confident`].width}
-            height={POSE[`${side}-confident`].height}
-            style={{ height: "auto" }}
-            className="w-16 shrink-0 sm:w-20"
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[16px] font-extrabold sm:text-[18px]">
-            {debater.name}
-          </div>
-          {debater.statement && (
-            <p
-              className={cn(
-                "mt-1.5 mb-0 w-fit max-w-full rounded-lg bg-(--bg-hero) px-3 py-1.5 text-left text-[13px] leading-snug font-medium break-keep whitespace-pre-line sm:text-[14px]",
-                !isPro && "md:ml-auto",
-              )}
-            >
-              {debater.statement}
-            </p>
-          )}
-        </div>
       </section>
     );
   }
@@ -138,7 +88,7 @@ export function DebaterCard({
       <div
         className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
       >
-        {!isPro && (
+        {!replay && !isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ background: color }}
@@ -157,7 +107,15 @@ export function DebaterCard({
             나
           </span>
         )}
-        {isPro && (
+        {myChoice && (
+          <span
+            className="border text-[12px] font-bold px-2.25 py-0.5 rounded-(--radius-pill) whitespace-nowrap"
+            style={{ borderColor: color, color }}
+          >
+            내 선택
+          </span>
+        )}
+        {!replay && isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ background: color }}
@@ -185,7 +143,7 @@ export function DebaterCard({
     </div>
   );
 
-  const dimmed = debater.dimmed ?? !debater.speaking;
+  const dimmed = !replay && (debater.dimmed ?? !debater.speaking);
 
   return (
     <section

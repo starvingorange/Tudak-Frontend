@@ -4,12 +4,15 @@ import { ArrowLeft, SquareCheckBig } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useGetViewDetails } from "@/api/poll/hooks/useGetViewDetails";
+import { FindPollDetailsResponseMyAgreementType } from "@/api/poll/types/FindPollDetailsResponseMyAgreementType";
 import { ChatLog } from "@/features/debates/room/chat-log";
+import type { DebaterState } from "@/features/debates/room/data";
 import { DebaterCard } from "@/features/debates/room/debater-card";
+import { formatClock } from "@/features/debates/room/use-debate-turns";
 import { ROUTES } from "@/lib/routes";
 import { getPollDetailFallback } from "./data";
 import { pollDetailFromView } from "./poll-detail-from-view";
-import { RecordingList } from "./recording-list";
+import { type PlaybackProgress, RecordingList } from "./recording-list";
 import { VoteModal } from "./vote-modal";
 
 type Vote = "pro" | "con" | null;
@@ -28,6 +31,11 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
 
   const [voteOpen, setVoteOpen] = useState(false);
   const [myVote, setMyVote] = useState<Vote>(null);
+  const [progress, setProgress] = useState<PlaybackProgress>({
+    playingSide: null,
+    usedSeconds: { pro: 0, con: 0 },
+    totalSeconds: { pro: null, con: null },
+  });
 
   if (hasNumericId && isLoading) {
     return (
@@ -47,6 +55,26 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
   const fallback = getPollDetailFallback(pollId);
   const poll = view ? pollDetailFromView(pollId, view, fallback) : fallback;
   const live = view != null;
+  const debaterWithClock = (debater: DebaterState, side: "pro" | "con") => {
+    const total = progress.totalSeconds[side];
+    const remaining =
+      total == null ? null : Math.max(0, total - progress.usedSeconds[side]);
+    return {
+      ...debater,
+      speaking: progress.playingSide === side,
+      remainingLabel: remaining == null ? "--:--" : formatClock(remaining),
+      remainingPercent:
+        remaining == null || !total ? 100 : (remaining / total) * 100,
+    };
+  };
+  const votedSide: Vote =
+    myVote ??
+    (view?.myAgreementType === FindPollDetailsResponseMyAgreementType.AGREE
+      ? "pro"
+      : view?.myAgreementType ===
+          FindPollDetailsResponseMyAgreementType.DISAGREE
+        ? "con"
+        : null);
 
   return (
     <div className="mx-auto max-w-295 px-4 pt-4 sm:pt-5">
@@ -64,13 +92,23 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
       </div>
 
       <div className="mt-5.5 grid items-center gap-4 md:grid-cols-[1fr_88px_1fr] md:gap-x-0">
-        <DebaterCard side="pro" debater={poll.pro} hideRemainingTime />
+        <DebaterCard
+          side="pro"
+          debater={debaterWithClock(poll.pro, "pro")}
+          replay
+          myChoice={votedSide === "pro"}
+        />
         <div className="flex justify-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-(--border-1) bg-(--bg-card) text-lg font-extrabold sm:h-16 sm:w-16 sm:text-xl">
             VS
           </span>
         </div>
-        <DebaterCard side="con" debater={poll.con} hideRemainingTime />
+        <DebaterCard
+          side="con"
+          debater={debaterWithClock(poll.con, "con")}
+          replay
+          myChoice={votedSide === "con"}
+        />
       </div>
 
       {poll.recordings.length > 0 ? (
@@ -80,6 +118,7 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
           conName={poll.conName}
           proImageUrl={poll.pro.imageUrl}
           conImageUrl={poll.con.imageUrl}
+          onProgressChange={setProgress}
         />
       ) : (
         <ChatLog messages={poll.transcript} />
