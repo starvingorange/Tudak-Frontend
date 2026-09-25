@@ -3,6 +3,7 @@
 export const ROUTES = {
   HOME: () => "/",
   VOTES: () => "/votes",
+  VOTE_DETAIL: (pollId: string | number) => `/votes/${pollId}`,
   DEBATES: () => "/debates",
   CREATE_DEBATE: () => "/debates/new",
   DEBATE_DETAIL: (debateId: string | number) => `/debates/${debateId}`,

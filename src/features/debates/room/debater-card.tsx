@@ -17,9 +17,20 @@ interface DebaterCardProps {
   /** Whether this seat is the local user's own — shows a small "나" badge
    * next to the name. */
   isMe?: boolean;
+  /** Poll detail replay — drops the live-debate "발언 중/대기 중" badge and
+   * dimming; `debater.speaking` still drives the highlight border/scale. */
+  replay?: boolean;
+  /** Marks the seat the local user voted for. */
+  myChoice?: boolean;
 }
 
-export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
+export function DebaterCard({
+  side,
+  debater,
+  isMe,
+  replay,
+  myChoice,
+}: DebaterCardProps) {
   const isPro = side === "pro";
   const color = isPro ? "var(--vote-blue)" : "var(--vote-red)";
   const label = isPro ? "찬성" : "반대";
@@ -77,7 +88,7 @@ export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
       <div
         className={`flex flex-wrap items-center gap-2 ${isPro ? "" : "justify-start sm:justify-end"}`}
       >
-        {!isPro && (
+        {!replay && !isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ background: color }}
@@ -96,7 +107,15 @@ export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
             나
           </span>
         )}
-        {isPro && (
+        {myChoice && (
+          <span
+            className="border text-[12px] font-bold px-2.25 py-0.5 rounded-(--radius-pill) whitespace-nowrap"
+            style={{ borderColor: color, color }}
+          >
+            내 선택
+          </span>
+        )}
+        {!replay && isPro && (
           <span
             className="text-white text-xs font-bold px-2.75 py-1 rounded-(--radius-pill) whitespace-nowrap"
             style={{ background: color }}
@@ -124,7 +143,7 @@ export function DebaterCard({ side, debater, isMe }: DebaterCardProps) {
     </div>
   );
 
-  const dimmed = debater.dimmed ?? !debater.speaking;
+  const dimmed = !replay && (debater.dimmed ?? !debater.speaking);
 
   return (
     <section

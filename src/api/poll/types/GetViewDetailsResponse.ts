@@ -4,6 +4,7 @@
  */
 import type { CommonResponse } from "@/api/common/types/CommonResponse";
 import type { DebateUser } from "./DebateUser";
+import type { FindPollDetailsResponseMyAgreementType } from "./FindPollDetailsResponseMyAgreementType";
 
 export type GetViewDetailsResponse = CommonResponse<{
   title?: string;
@@ -11,4 +12,6 @@ export type GetViewDetailsResponse = CommonResponse<{
   disagree?: DebateUser;
   agreeVoteCount?: number;
   disagreeVoteCount?: number;
+  myAgreementType?: FindPollDetailsResponseMyAgreementType;
+  expiredAt?: string;
 }>;

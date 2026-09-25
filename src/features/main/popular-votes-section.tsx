@@ -1,11 +1,15 @@
 "use client";
 
 import { SquareCheckBig } from "lucide-react";
+import Link from "next/link";
 import { useGetHome } from "@/api/user/hooks/useGetHome";
+import type { PopularPoll } from "@/api/user/types/PopularPoll";
 import { Card } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { BACKEND_TO_CATEGORY } from "@/features/shared/categories";
+import { ROUTES } from "@/lib/routes";
+import { cn, formatDateLabel } from "@/lib/utils";
 
 export function PopularVotesSection() {
   // GET /api/users/home is meant to be public (visible to logged-out
@@ -33,24 +37,51 @@ export function PopularVotesSection() {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4.5">
-          {popularPolls.map((vote) => (
-            <Card key={vote.title} className="flex flex-col">
-              <CategoryBadge
-                category={BACKEND_TO_CATEGORY[vote.category ?? "OTHERS"]}
-                className="self-start"
-              />
-              <div className="mt-3 min-h-0 whitespace-pre-line text-lg leading-snug font-extrabold tracking-[-0.3px] sm:mt-3.5 sm:min-h-14 sm:text-xl">
-                {vote.title}
-              </div>
-              <div className="mt-3 text-[13px] leading-relaxed text-(--text-2) sm:mt-3.5">
-                투표수 {(vote.voteCount ?? 0).toLocaleString()}
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                {vote.dDay}
-              </div>
-            </Card>
-          ))}
+          {popularPolls.map((vote) =>
+            vote.pollId != null ? (
+              <Link
+                key={vote.pollId}
+                href={ROUTES.VOTE_DETAIL(vote.pollId)}
+                className="block"
+              >
+                <PopularVoteCard vote={vote} linked />
+              </Link>
+            ) : (
+              <PopularVoteCard key={vote.title} vote={vote} />
+            ),
+          )}
         </div>
       )}
     </section>
+  );
+}
+
+interface PopularVoteCardProps {
+  vote: PopularPoll;
+  /** Rendered inside a Link — adds a hover affordance. */
+  linked?: boolean;
+}
+
+function PopularVoteCard({ vote, linked }: PopularVoteCardProps) {
+  return (
+    <Card
+      className={cn(
+        "flex h-full flex-col",
+        linked && "transition-colors hover:border-(--brand-yellow)",
+      )}
+    >
+      <CategoryBadge
+        category={BACKEND_TO_CATEGORY[vote.category ?? "OTHERS"]}
+        className="self-start"
+      />
+      <div className="mt-3 min-h-0 whitespace-pre-line text-lg leading-snug font-extrabold tracking-[-0.3px] sm:mt-3.5 sm:min-h-14 sm:text-xl">
+        {vote.title}
+      </div>
+      <div className="mt-3 text-[13px] leading-relaxed text-(--text-2) sm:mt-3.5">
+        투표수 {(vote.voteCount ?? 0).toLocaleString()}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        {vote.dDay ? formatDateLabel(vote.dDay) : ""}
+      </div>
+    </Card>
   );
 }

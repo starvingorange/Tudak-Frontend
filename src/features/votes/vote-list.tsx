@@ -9,7 +9,7 @@ import {
 } from "@/features/shared/categories";
 import { CategoryTabBar } from "@/features/shared/category-tab-bar";
 import { useIsLoggedIn } from "@/stores/auth-store";
-import { VOTE_SORT_OPTIONS, VOTE_SORT_TO_BACKEND } from "./data";
+import { SORT_TO_BACKEND, VOTE_SORT_OPTIONS } from "./data";
 import { VoteRow } from "./vote-row";
 import { voteRowFromPoll } from "./vote-row-from-poll";
 import { VoteSortDropdown } from "./vote-sort-dropdown";
@@ -33,7 +33,7 @@ export function VoteList() {
   const { data, isLoading } = useGetView1(
     {
       categoryType: tab === "전체" ? undefined : CATEGORY_TO_BACKEND[tab],
-      sortType: VOTE_SORT_TO_BACKEND[sort],
+      sortType: SORT_TO_BACKEND[sort],
       pageable: { page, size: PAGE_SIZE },
     },
     { query: { ...QUERY_OPTIONS, enabled: loggedIn } },
@@ -73,7 +73,7 @@ export function VoteList() {
           </span>
         </div>
       ) : isLoading ? null : rows.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-1.5 py-16 text-center sm:mt-5">
+        <div className="mt-4 flex flex-col items-center gap-1.5 py-32 text-center sm:mt-5 sm:py-40">
           <span className="text-[15px] font-bold text-(--text-2)">
             아직 진행 중인 투표가 없어요
           </span>

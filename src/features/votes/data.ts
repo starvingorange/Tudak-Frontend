@@ -13,7 +13,7 @@ export interface VoteRow {
 
 export const VOTE_SORT_OPTIONS = ["최신순", "인기순", "마감임박순"] as const;
 
-export const VOTE_SORT_TO_BACKEND: Record<
+export const SORT_TO_BACKEND: Record<
   (typeof VOTE_SORT_OPTIONS)[number],
   View1SortType
 > = {
