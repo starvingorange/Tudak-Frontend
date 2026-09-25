@@ -17,6 +17,8 @@ interface VoteModalProps {
   pollId: number | null;
   /** True once `GET /api/polls/{id}` has returned — gates the real vote POST. */
   live: boolean;
+  /** 마감일이 지나 투표할 수 없고 결과만 볼 수 있는 상태. */
+  closed: boolean;
   poll: PollDetail;
   myVote: Side | null;
   onVote: (side: Side) => void;
@@ -26,6 +28,7 @@ interface VoteModalProps {
 export function VoteModal({
   pollId,
   live,
+  closed,
   poll,
   myVote,
   onVote,
@@ -36,6 +39,7 @@ export function VoteModal({
   const queryClient = useQueryClient();
   const { mutate, isPending } = usePostVote();
   const voted = myVote !== null;
+  const showResult = voted || closed;
 
   const total = poll.proVotes + poll.conVotes;
   const proPercent =
@@ -80,34 +84,46 @@ export function VoteModal({
   const option = (side: Side) => {
     const isPro = side === "pro";
     const active = (voted ? myVote : picked) === side;
+    const imageUrl = isPro ? poll.pro.imageUrl : poll.con.imageUrl;
     const color = isPro ? "var(--vote-blue)" : "var(--vote-red)";
     return (
       <button
         type="button"
-        disabled={voted || isPending}
+        disabled={showResult || isPending}
         onClick={() => setPicked(side)}
         className={cn(
           "flex items-center gap-4 rounded-xl p-[16px_18px] text-left transition-all",
           active ? (isPro ? "bg-[#eef1fd]" : "bg-[#fdecec]") : "bg-(--bg-card)",
           voted && !active && "opacity-55",
-          !voted && "cursor-pointer",
+          !showResult && "cursor-pointer",
         )}
         style={{
           border: active ? `2px solid ${color}` : "1px solid var(--border-1)",
         }}
       >
-        <Image
-          src={
-            isPro
-              ? "/assets-characters/pro-basic.webp"
-              : "/assets-characters/con-basic.webp"
-          }
-          alt={isPro ? "찬성" : "반대"}
-          width={isPro ? 190 : 200}
-          height={isPro ? 165 : 158}
-          style={{ width: "auto" }}
-          className="h-14 sm:h-16"
-        />
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={`${isPro ? poll.proName : poll.conName} 프로필`}
+            width={64}
+            height={64}
+            unoptimized
+            className="h-14 w-14 shrink-0 rounded-full border border-(--border-1) object-cover sm:h-16 sm:w-16"
+          />
+        ) : (
+          <Image
+            src={
+              isPro
+                ? "/assets-characters/pro-basic.webp"
+                : "/assets-characters/con-basic.webp"
+            }
+            alt={isPro ? "찬성" : "반대"}
+            width={isPro ? 190 : 200}
+            height={isPro ? 165 : 158}
+            style={{ width: "auto" }}
+            className="h-14 sm:h-16"
+          />
+        )}
         <span className="flex flex-col items-start gap-1">
           <span
             className="text-[15px] font-extrabold sm:text-base"
@@ -151,7 +167,9 @@ export function VoteModal({
           </span>
         </div>
         <div className="mt-2 text-[13.5px] text-(--text-2)">
-          토론 종료 후 3일간 투표할 수 있어요. 투표는 한 번만 가능합니다.
+          {closed
+            ? "투표 기간이 끝나 결과만 볼 수 있어요."
+            : "토론 종료 후 3일간 투표할 수 있어요. 투표는 한 번만 가능합니다."}
         </div>
 
         <div className="mt-4.5 grid gap-3.5 sm:grid-cols-2">
@@ -159,7 +177,7 @@ export function VoteModal({
           {option("con")}
         </div>
 
-        {voted ? (
+        {showResult ? (
           <>
             <div className="mt-5 flex h-2.5 overflow-hidden rounded-full">
               <span
@@ -188,7 +206,9 @@ export function VoteModal({
               </span>
             </div>
             <div className="mt-4 text-center text-sm font-extrabold">
-              {myVote === "pro" ? "찬성" : "반대"}에 투표했어요!
+              {voted
+                ? `${myVote === "pro" ? "찬성" : "반대"}에 투표했어요!`
+                : "투표가 마감되었어요"}
             </div>
             <button
               type="button"

@@ -10,6 +10,7 @@ import type { DebaterState } from "@/features/debates/room/data";
 import { DebaterCard } from "@/features/debates/room/debater-card";
 import { formatClock } from "@/features/debates/room/use-debate-turns";
 import { ROUTES } from "@/lib/routes";
+import { formatDDay } from "@/lib/utils";
 import { getPollDetailFallback } from "./data";
 import { pollDetailFromView } from "./poll-detail-from-view";
 import { type PlaybackProgress, RecordingList } from "./recording-list";
@@ -55,6 +56,9 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
   const fallback = getPollDetailFallback(pollId);
   const poll = view ? pollDetailFromView(pollId, view, fallback) : fallback;
   const live = view != null;
+  const closed = view?.expiredAt
+    ? formatDDay(view.expiredAt) === "마감"
+    : false;
   const debaterWithClock = (debater: DebaterState, side: "pro" | "con") => {
     const total = progress.totalSeconds[side];
     const remaining =
@@ -131,7 +135,7 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
           className="inline-flex items-center gap-2.5 rounded-full bg-(--brand-yellow) px-10 py-3.5 text-base font-extrabold text-(--brand-on-yellow) hover:brightness-[0.96]"
         >
           <SquareCheckBig size={18} />
-          {myVote ? "투표 결과 보기" : "투표하기"}
+          {votedSide || closed ? "투표 결과 보기" : "투표하기"}
         </button>
       </div>
 
@@ -139,8 +143,9 @@ export function PollDetailView({ pollId }: PollDetailViewProps) {
         <VoteModal
           pollId={hasNumericId ? numericId : null}
           live={live}
+          closed={closed}
           poll={poll}
-          myVote={myVote}
+          myVote={votedSide}
           onVote={setMyVote}
           onClose={() => setVoteOpen(false)}
         />
