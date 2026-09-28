@@ -42,6 +42,9 @@ export interface UseDebateTurnsOptions {
 export interface UseDebateTurnsResult {
   /** 3, 2, 1 그다음 null(카운트다운 끝) — 끝나기 전까진 아무도 발언 못 함. */
   countdown: number | null;
+  /** 0..5 원본 턴 인덱스 — `currentTurnIndex`/`currentPhase`로 갈리기 전
+   * 값. 실시간 자막이 턴별로 말풍선을 구분해 갱신할 때 키로 쓴다. */
+  step: number;
   /** 지금 말할 차례인 쪽 — 0 찬성, 1 반대. */
   currentTurnIndex: 0 | 1;
   /** 지금이 입론/반론/결론 중 어느 단계인지. */
@@ -225,6 +228,7 @@ export function useDebateTurns({
 
   return {
     countdown,
+    step,
     currentTurnIndex,
     currentPhase,
     isMyTurnNow,

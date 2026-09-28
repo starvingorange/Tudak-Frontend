@@ -47,12 +47,15 @@ export interface DebateCallContextValue extends UseDebateAudioCallResult {
    * bookkeeping (a ref), same as the rest of this codebase's WS effects. */
   connectCall: (args: ConnectCallArgs) => void;
   disconnectCall: () => void;
-  /** Wire straight into `useDebateTurns`'s `onTurnStart`/`onTurnEnd` — records
-   * (and, on turn end, uploads) only the caller's own turns. The actual P2P
-   * key exchange and `finishDebate` call happen here in the provider so they
-   * survive the room → result page navigation. */
+  /** Wire straight into `useDebateTurns`'s `onTurnStart` — records only the
+   * caller's own turns. The actual P2P key exchange and `finishDebate` call
+   * happen here in the provider so they survive the room → result page
+   * navigation. */
   startRecordingTurn: (step: number, side: 0 | 1) => void;
-  stopRecordingTurn: (step: number, side: 0 | 1) => void;
+  /** Call on turn end with the `sttText` `use-live-caption.ts`'s `stopTurn`
+   * returned for that same turn — paired with the uploaded s3ObjectKey and
+   * sent as one `voiceDataList[]` entry to `finishDebate`. */
+  stopRecordingTurn: (step: number, side: 0 | 1, sttText: string) => void;
   /** The finished debate's pollId, once known — `finishDebate` only ever
    * runs on the host, so the guest learns it via a P2P relay (see below).
    * `null` until then; the result page shows a "정리하는 중" state till it
@@ -194,7 +197,10 @@ export function DebateCallProvider({
       debateId: numericDebateId,
       data: {
         debateId: numericDebateId,
-        s3ObjectKeyList: merged.map((entry) => entry.s3ObjectKey),
+        voiceDataList: merged.map((entry) => ({
+          s3ObjectKey: entry.s3ObjectKey,
+          sttText: entry.sttText,
+        })),
       },
     });
   }, [
@@ -228,8 +234,8 @@ export function DebateCallProvider({
   }, []);
 
   const stopRecordingTurn = useCallback(
-    (step: number, side: 0 | 1) => {
-      recording.stopTurn(step, side);
+    (step: number, side: 0 | 1, sttText: string) => {
+      recording.stopTurn(step, side, sttText);
     },
     [recording.stopTurn],
   );
@@ -259,6 +265,8 @@ export function DebateCallProvider({
       incomingRecordingKeys: audioCall.incomingRecordingKeys,
       sendPollReady: audioCall.sendPollReady,
       incomingPollReady: audioCall.incomingPollReady,
+      sendCaption: audioCall.sendCaption,
+      incomingCaption: audioCall.incomingCaption,
       myAgreement: connectArgs?.myAgreement ?? null,
       isHost,
       peerUserId: connectArgs?.peerUserId ?? null,
@@ -289,6 +297,8 @@ export function DebateCallProvider({
       audioCall.incomingRecordingKeys,
       audioCall.sendPollReady,
       audioCall.incomingPollReady,
+      audioCall.sendCaption,
+      audioCall.incomingCaption,
       connectArgs,
       isHost,
       connectCall,
