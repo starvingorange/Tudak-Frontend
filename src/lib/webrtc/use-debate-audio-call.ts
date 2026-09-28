@@ -52,6 +52,22 @@ export interface IncomingPollReady {
   pollId: number;
 }
 
+export type DebateCaptionMessage = {
+  type: "caption";
+  step: number;
+  side: 0 | 1;
+  text: string;
+  isFinal: boolean;
+};
+
+export interface IncomingCaption {
+  id: number;
+  step: number;
+  side: 0 | 1;
+  text: string;
+  isFinal: boolean;
+}
+
 export interface UseDebateAudioCallResult {
   remoteStream: MediaStream | null;
   /** My own outgoing mic stream — same object for the call's lifetime, tracks
@@ -96,6 +112,13 @@ export interface UseDebateAudioCallResult {
   /** The host's pollId message, or `null` before it arrives — only ever sent
    * once, by the host. */
   incomingPollReady: IncomingPollReady | null;
+  /** Sends the local speaker's live speech-to-text transcript straight to the
+   * opponent — see `use-live-caption.ts`, which owns the actual browser
+   * Web Speech API recognition. */
+  sendCaption: (message: DebateCaptionMessage) => boolean;
+  /** The opponent's latest live-caption update, or `null` before the first
+   * one — a new object identity on every message, even repeats. */
+  incomingCaption: IncomingCaption | null;
 }
 
 /** Establishes (and tears down) a single 1:1 audio-only WebRTC call with the
@@ -122,6 +145,8 @@ export function useDebateAudioCall({
     useState<IncomingRecordingKeys | null>(null);
   const [incomingPollReady, setIncomingPollReady] =
     useState<IncomingPollReady | null>(null);
+  const [incomingCaption, setIncomingCaption] =
+    useState<IncomingCaption | null>(null);
 
   const peerRef = useRef<DebatePeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -225,6 +250,14 @@ export function useDebateAudioCall({
                 id: Date.now() + Math.random(),
                 pollId: message.pollId,
               });
+            } else if (message.type === "caption") {
+              setIncomingCaption({
+                id: Date.now() + Math.random(),
+                step: message.step,
+                side: message.side,
+                text: message.text,
+                isFinal: message.isFinal,
+              });
             } else {
               setIncomingTurn(message);
             }
@@ -279,6 +312,7 @@ export function useDebateAudioCall({
       setIncomingTurn(null);
       setIncomingRecordingKeys(null);
       setIncomingPollReady(null);
+      setIncomingCaption(null);
     };
   }, [peerUserId, isCaller, applySignal]);
 
@@ -312,6 +346,12 @@ export function useDebateAudioCall({
     (pollId: number) =>
       peerRef.current?.sendControlMessage({ type: "poll-ready", pollId }) ??
       false,
+    [],
+  );
+
+  const sendCaption = useCallback(
+    (message: DebateCaptionMessage) =>
+      peerRef.current?.sendControlMessage(message) ?? false,
     [],
   );
 
@@ -356,5 +396,7 @@ export function useDebateAudioCall({
     incomingRecordingKeys,
     sendPollReady,
     incomingPollReady,
+    sendCaption,
+    incomingCaption,
   };
 }

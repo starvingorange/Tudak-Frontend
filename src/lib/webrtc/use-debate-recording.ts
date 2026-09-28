@@ -20,9 +20,15 @@ export interface UseDebateRecordingResult {
    * 안 함. */
   startTurn: (step: number, side: 0 | 1) => void;
   /** 이 턴이 끝날 때 호출 — 내 턴이었을 때만 녹음을 멈추고 즉시
-   * preUpload → S3 PUT까지 마친 뒤 s3ObjectKey를 반환. 내 턴이 아니었으면
-   * 곧바로 null. */
-  stopTurn: (step: number, side: 0 | 1) => Promise<string | null>;
+   * preUpload → S3 PUT까지 마친 뒤 s3ObjectKey를 반환. `sttText`는
+   * `use-live-caption.ts`의 `stopTurn`이 반환한, 이 턴 동안 인식된 최종
+   * 텍스트를 그대로 받아 s3ObjectKey와 함께 저장한다(finishDebate 요청의
+   * `voiceDataList[]` 항목이 됨). 내 턴이 아니었으면 곧바로 null. */
+  stopTurn: (
+    step: number,
+    side: 0 | 1,
+    sttText: string,
+  ) => Promise<string | null>;
   /** 지금까지 업로드가 끝난 내 턴들의 키 — step 오름차순, 매번 새 배열. */
   myKeys: RecordingKeyEntry[];
   /** 내가 맡은 턴 3개가 전부 업로드까지 끝났는지. */
@@ -38,7 +44,9 @@ export function useDebateRecording({
 }: UseDebateRecordingOptions): UseDebateRecordingResult {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
-  const [keysByStep, setKeysByStep] = useState<Record<number, string>>({});
+  const [keysByStep, setKeysByStep] = useState<
+    Record<number, { s3ObjectKey: string; sttText: string }>
+  >({});
 
   const { mutateAsync: preUpload } = usePostPreUpload();
 
@@ -68,7 +76,11 @@ export function useDebateRecording({
   );
 
   const stopTurn = useCallback(
-    async (step: number, side: 0 | 1): Promise<string | null> => {
+    async (
+      step: number,
+      side: 0 | 1,
+      sttText: string,
+    ): Promise<string | null> => {
       const recorder = recorderRef.current;
       if (side !== mySide || !recorder) return null;
       recorderRef.current = null;
@@ -118,7 +130,10 @@ export function useDebateRecording({
           return null;
         }
 
-        setKeysByStep((prev) => ({ ...prev, [step]: s3objectKey }));
+        setKeysByStep((prev) => ({
+          ...prev,
+          [step]: { s3ObjectKey: s3objectKey, sttText },
+        }));
         return s3objectKey;
       } catch (error) {
         console.error("[debate-recording] failed to upload turn", step, error);
@@ -131,7 +146,7 @@ export function useDebateRecording({
   const myKeys = useMemo<RecordingKeyEntry[]>(
     () =>
       Object.entries(keysByStep)
-        .map(([step, s3ObjectKey]) => ({ step: Number(step), s3ObjectKey }))
+        .map(([step, entry]) => ({ step: Number(step), ...entry }))
         .sort((a, b) => a.step - b.step),
     [keysByStep],
   );

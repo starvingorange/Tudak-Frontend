@@ -3,10 +3,14 @@
 const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 
 /** 녹음된 한 턴의 업로드 결과 — `step`은 use-debate-turns.ts의 0..5 턴
- * 인덱스와 동일해서, 방장이 양쪽 키를 받은 뒤 그대로 정렬해 합칠 수 있다. */
+ * 인덱스와 동일해서, 방장이 양쪽 키를 받은 뒤 그대로 정렬해 합칠 수 있다.
+ * `sttText`는 그 턴 동안 로컬 Web Speech API로 인식된 최종 텍스트 —
+ * finishDebate 요청의 `voiceDataList[].sttText`로 그대로 나간다(브라우저가
+ * 인식을 지원 안 하면 빈 문자열). */
 export interface RecordingKeyEntry {
   step: number;
   s3ObjectKey: string;
+  sttText: string;
 }
 
 export type DebateControlMessage =
@@ -27,7 +31,19 @@ export type DebateControlMessage =
   | { type: "recording-keys"; keys: RecordingKeyEntry[] }
   // finishDebate는 방장만 호출하므로 pollId도 방장만 안다 — 게스트도 결과
   // 페이지에서 같은 poll을 보게 하려고 방장이 이걸로 한 번 전달한다.
-  | { type: "poll-ready"; pollId: number };
+  | { type: "poll-ready"; pollId: number }
+  // 발언자가 말하는 동안(마이크 on) 브라우저 Web Speech API로 실시간
+  // 인식한 텍스트를 그대로 상대에게 전달 — text는 그 턴에서 지금까지
+  // 인식된 전체 문장(중간/최종 갱신 모두 이걸로 옴), isFinal은 방금 조각이
+  // 확정본인지. step으로 기존 말풍선을 찾아 텍스트만 갱신하는 용도라 매번
+  // 새 말풍선이 쌓이지 않는다.
+  | {
+      type: "caption";
+      step: number;
+      side: 0 | 1;
+      text: string;
+      isFinal: boolean;
+    };
 
 export interface DebatePeerConnectionHandlers {
   onIceCandidate?: (candidate: RTCIceCandidateInit) => void;
@@ -59,12 +75,22 @@ function parseControlMessage(data: string): DebateControlMessage | null {
       parsed.keys.every(
         (entry: unknown) =>
           typeof (entry as RecordingKeyEntry)?.step === "number" &&
-          typeof (entry as RecordingKeyEntry)?.s3ObjectKey === "string",
+          typeof (entry as RecordingKeyEntry)?.s3ObjectKey === "string" &&
+          typeof (entry as RecordingKeyEntry)?.sttText === "string",
       )
     ) {
       return parsed;
     }
     if (parsed?.type === "poll-ready" && typeof parsed.pollId === "number") {
+      return parsed;
+    }
+    if (
+      parsed?.type === "caption" &&
+      typeof parsed.step === "number" &&
+      (parsed.side === 0 || parsed.side === 1) &&
+      typeof parsed.text === "string" &&
+      typeof parsed.isFinal === "boolean"
+    ) {
       return parsed;
     }
     return null;

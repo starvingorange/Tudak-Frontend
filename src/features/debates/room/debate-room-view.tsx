@@ -8,15 +8,33 @@ import { useGetDebate } from "@/api/debate/hooks/useGetDebate";
 import { useDebateCall } from "@/features/debates/shared/debate-call-provider";
 import { getSeatsFromDetail } from "@/features/debates/shared/debate-seats";
 import { ROUTES } from "@/lib/routes";
+import { useLiveCaption } from "@/lib/webrtc/use-live-caption";
 import { ChatLog } from "./chat-log";
 import { ControlBar } from "./control-bar";
-import type { DebaterState } from "./data";
+import type { DebaterState, TranscriptMessage } from "./data";
 import { DebaterCard } from "./debater-card";
 import { formatClock, TURN_SECONDS, useDebateTurns } from "./use-debate-turns";
 import { VoteProgressPanel } from "./vote-progress-panel";
 
 interface DebateRoomViewProps {
   debateId: string;
+}
+
+/** 실시간 자막 말풍선 하나 — `TranscriptMessage`와 달리 화자 이름은 안
+ * 들고 있음(렌더 시점에 `pro`/`con` 시트 정보로 채움), 대신 `step`으로
+ * 같은 턴의 갱신을 찾아 텍스트만 덮어쓴다. */
+interface LiveTranscriptEntry {
+  step: number;
+  side: "pro" | "con";
+  time: string;
+  text: string;
+}
+
+function formatTimeLabel(): string {
+  return new Date().toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function DebateRoomView({ debateId }: DebateRoomViewProps) {
@@ -41,6 +59,8 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     incomingControl,
     sendTurn,
     incomingTurn,
+    sendCaption,
+    incomingCaption,
     disconnectCall,
     startRecordingTurn,
     stopRecordingTurn,
@@ -70,8 +90,73 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     router.push(ROUTES.DEBATE_RESULT(debateId));
   }, [sendControl, router, debateId]);
 
+  // 실시간 자막 — step으로 같은 턴의 말풍선을 찾아 텍스트만 갱신한다(매
+  // 인식 조각마다 새 말풍선이 쌓이지 않게). 화자 이름은 여기서 안 채우고
+  // ChatLog에 넘기기 직전(아래 JSX)에 그 시점의 pro/con 시트 정보로 채운다
+  // — 이 훅들은 이르게 로딩 상태의 컴포넌트 return 이전에 있어서, room이
+  // 아직 없을 때 이름을 미리 닫아버리면(closure) 나중에 room이 로드돼도
+  // 갱신 안 되는 문제를 피하기 위함이다.
+  const [transcript, setTranscript] = useState<LiveTranscriptEntry[]>([]);
+
+  const upsertTranscript = useCallback(
+    (step: number, side: 0 | 1, text: string) => {
+      setTranscript((prev) => {
+        const idx = prev.findIndex((m) => m.step === step);
+        if (idx === -1) {
+          if (!text) return prev;
+          return [
+            ...prev,
+            {
+              step,
+              side: side === 0 ? "pro" : "con",
+              time: formatTimeLabel(),
+              text,
+            },
+          ];
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], text };
+        return next;
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!incomingCaption) return;
+    upsertTranscript(
+      incomingCaption.step,
+      incomingCaption.side,
+      incomingCaption.text,
+    );
+  }, [incomingCaption, upsertTranscript]);
+
+  const handleCaptionResult = useCallback(
+    (step: number, side: 0 | 1, text: string, isFinal: boolean) => {
+      upsertTranscript(step, side, text);
+      sendCaption({ type: "caption", step, side, text, isFinal });
+    },
+    [upsertTranscript, sendCaption],
+  );
+
+  const { startTurn: startCaptionTurn, stopTurn: stopCaptionTurn } =
+    useLiveCaption({ mySide: myTurnIndex, onResult: handleCaptionResult });
+
+  // 턴이 끝나는 순간(발언 종료를 눌렀든 시간이 다 됐든) 그때까지 인식된
+  // 최종 텍스트를 stopCaptionTurn에서 받아, 같은 턴의 업로드(stopRecordingTurn)에
+  // 실어 보낸다 — finishDebate 요청의 voiceDataList[].sttText가 이렇게
+  // 채워진다.
+  const handleTurnEnd = useCallback(
+    (step: number, side: 0 | 1) => {
+      const sttText = stopCaptionTurn(step, side);
+      stopRecordingTurn(step, side, sttText);
+    },
+    [stopCaptionTurn, stopRecordingTurn],
+  );
+
   const {
     countdown,
+    step,
     currentTurnIndex,
     currentPhase,
     isMyTurnNow,
@@ -85,9 +170,32 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     sendTurn,
     incomingTurn,
     onTurnStart: startRecordingTurn,
-    onTurnEnd: stopRecordingTurn,
+    onTurnEnd: handleTurnEnd,
     onDebateEnd,
   });
+
+  // 마이크가 켜져 있는 동안만(=실제로 말하는 동안만) 인식을 돌린다 — 녹음은
+  // 턴 내내 로컬 스트림을 그대로 녹음해 마이크가 꺼진 구간은 무음으로
+  // 남지만, Web Speech API는 트랙의 enabled 상태와 무관하게 실제 마이크
+  // 입력을 그대로 듣기 때문에 마이크를 끈 동안까지 인식하면 상대에게
+  // 전달하는 자막과 실제 오디오 뮤트 상태가 어긋난다. 턴이 끝날 때의 정지는
+  // 위 handleTurnEnd가 직접 처리하므로, 여기 cleanup은 사실상 "턴 중
+  // 마이크를 일시적으로 끈" 경우만 담당한다(같은 턴이면 use-live-caption이
+  // 누적 텍스트를 안 버림).
+  useEffect(() => {
+    if (!isMyTurnNow || !micOn) return;
+    startCaptionTurn(step, currentTurnIndex);
+    return () => {
+      stopCaptionTurn(step, currentTurnIndex);
+    };
+  }, [
+    isMyTurnNow,
+    micOn,
+    step,
+    currentTurnIndex,
+    startCaptionTurn,
+    stopCaptionTurn,
+  ]);
 
   useEffect(() => {
     if (incomingControl?.message.type === "end" && !endTriggeredRef.current) {
@@ -195,6 +303,17 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
     router.push(ROUTES.DEBATES());
   };
 
+  // 화자 이름은 여기서 채운다 — `transcript` 자체는 이름 없이 step/side만
+  // 들고 있는 이유는 위 훅 선언부 주석 참고.
+  const chatMessages: TranscriptMessage[] = transcript.map((message) => ({
+    ...message,
+    name:
+      (message.side === "pro" ? pro?.name : con?.name) ??
+      (message.side === "pro"
+        ? (room.agreeLabel ?? "찬성")
+        : (room.disagreeLabel ?? "반대")),
+  }));
+
   return (
     <div className="mx-auto max-w-295 px-4 pt-4 pb-8 sm:pt-5 sm:pb-10">
       {/* biome-ignore lint/a11y/useMediaCaption: opponent's live mic audio, nothing to caption */}
@@ -231,8 +350,8 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
         </div>
       )}
 
-      {/* 채팅 로그, 관전자 투표, 득표수는 아직 토론 WS 프로토콜에 없는 기능이라
-          — 연동되기 전까지 이 패널은 스텝 트래커만 보여준다. */}
+      {/* 관전자 투표, 득표수는 아직 토론 WS 프로토콜에 없는 기능이라 —
+          연동되기 전까지 이 패널은 스텝 트래커만 보여준다. */}
       <VoteProgressPanel
         voteEnded={false}
         currentPhase={currentPhase}
@@ -250,7 +369,7 @@ export function DebateRoomView({ debateId }: DebateRoomViewProps) {
         <DebaterCard side="con" debater={con} isMe={myTurnIndex === 1} />
       </div>
 
-      <ChatLog messages={[]} />
+      <ChatLog messages={chatMessages} />
 
       <ControlBar
         myTurn={isMyTurnNow}
